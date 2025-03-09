@@ -1,7 +1,7 @@
 * Introduction
 This is an Emacs minor mode for [[https://github.com/hyperfiddle/electric][Electric Clojure]]. It colors client and server sites in source code.
 
-Here's a simple example:
+Here's a simple example (code taken from https://electric.hyperfiddle.net/tutorial/dir_tree):
 [[file:readme-files/dir-tree-example.png]]
 * Installation
 To install, copy the file ~nomis-electric-clojure.el~ to a place where it will
