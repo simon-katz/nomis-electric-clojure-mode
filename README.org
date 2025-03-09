@@ -9,6 +9,21 @@ be found by your Emacs and add the following to your init file:
 #+begin_src elisp
   (require 'nomis-electric-clojure)
 #+end_src
+* Turning on nomis-electric-clojure-mode
+To turn on nomis-electric-clojure-mode, run ~M-x nomis-electric-clojure-mode~.
+* Overview of Features
+nomis-electric-clojure-mode does the following:
+
+- Auto-detects whether the code is Electric v2 or Electric v3. It does this by
+  looking for ~[hyperfiddle.electric :as e]~ or ~[hyperfiddle.electric3 :as e]~
+  at the start of the file. If it can't decide, it assumes v3.
+
+- Applies separate colors to client regions and server regions.
+
+- Does not apply a color to regions that may be either client or server.
+
+nomis-electric-clojure-mode does not look at the call tree, so regions of code
+that are not colored may in fact always run on one site.
 * Contributing
 For now, I'm not accepting PRs. Instead you can get in touch with me at
 https://clojurians.slack.com/. My user name is /simonkatz/ --- either
