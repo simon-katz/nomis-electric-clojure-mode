@@ -71,7 +71,7 @@ You can re-run the auto-detection of the version in any of the following ways:
 
 For Electric v2 I don't think there's anything further to do.
 
-I still need to finish going through the Electric v3 tutorial, but I think I may want to add understanding of the contents of the `hyperfiddle.electric-forms3` namespace, or at least some of it. I'm not sure if there's anything else that could or should be done.
+I still need to finish going through the Electric v3 tutorial. I think I may want to add understanding of the contents of the `hyperfiddle.electric-forms3` namespace, or at least some of it. I'm not sure if there's anything else that could or should be done.
 
 
 # Contributing
