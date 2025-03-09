@@ -487,7 +487,7 @@ This is very DIY. Is there a better way?")
                                   (eq 'nomis/ec-overlay
                                       (overlay-get ov 'category)))
                                 all-ovs)))
-    (message "----------------")
+    (nomis/ec-message-no-disp "----------------")
     (dolist (ov ovs)
       (let* ((ov-start (overlay-start ov))
              (ov-end   (overlay-end ov))
