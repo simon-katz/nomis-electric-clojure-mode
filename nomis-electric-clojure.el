@@ -444,23 +444,26 @@ This is very DIY. Is there a better way?")
 
 (defun nomis/ec-redetect-electric-version ()
   (interactive)
-  (-nomis/ec-check-nomis-electric-clojure-mode)
-  (-nomis/ec-turn-off)
-  (-nomis/ec-turn-on))
+  (if (not nomis-electric-clojure-mode)
+      (nomis-electric-clojure-mode)
+    (-nomis/ec-turn-off)
+    (-nomis/ec-turn-on)))
 
 (defun nomis/ec-toggle-highlight-initial-whitespace? ()
   (interactive)
-  (-nomis/ec-check-nomis-electric-clojure-mode)
-  (setq nomis/ec-highlight-initial-whitespace?
-        (not nomis/ec-highlight-initial-whitespace?))
-  (-nomis/ec-overlay-region (point-min) (point-max)))
+  (if (not nomis-electric-clojure-mode)
+      (nomis-electric-clojure-mode)
+    (setq nomis/ec-highlight-initial-whitespace?
+          (not nomis/ec-highlight-initial-whitespace?))
+    (-nomis/ec-overlay-region (point-min) (point-max))))
 
 (defun nomis/ec-toggle-debug-feedback-flash? ()
   (interactive)
-  (-nomis/ec-check-nomis-electric-clojure-mode)
-  (setq -nomis/ec-give-debug-feedback-flash?
-        (not -nomis/ec-give-debug-feedback-flash?))
-  (message "Debug feedback flaah turned %s"
+  (if (not nomis-electric-clojure-mode)
+      (nomis-electric-clojure-mode)
+    (setq -nomis/ec-give-debug-feedback-flash?
+          (not -nomis/ec-give-debug-feedback-flash?)))
+  (message "Debug feedback flash turned %s"
            (if -nomis/ec-give-debug-feedback-flash? "on" "off")))
 
 (defun nomis/ec-report-overlays ()
