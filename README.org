@@ -4,8 +4,8 @@ This is an Emacs minor mode for [[https://github.com/hyperfiddle/electric][Elect
 Here's a simple example:
 [[file:readme-files/dir-tree-example.png]]
 * Installation
-To install, copy this file to a place where it will be found by your Emacs and
-add the following to your init file:
+To install, copy the file ~nomis-electric-clojure.el~ to a place where it will
+be found by your Emacs and add the following to your init file:
 #+begin_src elisp
   (require 'nomis-electric-clojure)
 #+end_src
