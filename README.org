@@ -1,5 +1,8 @@
 * Introduction
-This is an Emacs minor mode for [[https://github.com/hyperfiddle/electric][Electric Clojure]].
+This is an Emacs minor mode for [[https://github.com/hyperfiddle/electric][Electric Clojure]]. It colors client and server sites in source code.
+
+Here's a simple example:
+[[file:readme-files/dir-tree-example.png]]
 * Installation
 To install, copy this file to a place where it will be found by your Emacs and
 add the following to your init file:
