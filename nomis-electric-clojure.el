@@ -467,7 +467,8 @@ This is very DIY. Is there a better way?")
       (nomis-electric-clojure-mode)
     (setq nomis/ec-highlight-initial-whitespace?
           (not nomis/ec-highlight-initial-whitespace?))
-    (-nomis/ec-overlay-region (point-min) (point-max))))
+    (-nomis/ec-turn-off)
+    (-nomis/ec-turn-on)))
 
 (defun nomis/ec-toggle-debug-feedback-flash? ()
   (interactive)
