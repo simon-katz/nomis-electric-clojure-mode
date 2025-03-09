@@ -57,7 +57,7 @@ You can re-run the auto-detection in any of the following ways:
 - by reverting the buffer."
   :type 'integer)
 
-(defcustom nomis/ec-highlight-initial-whitespace? nil
+(defcustom nomis/ec-color-initial-whitespace? nil
   "Whether to color whitespace at the beginning of lines in
 sited code."
   :type 'boolean)
@@ -194,7 +194,7 @@ This can be:
     (overlay-put ov 'category 'nomis/ec-overlay)
     (overlay-put ov 'face face)
     (overlay-put ov 'evaporate t)
-    (unless nomis/ec-highlight-initial-whitespace?
+    (unless nomis/ec-color-initial-whitespace?
       ;; We have multiple overlays in the same place, so we need to
       ;; specify their priority.
       (overlay-put ov 'priority (cons nil nesting-level)))
@@ -206,7 +206,7 @@ This can be:
                  (:client  'nomis/ec-client-face)
                  (:server  'nomis/ec-server-face)
                  (:neutral 'nomis/ec-neutral-face))))
-    (if nomis/ec-highlight-initial-whitespace?
+    (if nomis/ec-color-initial-whitespace?
         (let* ((start
                 ;; When a form has only whitespace between its start and the
                 ;; beginning of the line, color from the start of the line.
@@ -435,7 +435,7 @@ This is very DIY. Is there a better way?")
     (nomis-electric-clojure-mode)))
 
 (define-minor-mode nomis-electric-clojure-mode
-  "Highlight Electric Clojure client code regions and server code regions."
+  "Color Electric Clojure client code regions and server code regions."
   :init-value nil
   (if nomis-electric-clojure-mode
       (progn
@@ -461,12 +461,12 @@ This is very DIY. Is there a better way?")
     (-nomis/ec-turn-off)
     (-nomis/ec-turn-on)))
 
-(defun nomis/ec-toggle-highlight-initial-whitespace? ()
+(defun nomis/ec-toggle-color-initial-whitespace? ()
   (interactive)
   (if (not nomis-electric-clojure-mode)
       (nomis-electric-clojure-mode)
-    (setq nomis/ec-highlight-initial-whitespace?
-          (not nomis/ec-highlight-initial-whitespace?))
+    (setq nomis/ec-color-initial-whitespace?
+          (not nomis/ec-color-initial-whitespace?))
     (-nomis/ec-turn-off)
     (-nomis/ec-turn-on)))
 
