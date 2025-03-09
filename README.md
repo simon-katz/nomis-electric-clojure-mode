@@ -44,7 +44,7 @@ By default, initial whitespace is not colored.
 
 You can change this by customizing `nomis/ec-color-initial-whitespace?`.
 
-You can toggle this on-the-fly with `M-x nomis/ec-toggle-color-initial-whitespace`
+You can toggle this on-the-fly with `M-x nomis/ec-toggle-color-initial-whitespace`.
 
 Here's an example (code again taken from [dir-tree example at Electric v3 tutorial](https://electric.hyperfiddle.net/tutorial/dir_tree)):
 
