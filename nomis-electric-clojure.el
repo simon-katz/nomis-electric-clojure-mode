@@ -234,7 +234,8 @@ This can be:
           (let* ((start-2 (point))
                  (end-2 (min end
                              (progn (end-of-line) (1+ (point))))))
-            (-nomis/ec-make-overlay nesting-level face start-2 end-2)
+            (unless (= (1+ start-2) end-2) ; don't color blank lines
+              (-nomis/ec-make-overlay nesting-level face start-2 end-2))
             (unless (eobp) (forward-char))
             (when (bolp)
               (back-to-indentation))))))))
