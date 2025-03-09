@@ -25,6 +25,13 @@ nomis-electric-clojure-mode does the following:
 
 nomis-electric-clojure-mode does not look at the call tree, so regions of code
 that are not colored may in fact always run on one site.
+* Coloring Initial Whitespace
+By default, initial whitespace is not colored.
+
+You can toggle that with ~M-x nomis/ec-toggle-highlight-initial-whitespace?~
+
+Here's a simple example (code taken from https://electric.hyperfiddle.net/tutorial/dir_tree):
+file:readme-files/dir-tree-example-initial-whitespace.png
 * FAQ
 ** nomis-electric-clojure-mode thinks my code is v2 but actually it's v3, or vice versa
 This can happen in a newly-created file or if the if the ~:require~ form
