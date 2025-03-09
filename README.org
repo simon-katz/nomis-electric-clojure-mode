@@ -10,5 +10,6 @@ be found by your Emacs and add the following to your init file:
   (require 'nomis-electric-clojure)
 #+end_src
 * Contributing
-For now, I'm not accepting PRs. Get in touch with me instead! Either tag me (simonkatz)
-or DM me in a message at https://clojurians.slack.com/.
+For now, I'm not accepting PRs. Instead you can get in touch with me at
+https://clojurians.slack.com/. My user name is /simonkatz/ --- either
+tag me or DM me.
