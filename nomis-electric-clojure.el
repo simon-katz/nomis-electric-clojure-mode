@@ -73,9 +73,9 @@ or
 near the beginning of the buffer.
 
 You can re-run the auto-detection in any of the following ways:
-- by reverting the buffer
 - by running `M-x nomis/ec-redetect-electric-version`
-- by turning `nomis-electric-clojure-mode` off and then back on."
+- by turning `nomis-electric-clojure-mode` off and then back on
+- by reverting the buffer."
   :type 'integer)
 
 (defcustom nomis/ec-highlight-initial-whitespace? nil
