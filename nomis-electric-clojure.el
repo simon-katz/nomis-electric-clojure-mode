@@ -83,8 +83,7 @@ This can be:
   - an `(e/fn ...)`
 - code that is neither client nor server; for example:
   - in Electric v3:
-    - symbols that are being bound; /eg/ the LHS of `let` bindings
-    - `dom/xxxx` symbols.")
+    - symbols that are being bound; /eg/ the LHS of `let` bindings.")
 
 ;;;; ___________________________________________________________________________
 
