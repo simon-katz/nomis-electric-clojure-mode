@@ -38,22 +38,6 @@
 ;;;; https://gitlab.com/xificurC/hf-electric.el/-/blob/master/hf-electric.el
 ;;;; Permalink: https://gitlab.com/xificurC/hf-electric.el/-/blob/5e6e3d69e42a64869f1eecd8b804cf4b679f9501/hf-electric.el
 
-;;;; TODO: Are overlays created for the whole buffer, or just the
-;;;;       displayed part?
-;;;;       - Check values of `start` and `end` in different scenarios.
-;;;;       - Do we really want
-;;;;         `(-nomis/ec-overlay-region (POINT-MIN) (POINT-MAX))`?
-
-;;;; TODO: Go further through the tutorials -- is there more to do?
-
-;;;; TODO: When user changes `nomis/ec-highlight-initial-whitespace?`, re-apply
-;;;;       overlays to all `nomis-electric-clojure-mode` buffers.
-
-;;;; TODO: The code to reapply `nomis-electric-clojure-mode` when a buffer
-;;;;       is reverted is very DIY. Does Emacs have something to do this?
-
-;;;; TODO: Deal better with unbalanced parentheses.
-
 ;;;; ___________________________________________________________________________
 
 (defcustom nomis/ec-bound-for-electric-require-search 100000
