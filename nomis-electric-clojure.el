@@ -74,7 +74,7 @@ sited code."
 
 (defface nomis/ec-neutral-face
   `((t ,(list :inherit 'default)))
-  "Face for Electric code that is not specifically client code nor
+  "Face for Electric code that is neither specifically client code nor
 specifically server code.
 
 This can be:
