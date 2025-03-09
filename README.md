@@ -31,7 +31,7 @@ nomis-electric-clojure-mode does the following:
   - `[hyperfiddle.electric3 :as e]`
   - (If auto-detect fails, v3 is assumed.)
 
-- Applies separate colors to client regions and server regions.
+- Applies different colors to client regions and server regions.
 
 - Does not apply a color to regions that may be either client or server.
 
