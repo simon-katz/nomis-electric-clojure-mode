@@ -1,0 +1,11 @@
+* Introduction
+This is an Emacs minor mode for [[https://github.com/hyperfiddle/electric][Electric Clojure]].
+* Installation
+To install, copy this file to a place where it will be found by your Emacs and
+add the following to your init file:
+#+begin_src elisp
+  (require 'nomis-electric-clojure)
+#+end_src
+* Contributing
+For now, I'm not accepting PRs. Get in touch with me instead! Either tag me (simonkatz)
+or DM me in a message at https://clojurians.slack.com/.
