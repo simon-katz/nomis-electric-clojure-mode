@@ -207,7 +207,19 @@ This can be:
                  (:server  'nomis/ec-server-face)
                  (:neutral 'nomis/ec-neutral-face))))
     (if nomis/ec-highlight-initial-whitespace?
-        (-nomis/ec-make-overlay nesting-level face start end)
+        (let* ((start
+                ;; When a form has only whitespace between its start and the
+                ;; beginning of the line, color from the start of the line.
+                (if (and (not (bolp))
+                         (= (point)
+                            (save-excursion
+                              (beginning-of-line)
+                              (forward-whitespace 1))))
+                    (save-excursion
+                      (beginning-of-line)
+                      (point))
+                  start)))
+          (-nomis/ec-make-overlay nesting-level face start end))
       (save-excursion
         (while (< (point) end)
           (let* ((start-2 (point))
