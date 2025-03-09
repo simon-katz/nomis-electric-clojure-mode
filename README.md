@@ -53,7 +53,7 @@ Here's an example (code again taken from [dir-tree example at Electric v3 tutori
 
 # FAQ
 
-## nomis-electric-clojure-mode thinks code is v2 but actually it's v3, or vice versa
+## nomis-electric-clojure-mode thinks code is v3 but actually it's v2, or vice versa
 
 This can happen in a newly-created file or if the if the `:require` form in the namespace declaration is changed.
 
