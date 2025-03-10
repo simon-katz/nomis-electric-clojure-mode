@@ -15,10 +15,11 @@ To install, copy the file `nomis-electric-clojure.el` to a place where it will b
   (require 'nomis-electric-clojure)
 ```
 
+When you update `nomis-electric-clojure.el` to a new version, it is safest to restart Emacs rather than just evaluating the new code.
 
 # Turning on nomis-electric-clojure-mode
 
-To turn on nomis-electric-clojure-mode, run `M-x nomis-electric-clojure-mode`. The same command will turn it off.
+To turn on the mode, run `M-x nomis-electric-clojure-mode`. The same command will turn it off.
 
 
 # Overview of Features
@@ -35,7 +36,7 @@ nomis-electric-clojure-mode does the following:
 
 - Does not apply a color to regions that may be either client or server.
 
-nomis-electric-clojure-mode does not look at the call tree, so regions of code that are not colored may in fact always run on one site.
+The mode does not look at the call tree, so regions of code that are not colored may in fact always run on one site.
 
 
 # Coloring Initial Whitespace
@@ -55,14 +56,13 @@ Here's an example (code again taken from [dir-tree example at Electric v3 tutori
 
 ## nomis-electric-clojure-mode thinks code is v3 but actually it's v2, or vice versa
 
-This can happen in a newly-created file or if the if the `:require` form in the namespace declaration is changed.
+This can happen in a newly-created file or if the `:require` form in the namespace declaration is changed.
 
 You can re-run the auto-detection of the version in any of the following ways:
 
 - by running `M-x nomis/ec-redetect-electric-version`
 
-- by turning nomis-electric-clojure-mode off and then back on (by running
-  `M-x nomis-electric-clojure-mode` twice)
+- by turning the mode off and then back on (by running `M-x nomis-electric-clojure-mode` twice)
 
 - by reverting the buffer.
 
