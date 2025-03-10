@@ -458,10 +458,9 @@ This can be:
           (-nomis/ec-walk-and-overlay)
           (forward-sexp))
         (-nomis/ec-feedback-flash start end start-2 end-2)
-        `(jit-lock-bounds ,start-2 . ,end-2)))
-    ;; (nomis/ec-message-no-disp "*-nomis/ec-n-lumps-in-current-update* = %s"
-    ;;                           *-nomis/ec-n-lumps-in-current-update*)
-    ))
+        ;; (nomis/ec-message-no-disp "*-nomis/ec-n-lumps-in-current-update* = %s"
+        ;;                           *-nomis/ec-n-lumps-in-current-update*)
+        `(jit-lock-bounds ,start-2 . ,end-2)))))
 
 ;;;; ___________________________________________________________________________
 
