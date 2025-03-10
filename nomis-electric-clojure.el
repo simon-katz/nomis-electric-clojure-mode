@@ -40,7 +40,7 @@
 
 ;;;; ___________________________________________________________________________
 
-(defcustom nomis/ec-bound-for-electric-require-search 100000
+(defcustom nomis/ec-bound-for-electric-require-search 10000
   "How far to search in Electric Clojure source code buffers when
 trying to detect the version of Electric Clojure.
 
