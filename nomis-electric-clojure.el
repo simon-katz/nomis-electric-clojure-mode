@@ -319,13 +319,13 @@ This can be:
                       ))
     (-nomis/ec-overlay-args-of-form)))
 
-(defun -nomis/ec-overlay-let ()
+(defun -nomis/ec-overlay-let (operator)
   (save-excursion
     (let* ((inherited-site *-nomis/ec-site*))
       ;; Whole form:
       (-nomis/ec-with-site (:neutral)
         ;; Bindings:
-        (-nomis/ec-checking-movement ("let"
+        (-nomis/ec-checking-movement (operator
                                       (down-list 2))
           (while (-nomis/ec-can-forward-sexp?)
             ;; Skip the LHS of the binding:
@@ -399,10 +399,12 @@ This can be:
               (-nomis/ec-overlay-site :neutral))
              ((looking-at "(dom/")
               (-nomis/ec-overlay-dom-xxxx))
-             ((or (looking-at "(let\\_>")
-                  (looking-at "(binding\\_>")
-                  (looking-at "(e/for\\_>"))
-              (-nomis/ec-overlay-let))
+             ((looking-at "(let\\_>")
+              (-nomis/ec-overlay-let "let"))
+             ((looking-at "(binding\\_>")
+              (-nomis/ec-overlay-let "binding"))
+             ((looking-at "(e/for\\_>")
+              (-nomis/ec-overlay-let "e/for"))
              ((looking-at "(e/for-by\\_>")
               (-nomis/ec-overlay-for-by "for-by"))
              ((-nomis/ec-looking-at-bracketed-sexp-start)
