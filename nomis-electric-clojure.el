@@ -341,6 +341,37 @@ This can be:
         (forward-sexp)
         (-nomis/ec-overlay-body inherited-site)))))
 
+(defun -nomis/ec-overlay-for-by (operator)
+  (save-excursion
+    (let* ((inherited-site *-nomis/ec-site*))
+      ;; Whole form:
+      (-nomis/ec-with-site (:neutral)
+        ;; Key function:
+        (-nomis/ec-checking-movement (operator
+                                      (progn (down-list)
+                                             (forward-sexp)))
+          (when (-nomis/ec-can-forward-sexp?)
+            (-nomis/ec-bof)
+            (-nomis/ec-with-site (inherited-site)
+              (-nomis/ec-walk-and-overlay))
+            (forward-sexp)))
+        ;; Bindings:
+        (-nomis/ec-checking-movement (operator
+                                      (down-list))
+          (while (-nomis/ec-can-forward-sexp?)
+            ;; Skip the LHS of the binding:
+            (forward-sexp)
+            ;; Walk the RHS of the binding, if there is one:
+            (when (-nomis/ec-can-forward-sexp?)
+              (-nomis/ec-bof)
+              (-nomis/ec-with-site (inherited-site)
+                (-nomis/ec-walk-and-overlay))
+              (forward-sexp))))
+        ;; Body:
+        (backward-up-list)
+        (forward-sexp)
+        (-nomis/ec-overlay-body inherited-site)))))
+
 (defun -nomis/ec-overlay-other-bracketed-form ()
   (save-excursion
     (down-list)
@@ -372,6 +403,8 @@ This can be:
                   (looking-at "(binding\\_>")
                   (looking-at "(e/for\\_>"))
               (-nomis/ec-overlay-let))
+             ((looking-at "(e/for-by\\_>")
+              (-nomis/ec-overlay-for-by "for-by"))
              ((-nomis/ec-looking-at-bracketed-sexp-start)
               (-nomis/ec-overlay-other-bracketed-form)))))))
 
