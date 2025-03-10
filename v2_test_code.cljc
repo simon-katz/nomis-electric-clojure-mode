@@ -7,6 +7,7 @@
 
 (e/defn Foo1 []
   (+ 1 2 3)
+  (dom/div 1 2 3)
   (e/client (bar 4 5 6))
   (e/server (map inc (range 10)))
   (dom/div 1 2 3)
