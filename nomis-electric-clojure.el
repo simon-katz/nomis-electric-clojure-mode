@@ -416,11 +416,11 @@ This is used when reverting a buffer, when we reapply the mode.
 
 This is very DIY. Is there a better way?")
 
-(defun -nomis/ec-turn-on ()
+(defun -nomis/ec-enable ()
   (cl-pushnew (current-buffer) -nomis/ec-buffers)
   (jit-lock-register '-nomis/ec-overlay-region t))
 
-(defun -nomis/ec-turn-off (&optional reverting?)
+(defun -nomis/ec-disable (&optional reverting?)
   (unless reverting?
     (setq -nomis/ec-buffers (cl-remove (current-buffer) -nomis/ec-buffers)))
   (setq -nomis/ec-electric-version nil) ; so we will re-detect this
@@ -428,7 +428,7 @@ This is very DIY. Is there a better way?")
   (remove-overlays nil nil 'category 'nomis/ec-overlay))
 
 (defun -nomis/ec-before-revert ()
-  (-nomis/ec-turn-off t))
+  (-nomis/ec-disable t))
 
 (defun -nomis/ec-after-revert ()
   (when (member (current-buffer) -nomis/ec-buffers)
@@ -439,11 +439,11 @@ This is very DIY. Is there a better way?")
   :init-value nil
   (if nomis-electric-clojure-mode
       (progn
-        (-nomis/ec-turn-on)
+        (-nomis/ec-enable)
         (add-hook 'before-revert-hook '-nomis/ec-before-revert nil t)
         (add-hook 'after-revert-hook '-nomis/ec-after-revert nil t))
     (progn
-      (-nomis/ec-turn-off)
+      (-nomis/ec-disable)
       (remove-hook 'before-revert-hook '-nomis/ec-before-revert t)
       (remove-hook 'after-revert-hook '-nomis/ec-after-revert t))))
 
@@ -458,8 +458,8 @@ This is very DIY. Is there a better way?")
   (interactive)
   (if (not nomis-electric-clojure-mode)
       (nomis-electric-clojure-mode)
-    (-nomis/ec-turn-off)
-    (-nomis/ec-turn-on)))
+    (-nomis/ec-disable)
+    (-nomis/ec-enable)))
 
 (defun nomis/ec-toggle-color-initial-whitespace ()
   (interactive)
@@ -467,8 +467,8 @@ This is very DIY. Is there a better way?")
       (nomis-electric-clojure-mode)
     (setq nomis/ec-color-initial-whitespace?
           (not nomis/ec-color-initial-whitespace?))
-    (-nomis/ec-turn-off)
-    (-nomis/ec-turn-on)))
+    (-nomis/ec-disable)
+    (-nomis/ec-enable)))
 
 (defun nomis/ec-toggle-debug-feedback-flash ()
   (interactive)
