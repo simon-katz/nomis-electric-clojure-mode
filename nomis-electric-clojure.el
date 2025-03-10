@@ -380,13 +380,15 @@ This can be:
       (-nomis/ec-walk-and-overlay)
       (forward-sexp))))
 
-(defun -nomis/ec-operator-call-regexp (operator)
-  (concat "(\\([[:space:]]\\|\n\\)*" operator "\\_>"))
+(defun -nomis/ec-operator-call-regexp (operator &optional no-symbol-end?)
+  (concat "(\\([[:space:]]\\|\n\\)*"
+          operator
+          (if no-symbol-end? "" "\\_>")))
 
 (defconst -nomis/ec-e/client-form-regexp (-nomis/ec-operator-call-regexp "e/client"))
 (defconst -nomis/ec-e/server-form-regexp (-nomis/ec-operator-call-regexp "e/server"))
 (defconst -nomis/ec-e/fn-form-regexp     (-nomis/ec-operator-call-regexp "e/fn"))
-(defconst -nomis/ec-dom/-form-regexp     (-nomis/ec-operator-call-regexp "dom/"))
+(defconst -nomis/ec-dom/-form-regexp     (-nomis/ec-operator-call-regexp "dom/" t))
 (defconst -nomis/ec-let-form-regexp      (-nomis/ec-operator-call-regexp "let"))
 (defconst -nomis/ec-binding-form-regexp  (-nomis/ec-operator-call-regexp "binding"))
 (defconst -nomis/ec-e/for-form-regexp    (-nomis/ec-operator-call-regexp "e/for"))
