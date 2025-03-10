@@ -40,6 +40,15 @@
 
 ;;;; ___________________________________________________________________________
 
+(defcustom nomis/ec-auto-enable? t
+  "Whether to turn on `nomis-electric-clojure-mode` automatically by
+looking for
+  `[hyperfiddle.electric :as e]`
+or
+  `[hyperfiddle.electric3 :as e]`
+at the beginning of all .cljc buffers."
+  :type 'boolean)
+
 (defcustom nomis/ec-bound-for-electric-require-search 10000
   "How far to search in Electric Clojure source code buffers when
 trying to detect the version of Electric Clojure.
@@ -371,13 +380,21 @@ This can be:
                                   nomis/ec-bound-for-electric-require-search
                                   t)))
 
+(defun -nomis/ec-explicit-electric-version ()
+  (cond ((-nomis/ec-buffer-has-text? "[hyperfiddle.electric3 :as e]")
+         :v3)
+        ((-nomis/ec-buffer-has-text? "[hyperfiddle.electric :as e]")
+         :v2)))
+
+(defvar -nomis/ec-noted-explicit-electric-version nil
+  "Used when auto-enabling the mode, to avoid searching the buffer twice.")
+(make-variable-buffer-local '-nomis/ec-noted-explicit-electric-version)
+
 (defun -nomis/ec-detect-electric-version ()
-  (let* ((v (cond ((-nomis/ec-buffer-has-text? "[hyperfiddle.electric3 :as e]")
-                   :v3)
-                  ((-nomis/ec-buffer-has-text? "[hyperfiddle.electric :as e]")
-                   :v2)
-                  (t
-                   :v3))))
+  (let* ((v (or -nomis/ec-noted-explicit-electric-version
+                (-nomis/ec-explicit-electric-version)
+                :v3)))
+    (setq -nomis/ec-noted-explicit-electric-version nil)
     (setq -nomis/ec-electric-version v)
     (message "Electric version = %s"
              (string-replace ":" "" (symbol-name v)))))
@@ -446,6 +463,19 @@ This is very DIY. Is there a better way?")
       (-nomis/ec-disable)
       (remove-hook 'before-revert-hook '-nomis/ec-before-revert t)
       (remove-hook 'after-revert-hook '-nomis/ec-after-revert t))))
+
+;;;; ___________________________________________________________________________
+;;;; Auto-activation of the mode
+
+(defun -nomis/ec-auto-enable-if-electric ()
+  (when nomis/ec-auto-enable?
+    (let* ((v (-nomis/ec-explicit-electric-version)))
+      (when v
+        (setq -nomis/ec-noted-explicit-electric-version v)
+        (nomis-electric-clojure-mode)))))
+
+(add-hook 'clojurec-mode-hook
+          '-nomis/ec-auto-enable-if-electric)
 
 ;;;; ___________________________________________________________________________
 ;;;; ---- Interactive commands ----

@@ -17,20 +17,29 @@ To install, copy the file `nomis-electric-clojure.el` to a place where it will b
 
 When you update `nomis-electric-clojure.el` to a new version, it is safest to restart Emacs rather than just evaluating the new code.
 
+
+# How nomis-electric-clojure Recognises Electric Buffers
+
+nomis-electric-clojure checks for Electric buffers by looking for one of the following near the start:
+
+  - `[hyperfiddle.electric :as e]` (⇒ Electric v2)
+  - `[hyperfiddle.electric3 :as e]` (⇒ Electric v3)
+
+There's a customizable variable, `nomis/ec-bound-for-electric-require-search` (default 10000), that determines how far into a buffer to search.
+
+
 # Turning on nomis-electric-clojure-mode
 
-To turn on the mode, run `M-x nomis-electric-clojure-mode`. The same command will turn it off.
+By default, the mode is turned on automatically for any `.cljc` buffer that is recognised to be Electric source code. You can disable this by customizing `nomis/ec-auto-enable?`.
+
+To turn the mode on or off manually, run `M-x nomis-electric-clojure-mode`. If the mode can't determine the Electric Version, it assumes v3.
 
 
 # Overview of Features
 
 nomis-electric-clojure-mode does the following:
 
-- Auto-detects whether the code is Electric v2 or Electric v3. It does this by looking for one of the following near the start of the file:
-
-  - `[hyperfiddle.electric :as e]`
-  - `[hyperfiddle.electric3 :as e]`
-  - (If auto-detect fails, v3 is assumed.)
+- Auto-detects whether the code is Electric v2 or Electric v3. (If auto-detect fails, v3 is assumed.)
 
 - Applies different colors to client regions and server regions.
 
