@@ -25,7 +25,7 @@ nomis-electric-clojure checks for Electric buffers by looking for one of the fol
   - `[hyperfiddle.electric :as e]` (⇒ Electric v2)
   - `[hyperfiddle.electric3 :as e]` (⇒ Electric v3)
 
-There's a customizable variable, `nomis/ec-bound-for-electric-require-search` (default 10000), that determines how far into a buffer to search.
+There's a customizable variable, `nomis/ec-bound-for-electric-require-search` (default 10000), that specifies how many characters into a buffer to search before giving up.
 
 
 # Turning on nomis-electric-clojure-mode
