@@ -143,7 +143,7 @@ This can be:
 
 ;;;; ___________________________________________________________________________
 
-(defun nomis/ec-message-no-disp (format-string &rest args)
+(defun -nomis/ec-message-no-disp (format-string &rest args)
   (let* ((inhibit-message t))
     (apply #'message format-string args)))
 
@@ -287,7 +287,7 @@ This can be:
 (defun -nomis/ec-checking-movement* (desc move-fn overlay-fn)
   (condition-case _
       (funcall move-fn)
-    (error (nomis/ec-message-no-disp
+    (error (-nomis/ec-message-no-disp
             "nomis-electric-clojure: Failed to parse %s"
             desc)))
   (funcall overlay-fn))
@@ -500,8 +500,8 @@ This can be:
           (-nomis/ec-walk-and-overlay)
           (forward-sexp))
         (-nomis/ec-feedback-flash start end start-2 end-2)
-        ;; (nomis/ec-message-no-disp "*-nomis/ec-n-lumps-in-current-update* = %s"
-        ;;                           *-nomis/ec-n-lumps-in-current-update*)
+        ;; (-nomis/ec-message-no-disp "*-nomis/ec-n-lumps-in-current-update* = %s"
+        ;;                            *-nomis/ec-n-lumps-in-current-update*)
         `(jit-lock-bounds ,start-2 . ,end-2)))))
 
 ;;;; ___________________________________________________________________________
@@ -624,7 +624,7 @@ This is very DIY. Is there a better way?")
                                   (eq 'nomis/ec-overlay
                                       (overlay-get ov 'category)))
                                 all-ovs)))
-    (nomis/ec-message-no-disp "----------------")
+    (-nomis/ec-message-no-disp "----------------")
     (dolist (ov ovs)
       (let* ((ov-start (overlay-start ov))
              (ov-end   (overlay-end ov))
@@ -632,13 +632,13 @@ This is very DIY. Is there a better way?")
                             (save-excursion
                               (goto-char ov-start)
                               (pos-eol)))))
-        (nomis/ec-message-no-disp "%s %s %s%s"
-                                  (overlay-get ov 'priority)
-                                  ov
-                                  (buffer-substring ov-start end)
-                                  (if (> ov-end end)
-                                      "..."
-                                    ""))))
+        (-nomis/ec-message-no-disp "%s %s %s%s"
+                                   (overlay-get ov 'priority)
+                                   ov
+                                   (buffer-substring ov-start end)
+                                   (if (> ov-end end)
+                                       "..."
+                                     ""))))
     (message "No. of overlays = %s" (length ovs))))
 
 ;;;; ___________________________________________________________________________
