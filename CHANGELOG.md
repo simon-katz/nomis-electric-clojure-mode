@@ -4,6 +4,7 @@
 ## 2025-03-11
 
 - Add `nomis/ec-use-underline?`.
+- Add `M-x nomis/ec-cycle-options` to cycle through combinations of `nomis/ec-color-initial-whitespace?` and `nomis/ec-use-underline?`.
 
 
 ## 2025-03-10

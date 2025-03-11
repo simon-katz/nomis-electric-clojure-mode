@@ -589,6 +589,24 @@ This is very DIY. Is there a better way?")
     (setq nomis/ec-use-underline? (not nomis/ec-use-underline?))
     (-nomis/ec-update-faces)))
 
+(defun nomis/ec-cycle-options ()
+  "Cycle between combinations of `nomis/ec-color-initial-whitespace?` and
+`nomis/ec-use-underline?`."
+  (interactive)
+  (if (not nomis-electric-clojure-mode)
+      (nomis-electric-clojure-mode)
+    ;; If we add more options, can generalise this. But it might not be very
+    ;; usable for more than two options -- too many things to cycle through.
+    (let* ((v1 (if nomis/ec-color-initial-whitespace? 1 0))
+           (v2 (if nomis/ec-use-underline? 1 0))
+           (v (+ v1 (* 2 v2)))
+           (new-v (mod (1+ v) 4)))
+      (setq nomis/ec-color-initial-whitespace? (not (zerop (logand 1 new-v))))
+      (setq nomis/ec-use-underline?            (not (zerop (logand 2 new-v))))
+      (-nomis/ec-update-faces)
+      (-nomis/ec-disable)
+      (-nomis/ec-enable))))
+
 (defun nomis/ec-toggle-debug-feedback-flash ()
   (interactive)
   (if (not nomis-electric-clojure-mode)

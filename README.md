@@ -70,6 +70,11 @@ Here's an example:
 ![dir-tree-example-underlining.png](docs/dir-tree-example-underlining.png)
 
 
+# Cycling Through Combinations of Options
+
+You can cycle through combinations of `nomis/ec-color-initial-whitespace?` and `nomis/ec-use-underline?` using `M-x nomis/ec-cycle-options`.
+
+
 # FAQ
 
 ## nomis-electric-clojure-mode thinks code is v3 but actually it's v2, or vice versa
