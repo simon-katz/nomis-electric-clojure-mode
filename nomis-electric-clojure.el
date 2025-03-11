@@ -154,6 +154,54 @@ This can be:
   (let* ((inhibit-message t))
     (apply #'message format-string args)))
 
+(defun -nomis/ec-pad-string (s n &optional pad-at-start?)
+  (let* ((len (length s)))
+    (if (>= len n)
+        s
+      (let* ((padding (make-string (max 0 (- n len))
+                                   ?\s)))
+        (if pad-at-start?
+            (concat padding s)
+          (concat s padding))))))
+
+(defun -nomis/ec-pad-or-truncate-string (s n)
+  (let* ((len (length s)))
+    (cond ((= len n) s)
+          ((< len n) (concat s
+                             (make-string (max 0 (- n len))
+                                          ?\s)))
+          (t (substring s 0 n)))))
+
+(defun -nomis/ec-a-few-current-chars ()
+  (let* ((start (point))
+         (end-of-form (save-excursion
+                        (when (-nomis/ec-can-forward-sexp?)
+                          (forward-sexp))
+                        (point)))
+         (end-of-line (pos-eol)))
+    (concat (buffer-substring start end-of-line)
+            (when (< end-of-line end-of-form) "▶▶▶"))))
+
+(defvar -nomis/ec-debug? nil)
+
+(defun -nomis/ec-debug (what &optional force?)
+  (when (or force? -nomis/ec-debug?)
+    (let* ((inhibit-message t))
+      (-nomis/ec-message-no-disp "%s %s ---- %s %s => %s"
+                                 (-nomis/ec-pad-string
+                                  (number-to-string (line-number-at-pos))
+                                  5
+                                  t)
+                                 (make-string (* 2 *-nomis/ec-level*) ?\s)
+                                 *-nomis/ec-site*
+                                 (let* ((s (with-output-to-string (princ what))))
+                                   (cl-case 2
+                                     (1 (-nomis/ec-pad-or-truncate-string
+                                         s
+                                         32))
+                                     (2 (-nomis/ec-pad-string s 32))))
+                                 (-nomis/ec-a-few-current-chars)))))
+
 ;;;; ___________________________________________________________________________
 ;;;; Some utilities copied from `nomis-sexp-utils`. (I don't want to
 ;;;; make this package dependent on `nomis-sexp-utils`.)
@@ -246,8 +294,10 @@ This can be:
 ;;;; ___________________________________________________________________________
 ;;;; Overlay basics
 
-(defun -nomis/ec-make-overlay (nesting-level face start end)
+(defun -nomis/ec-make-overlay (tag nesting-level face start end)
+  ;; (-nomis/ec-debug "MAKE-OVERLAY")
   (let* ((ov (make-overlay start end nil t nil)))
+    (overlay-put ov 'nomis/tag tag)
     (overlay-put ov 'category 'nomis/ec-overlay)
     (overlay-put ov 'face face)
     (overlay-put ov 'evaporate t)
@@ -257,7 +307,8 @@ This can be:
       (overlay-put ov 'priority (cons nil nesting-level)))
     ov))
 
-(defun -nomis/ec-overlay-single-lump (site nesting-level start end)
+(defun -nomis/ec-overlay-lump (tag site nesting-level start end)
+  (-nomis/ec-debug "OVERLAY-LUMP")
   (cl-incf *-nomis/ec-n-lumps-in-current-update*)
   (let* ((face (cl-ecase site
                  (:client  '-nomis/ec-client-face)
@@ -276,14 +327,14 @@ This can be:
                       (beginning-of-line)
                       (point))
                   start)))
-          (-nomis/ec-make-overlay nesting-level face start end))
+          (-nomis/ec-make-overlay tag nesting-level face start end))
       (save-excursion
         (while (< (point) end)
           (let* ((start-2 (point))
                  (end-2 (min end
                              (progn (end-of-line) (1+ (point))))))
             (unless (= (1+ start-2) end-2) ; don't color blank lines
-              (-nomis/ec-make-overlay nesting-level face start-2 end-2))
+              (-nomis/ec-make-overlay tag nesting-level face start-2 end-2))
             (unless (eobp) (forward-char))
             (when (bolp)
               (back-to-indentation))))))))
@@ -309,7 +360,8 @@ This can be:
   (forward-sexp)
   (backward-sexp))
 
-(defun -nomis/ec-with-site* (site end f)
+(defun -nomis/ec-with-site* (tag site end f)
+  (-nomis/ec-debug tag)
   (let* ((start (point))
          (end (or end
                   (save-excursion (forward-sexp) (point))))
@@ -318,33 +370,37 @@ This can be:
         ;; No need for a new overlay.
         (funcall f)
       (let* ((*-nomis/ec-site* site))
-        (-nomis/ec-overlay-single-lump site *-nomis/ec-level* start end)
+        (-nomis/ec-overlay-lump tag site *-nomis/ec-level* start end)
         (funcall f)))))
 
-(cl-defmacro -nomis/ec-with-site ((site &optional end) &body body)
+(cl-defmacro -nomis/ec-with-site ((tag site &optional end) &body body)
   (declare (indent 1))
-  `(-nomis/ec-with-site* ,site ,end (lambda () ,@body)))
+  `(-nomis/ec-with-site* ,tag ,site ,end (lambda () ,@body)))
 
 (defun -nomis/ec-overlay-args-of-form ()
+  (-nomis/ec-debug "args-of-form")
   (save-excursion
     (down-list)
     (forward-sexp)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
+      (-nomis/ec-debug "args-of-form--arg")
       (-nomis/ec-walk-and-overlay)
       (forward-sexp))))
 
 (defun -nomis/ec-overlay-site (site)
   (save-excursion
-    (-nomis/ec-with-site (site)
+    (-nomis/ec-with-site ("site" site)
       (-nomis/ec-overlay-args-of-form))))
 
 (defun -nomis/ec-overlay-body (site)
+  (-nomis/ec-debug "body")
   (save-excursion
     (when (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
       ;; Whole body:
-      (-nomis/ec-with-site (site
+      (-nomis/ec-with-site ("body"
+                            site
                             (let ((body-end
                                    (save-excursion (backward-up-list)
                                                    (forward-sexp)
@@ -361,9 +417,11 @@ This can be:
 ;;;; ---- Parse and overlay ----
 
 (defun -nomis/ec-overlay-dom-xxxx ()
+  (-nomis/ec-debug "dom-xxxx")
   (save-excursion
     (save-excursion (down-list)
-                    (-nomis/ec-with-site (:client)
+                    (-nomis/ec-with-site ("dom-xxxx"
+                                          :client)
                       ;; Nothing more.
                       ))
     (-nomis/ec-overlay-args-of-form)))
@@ -372,7 +430,8 @@ This can be:
   (save-excursion
     (let* ((inherited-site *-nomis/ec-site*))
       ;; Whole form:
-      (-nomis/ec-with-site (:neutral)
+      (-nomis/ec-with-site (operator
+                            :neutral)
         ;; Bindings:
         (-nomis/ec-checking-movement (operator
                                       (down-list 2))
@@ -382,7 +441,8 @@ This can be:
             ;; Walk the RHS of the binding, if there is one:
             (when (-nomis/ec-can-forward-sexp?)
               (-nomis/ec-bof)
-              (-nomis/ec-with-site (inherited-site)
+              (-nomis/ec-with-site ("let-binding-rhs"
+                                    inherited-site)
                 (-nomis/ec-walk-and-overlay))
               (forward-sexp))))
         ;; Body:
@@ -391,17 +451,20 @@ This can be:
         (-nomis/ec-overlay-body inherited-site)))))
 
 (defun -nomis/ec-overlay-for-by (operator)
+  (-nomis/ec-debug operator)
   (save-excursion
     (let* ((inherited-site *-nomis/ec-site*))
       ;; Whole form:
-      (-nomis/ec-with-site (:neutral)
+      (-nomis/ec-with-site (operator
+                            :neutral)
         ;; Key function:
         (-nomis/ec-checking-movement (operator
                                       (progn (down-list)
                                              (forward-sexp)))
           (when (-nomis/ec-can-forward-sexp?)
             (-nomis/ec-bof)
-            (-nomis/ec-with-site (inherited-site)
+            (-nomis/ec-with-site ("key-function"
+                                  inherited-site)
               (-nomis/ec-walk-and-overlay))
             (forward-sexp)))
         ;; Bindings:
@@ -413,7 +476,8 @@ This can be:
             ;; Walk the RHS of the binding, if there is one:
             (when (-nomis/ec-can-forward-sexp?)
               (-nomis/ec-bof)
-              (-nomis/ec-with-site (inherited-site)
+              (-nomis/ec-with-site ("for-by-binding-rhs"
+                                    inherited-site)
                 (-nomis/ec-walk-and-overlay))
               (forward-sexp))))
         ;; Body:
@@ -422,6 +486,7 @@ This can be:
         (-nomis/ec-overlay-body inherited-site)))))
 
 (defun -nomis/ec-overlay-other-bracketed-form ()
+  (-nomis/ec-debug "other-bracketed-form")
   (save-excursion
     (down-list)
     (while (-nomis/ec-can-forward-sexp?)
@@ -489,6 +554,9 @@ This can be:
              (string-replace ":" "" (symbol-name v)))))
 
 (defun -nomis/ec-overlay-region (start end)
+  (when -nomis/ec-debug?
+    (-nomis/ec-message-no-disp "________________________________")
+    (-nomis/ec-message-no-disp "==== -nomis/ec-overlay-region %s %s" start end))
   (unless -nomis/ec-electric-version
     (-nomis/ec-detect-electric-version))
   (let* ((*-nomis/ec-n-lumps-in-current-update* 0))
@@ -639,13 +707,14 @@ This is very DIY. Is there a better way?")
                             (save-excursion
                               (goto-char ov-start)
                               (pos-eol)))))
-        (-nomis/ec-message-no-disp "%s %s %s%s"
+        (-nomis/ec-message-no-disp "%s %s %s%s -- %s"
                                    (overlay-get ov 'priority)
                                    ov
                                    (buffer-substring ov-start end)
                                    (if (> ov-end end)
                                        "..."
-                                     ""))))
+                                     "")
+                                   (overlay-get ov 'nomis/tag))))
     (message "No. of overlays = %s" (length ovs))))
 
 ;;;; ___________________________________________________________________________
