@@ -39,6 +39,7 @@
 ;;;; Permalink: https://gitlab.com/xificurC/hf-electric.el/-/blob/5e6e3d69e42a64869f1eecd8b804cf4b679f9501/hf-electric.el
 
 ;;;; ___________________________________________________________________________
+;;;; Customizable things
 
 (defcustom nomis/ec-auto-enable? t
   "Whether to turn on `nomis-electric-clojure-mode` automatically by
@@ -71,17 +72,46 @@ You can re-run the auto-detection in any of the following ways:
 sited code."
   :type 'boolean)
 
-(defface nomis/ec-client-face
+(defcustom nomis/ec-use-underline? nil
+  "Whether to use underline instead of background color for
+Electric Clojure client and server code."
+  :type 'boolean)
+
+(defface nomis/ec-client-face/using-background
   `((((background dark)) ,(list :background "DarkGreen"))
     (t ,(list :background "DarkSeaGreen1")))
-  "Face for Electric Clojure client code.")
+  "Face for Electric Clojure client code when using background color.")
 
-(defface nomis/ec-server-face
+(defface nomis/ec-server-face/using-background
   `((((background dark)) ,(list :background "IndianRed4"))
     (t ,(list :background "#ffc5c5")))
+  "Face for Electric Clojure server code when using background color.")
+
+(defface nomis/ec-client-face/using-underline
+  `((((background dark)) ,(list :underline (list :color "Chartreuse"
+                                                 :style 'wave)))
+    (t ,(list :underline (list :color "LimeGreen"
+                               :style 'wave))))
+  "Face for Electric Clojure client code when using underline.")
+
+(defface nomis/ec-server-face/using-underline
+  `((((background dark)) ,(list :underline (list :color "DeepPink1"
+                                                 :style 'wave)))
+    (t ,(list :underline (list :color "DeepPink1"
+                               :style 'wave))))
+  "Face for Electric Clojure server code when using underline.")
+
+;;;; ___________________________________________________________________________
+
+(defface -nomis/ec-client-face
+  `() ; set by `-nomis/ec-update-faces`
+  "Face for Electric Clojure client code.")
+
+(defface -nomis/ec-server-face
+  `() ; set by `-nomis/ec-update-faces`
   "Face for Electric Clojure server code.")
 
-(defface nomis/ec-neutral-face
+(defface -nomis/ec-neutral-face
   `((t ,(list :inherit 'default)))
   "Face for Electric code that is neither specifically client code nor
 specifically server code.
@@ -93,6 +123,18 @@ This can be:
 - code that is neither client nor server; for example:
   - in Electric v3:
     - symbols that are being bound; /eg/ the LHS of `let` bindings.")
+
+(defun -nomis/ec-update-faces ()
+  (set-face-attribute '-nomis/ec-client-face nil
+                      :inherit
+                      (if nomis/ec-use-underline?
+                          'nomis/ec-client-face/using-underline
+                        'nomis/ec-client-face/using-background))
+  (set-face-attribute '-nomis/ec-server-face nil
+                      :inherit
+                      (if nomis/ec-use-underline?
+                          'nomis/ec-server-face/using-underline
+                        'nomis/ec-server-face/using-background)))
 
 ;;;; ___________________________________________________________________________
 
@@ -211,9 +253,9 @@ This can be:
 (defun -nomis/ec-overlay-single-lump (site nesting-level start end)
   (cl-incf *-nomis/ec-n-lumps-in-current-update*)
   (let* ((face (cl-case site
-                 (:client  'nomis/ec-client-face)
-                 (:server  'nomis/ec-server-face)
-                 (:neutral 'nomis/ec-neutral-face))))
+                 (:client  '-nomis/ec-client-face)
+                 (:server  '-nomis/ec-server-face)
+                 (:neutral '-nomis/ec-neutral-face))))
     (if nomis/ec-color-initial-whitespace?
         (let* ((start
                 ;; When a form has only whitespace between its start and the
@@ -495,6 +537,7 @@ This is very DIY. Is there a better way?")
   :init-value nil
   (if nomis-electric-clojure-mode
       (progn
+        (-nomis/ec-update-faces)
         (-nomis/ec-enable)
         (add-hook 'before-revert-hook '-nomis/ec-before-revert nil t)
         (add-hook 'after-revert-hook '-nomis/ec-after-revert nil t))
@@ -538,6 +581,13 @@ This is very DIY. Is there a better way?")
           (not nomis/ec-color-initial-whitespace?))
     (-nomis/ec-disable)
     (-nomis/ec-enable)))
+
+(defun nomis/ec-toggle-use-underline ()
+  (interactive)
+  (if (not nomis-electric-clojure-mode)
+      (nomis-electric-clojure-mode)
+    (setq nomis/ec-use-underline? (not nomis/ec-use-underline?))
+    (-nomis/ec-update-faces)))
 
 (defun nomis/ec-toggle-debug-feedback-flash ()
   (interactive)

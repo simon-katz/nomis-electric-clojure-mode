@@ -54,9 +54,20 @@ By default, initial whitespace is not colored.
 
 You can change this by customizing `nomis/ec-color-initial-whitespace?` and you can toggle this on-the-fly with `M-x nomis/ec-toggle-color-initial-whitespace`.
 
-Here's an example (code again taken from [dir-tree example at Electric v3 tutorial](https://electric.hyperfiddle.net/tutorial/dir_tree)):
+Here's an example:
 
 ![dir-tree-example-initial-whitespace.png](docs/dir-tree-example-initial-whitespace.png)
+
+
+# Using Underlining Instead of Background
+
+By default, client and server regions have colored backgrounds. Sometimes this can make your code hard to read.
+
+You can use underlining instead by customizing `nomis/ec-use-underline?` and you can toggle this on-the-fly with `M-x nomis/ec-toggle-use-underline`.
+
+Here's an example:
+
+![dir-tree-example-underlining.png](docs/dir-tree-example-underlining.png)
 
 
 # FAQ
