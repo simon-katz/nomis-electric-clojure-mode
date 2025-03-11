@@ -138,7 +138,7 @@ This can be:
 
 ;;;; ___________________________________________________________________________
 
-(defvar -nomis/ec-electric-version nil)
+(defvar -nomis/ec-electric-version)
 (make-variable-buffer-local '-nomis/ec-electric-version)
 
 ;;;; ___________________________________________________________________________
@@ -252,7 +252,7 @@ This can be:
 
 (defun -nomis/ec-overlay-single-lump (site nesting-level start end)
   (cl-incf *-nomis/ec-n-lumps-in-current-update*)
-  (let* ((face (cl-case site
+  (let* ((face (cl-ecase site
                  (:client  '-nomis/ec-client-face)
                  (:server  '-nomis/ec-server-face)
                  (:neutral '-nomis/ec-neutral-face))))
@@ -438,7 +438,7 @@ This can be:
 
 (defun -nomis/ec-walk-and-overlay ()
   (save-excursion
-    (cl-case -nomis/ec-electric-version
+    (cl-ecase -nomis/ec-electric-version
       (:v2
        (cond
         ((looking-at -nomis/ec-e/client-form-regexp) (-nomis/ec-overlay-site :client))
