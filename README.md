@@ -89,7 +89,7 @@ Here's an example:
 You can cycle through combinations of `nomis/ec-color-initial-whitespace?` and `nomis/ec-use-underline?` using `M-x nomis/ec-cycle-options`.
 
 
-# FAQ
+# Troubleshooting
 
 ## nomis-electric-clojure-mode thinks code is v3 but actually it's v2, or vice versa
 
