@@ -9,7 +9,11 @@ Here's an example (code taken from [dir-tree example at Electric v3 tutorial](ht
 
 # Installation
 
-To install, copy the file `nomis-electric-clojure.el` to a place where it will be found by your Emacs and add the following to your init file:
+Here are some options:
+
+## Option 1
+
+Copy the file `nomis-electric-clojure.el` to a place where it will be found by your Emacs and add the following to your init file:
 
 ```
   (require 'nomis-electric-clojure)
@@ -17,6 +21,16 @@ To install, copy the file `nomis-electric-clojure.el` to a place where it will b
 
 When you update `nomis-electric-clojure.el` to a new version, it is safest to restart Emacs rather than just evaluating the new code.
 
+## Option 2
+
+For Emacs 30+:
+
+```
+(use-package nomis-electric-clojure
+  :vc (:url "https://github.com/simon-katz/nomis-electric-clojure-mode"
+       :rev "newest")
+  :ensure t)
+```
 
 # How nomis-electric-clojure Recognises Electric Buffers
 
