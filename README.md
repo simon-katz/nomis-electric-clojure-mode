@@ -108,7 +108,17 @@ You can re-run the auto-detection of the version in any of the following ways:
 
 For Electric v2 I don't think there's anything further to do.
 
-I still need to finish going through the Electric v3 tutorial. I think I may want to add understanding of the contents of the `hyperfiddle.electric-forms3` namespace, or at least some of it. I'm not sure if there's anything else that could or should be done.
+For Electric v3:
+
+- Don't color Electric calls.
+
+- Don't color bound symbols when used in certain contexts:
+  - as an arg in an Electric call
+  - as the RHS of a binding pair.
+
+- I still need to finish going through the Electric v3 tutorial. I think I may want to add understanding of the contents of the `hyperfiddle.electric-forms3` namespace, or at least some of it.
+
+- Quite possibly other things that I haven't realised yet.
 
 
 # Contributing
