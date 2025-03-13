@@ -49,14 +49,3 @@
             (e/client 2)
             (e/fn [a b c] (+ a (e/client b) (e/server c)))
             3))
-
-(e/defn Foo3 []
-
-  [:a (e/client :b) (e/server :c)]
-
-  {:a (e/client 1)
-   :b (e/server 2)
-   (e/client :c) 3
-   (e/server :d) 4}
-
-  #{:a (e/client :b) (e/server :c)})
