@@ -122,7 +122,8 @@ Electric Clojure client and server code."
   "Face for Electric Clojure server code.")
 
 (defface -nomis/ec-neutral-face
-  `((t ,(list :inherit 'default)))
+  `((t ,(list :background "unspecified-bg"
+              :underline nil)))
   "Face for Electric code that is neither specifically client code nor
 specifically server code.
 
