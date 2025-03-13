@@ -184,10 +184,10 @@ This can be:
 
 (defvar -nomis/ec-debug? nil)
 
-(defun -nomis/ec-debug (what &optional force?)
+(defun -nomis/ec-debug (what &optional force? print-env?)
   (when (or force? -nomis/ec-debug?)
     (let* ((inhibit-message t))
-      (-nomis/ec-message-no-disp "%s %s ---- %s %s => %s"
+      (-nomis/ec-message-no-disp "%s %s ---- %s %s => %s%s"
                                  (-nomis/ec-pad-string
                                   (number-to-string (line-number-at-pos))
                                   5
@@ -200,7 +200,10 @@ This can be:
                                          s
                                          32))
                                      (2 (-nomis/ec-pad-string s 32))))
-                                 (-nomis/ec-a-few-current-chars)))))
+                                 (-nomis/ec-a-few-current-chars)
+                                 (if print-env?
+                                     (format " ---- env = %s" *-nomis/ec-bound-vars*)
+                                     "")))))
 
 ;;;; ___________________________________________________________________________
 ;;;; Some utilities copied from `nomis-sexp-utils`. (I don't want to
@@ -289,6 +292,8 @@ This can be:
   "The site of the code currently being analysed. One of `:neutral`,
 `:client` or `:server`.")
 
+(defvar *-nomis/ec-bound-vars*)
+
 (defvar *-nomis/ec-level* 0)
 
 ;;;; ___________________________________________________________________________
@@ -363,8 +368,8 @@ This can be:
   (forward-sexp)
   (backward-sexp))
 
-(defun -nomis/ec-with-site* (tag site end f)
-  (-nomis/ec-debug tag)
+(defun -nomis/ec-with-site* (tag site end print-env? f)
+  (-nomis/ec-debug tag nil print-env?)
   (let* ((start (point))
          (end (or end
                   (save-excursion (forward-sexp) (point))))
@@ -376,9 +381,11 @@ This can be:
         (-nomis/ec-overlay-lump tag site *-nomis/ec-level* start end)
         (funcall f)))))
 
-(cl-defmacro -nomis/ec-with-site ((tag site &optional end) &body body)
+(cl-defmacro -nomis/ec-with-site ((;; TODO: Make all of these keyword args
+                                   tag site &optional end print-env?)
+                                  &body body)
   (declare (indent 1))
-  `(-nomis/ec-with-site* ,tag ,site ,end (lambda () ,@body)))
+  `(-nomis/ec-with-site* ,tag ,site ,end ,print-env? (lambda () ,@body)))
 
 (defun -nomis/ec-overlay-args-of-form ()
   (-nomis/ec-debug "args-of-form")
@@ -416,8 +423,77 @@ This can be:
           (-nomis/ec-walk-and-overlay)
           (forward-sexp))))))
 
+;; TODO: Can bindings in `e/defn` and `e/fn` refer to earlier bindings? eg init forms?
+;; TODO: Handle destructuring in `-nomis/ec-binding-lhs->vars`.
+;; TODO: Handle all syntax in `e/defn` -- eg doc strings, attr map, multiple arities
+;; TODO: Handle all syntax in `e/fn` -- eg function name, same stuff as for `e/defn`.
+
+(defun -nomis/ec-binding-lhs->vars ()
+  (let* ((sym-or-nil (thing-at-point 'symbol t)))
+    (unless sym-or-nil
+      (-nomis/ec-message-no-disp "**** TODO: Unhandled binding LHS %s"
+                                 (thing-at-point 'sexp t)))
+    (list sym-or-nil)))
+
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay ----
+
+(defun -nomis/ec-overlay-specially-if-symbol (tag inherited-site)
+  (let* ((sym-or-nil (thing-at-point 'symbol t)))
+    (if (not sym-or-nil)
+        (-nomis/ec-with-site ((concat tag "-non-symbol")
+                              inherited-site)
+          (-nomis/ec-walk-and-overlay))
+      (if (member sym-or-nil *-nomis/ec-bound-vars*)
+          (-nomis/ec-with-site ((concat tag "-symbol-bound")
+                                :neutral
+                                nil
+                                t)
+            ;; Nothing more.
+            )
+        (-nomis/ec-with-site ((concat tag "-symbol-unbound")
+                              inherited-site
+                              nil
+                              t)
+          ;; Nothing more.
+          )))))
+
+(defun -nomis/ec-overlay-e-fn-bindings-and-body (operator)
+  ;; Args:
+  (-nomis/ec-checking-movement (operator
+                                (forward-sexp))
+    (let* ((new-vars '()))
+      (save-excursion
+        (backward-sexp)
+        (-nomis/ec-checking-movement (operator
+                                      (down-list))
+          (while (-nomis/ec-can-forward-sexp?)
+            (-nomis/ec-bof)
+            (let* ((vars (-nomis/ec-binding-lhs->vars)))
+              (setq new-vars (append vars new-vars)))
+            (forward-sexp))))
+      ;; Body
+      (let* ((*-nomis/ec-bound-vars*
+              (append new-vars *-nomis/ec-bound-vars*)))
+        (-nomis/ec-overlay-body :neutral)))))
+
+(defun -nomis/ec-overlay-e/defn ()
+  (-nomis/ec-debug "e/defn")
+  (save-excursion
+    (down-list)
+    (forward-sexp)
+    ;; Name:
+    (-nomis/ec-checking-movement ("e/defn"
+                                  (forward-sexp))
+      ;; Bindings and body:
+      (-nomis/ec-overlay-e-fn-bindings-and-body "e/defn"))))
+
+(defun -nomis/ec-overlay-e/fn ()
+  (save-excursion
+    (-nomis/ec-with-site ("e/fn" :neutral)
+      (down-list)
+      (forward-sexp)
+      (-nomis/ec-overlay-e-fn-bindings-and-body "e/fn"))))
 
 (defun -nomis/ec-overlay-dom-xxxx ()
   (-nomis/ec-debug "dom-xxxx")
@@ -429,6 +505,24 @@ This can be:
                       ))
     (-nomis/ec-overlay-args-of-form)))
 
+(defun -nomis-/ec-overlay-bindings (inherited-site)
+  ;; modularise
+  (while (-nomis/ec-can-forward-sexp?)
+    ;; Note the LHS of the binding:
+    (-nomis/ec-bof)
+    ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
+    ;; to use recursion instead of iteration.
+    (setq *-nomis/ec-bound-vars*
+          (append (-nomis/ec-binding-lhs->vars)
+                  *-nomis/ec-bound-vars*))
+    (forward-sexp)
+    ;; Walk the RHS of the binding, if there is one:
+    (when (-nomis/ec-can-forward-sexp?)
+      (-nomis/ec-bof)
+      (-nomis/ec-overlay-specially-if-symbol "binding-rhs"
+                                             inherited-site)
+      (forward-sexp))))
+
 (defun -nomis/ec-overlay-let (operator)
   (save-excursion
     (let* ((inherited-site *-nomis/ec-site*))
@@ -436,22 +530,14 @@ This can be:
       (-nomis/ec-with-site (operator
                             :neutral)
         ;; Bindings:
-        (-nomis/ec-checking-movement (operator
-                                      (down-list 2))
-          (while (-nomis/ec-can-forward-sexp?)
-            ;; Skip the LHS of the binding:
-            (forward-sexp)
-            ;; Walk the RHS of the binding, if there is one:
-            (when (-nomis/ec-can-forward-sexp?)
-              (-nomis/ec-bof)
-              (-nomis/ec-with-site ("let-binding-rhs"
-                                    inherited-site)
-                (-nomis/ec-walk-and-overlay))
-              (forward-sexp))))
-        ;; Body:
-        (backward-up-list)
-        (forward-sexp)
-        (-nomis/ec-overlay-body inherited-site)))))
+        (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
+          (-nomis/ec-checking-movement (operator
+                                        (down-list 2))
+            (-nomis-/ec-overlay-bindings inherited-site))
+          ;; Body:
+          (backward-up-list)
+          (forward-sexp)
+          (-nomis/ec-overlay-body inherited-site))))))
 
 (defun -nomis/ec-overlay-for-by (operator)
   (-nomis/ec-debug operator)
@@ -471,22 +557,33 @@ This can be:
               (-nomis/ec-walk-and-overlay))
             (forward-sexp)))
         ;; Bindings:
-        (-nomis/ec-checking-movement (operator
-                                      (down-list))
-          (while (-nomis/ec-can-forward-sexp?)
-            ;; Skip the LHS of the binding:
-            (forward-sexp)
-            ;; Walk the RHS of the binding, if there is one:
-            (when (-nomis/ec-can-forward-sexp?)
-              (-nomis/ec-bof)
-              (-nomis/ec-with-site ("for-by-binding-rhs"
-                                    inherited-site)
-                (-nomis/ec-walk-and-overlay))
-              (forward-sexp))))
-        ;; Body:
-        (backward-up-list)
+        (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
+          (-nomis/ec-checking-movement (operator
+                                        (down-list))
+            (-nomis-/ec-overlay-bindings inherited-site))
+          ;; Body:
+          (backward-up-list)
+          (forward-sexp)
+          (-nomis/ec-overlay-body inherited-site))))))
+
+(defun -nomis/ec-overlay-electric-call ()
+  (save-excursion
+    (let* ((inherited-site *-nomis/ec-site*))
+      (-nomis/ec-with-site ("electric-call"
+                            :neutral)
+        (down-list)
         (forward-sexp)
-        (-nomis/ec-overlay-body inherited-site)))))
+        ;; Each argument:
+        (while (-nomis/ec-can-forward-sexp?)
+          (-nomis/ec-bof)
+          (-nomis/ec-overlay-specially-if-symbol "electric-call-arg"
+                                                 inherited-site)
+          (forward-sexp))))))
+
+(defun -nomis/ec-overlay-host-call ()
+  (-nomis/ec-debug "host-call")
+  ;; No need to do anything.
+  )
 
 (defun -nomis/ec-overlay-other-bracketed-form ()
   (-nomis/ec-debug "other-bracketed-form")
@@ -497,11 +594,18 @@ This can be:
       (-nomis/ec-walk-and-overlay)
       (forward-sexp))))
 
+(defun -nomis/ec-overlay-symbol-number-etc ()
+  (-nomis/ec-debug "SYMBOL-NUMBER-ETC")
+  ;; Nothing to do. Special handling of symbols is done in
+  ;; `-nomis/ec-overlay-specially-if-symbol`.
+  )
+
 (defun -nomis/ec-operator-call-regexp (operator &optional no-symbol-end?)
   (concat "(\\([[:space:]]\\|\n\\)*"
           operator
           (if no-symbol-end? "" "\\_>")))
 
+(defconst -nomis/ec-e/defn-form-regexp   (-nomis/ec-operator-call-regexp "e/defn"))
 (defconst -nomis/ec-e/client-form-regexp (-nomis/ec-operator-call-regexp "e/client"))
 (defconst -nomis/ec-e/server-form-regexp (-nomis/ec-operator-call-regexp "e/server"))
 (defconst -nomis/ec-e/fn-form-regexp     (-nomis/ec-operator-call-regexp "e/fn"))
@@ -511,25 +615,48 @@ This can be:
 (defconst -nomis/ec-e/for-form-regexp    (-nomis/ec-operator-call-regexp "e/for"))
 (defconst -nomis/ec-e/for-by-form-regexp (-nomis/ec-operator-call-regexp "e/for-by"))
 
+(defconst -nomis/ec-symbol-chars "-a-zA-Z0-9$&*+_<>/'.=?!")
+
+(defconst -nomis/ec-host-function-name-regexp
+  (concat "["
+          -nomis/ec-symbol-chars
+          "]*"))
+
+(defconst -nomis/ec-electric-function-name-regexp
+  (concat "[A-Z]"
+          -nomis/ec-host-function-name-regexp))
+
+(defconst -nomis/ec-e/electric-call-regexp    (-nomis/ec-operator-call-regexp
+                                               -nomis/ec-electric-function-name-regexp))
+
+(defconst -nomis/ec-e/host-call-regexp
+  ;; We rely on `-nomis/ec-operator-call-regexp` being tried first.
+  (-nomis/ec-operator-call-regexp -nomis/ec-host-function-name-regexp))
+
 (defun -nomis/ec-walk-and-overlay ()
   (save-excursion
-    (cl-ecase -nomis/ec-electric-version
-      (:v2
-       (cond
-        ((looking-at -nomis/ec-e/client-form-regexp) (-nomis/ec-overlay-site :client))
-        ((looking-at -nomis/ec-e/server-form-regexp) (-nomis/ec-overlay-site :server))
-        ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))))
-      (:v3
-       (cond
-        ((looking-at -nomis/ec-e/client-form-regexp) (-nomis/ec-overlay-site :client))
-        ((looking-at -nomis/ec-e/server-form-regexp) (-nomis/ec-overlay-site :server))
-        ((looking-at -nomis/ec-e/fn-form-regexp)     (-nomis/ec-overlay-site :neutral))
-        ((looking-at -nomis/ec-dom/-form-regexp)     (-nomis/ec-overlay-dom-xxxx))
-        ((looking-at -nomis/ec-let-form-regexp)      (-nomis/ec-overlay-let "let"))
-        ((looking-at -nomis/ec-binding-form-regexp)  (-nomis/ec-overlay-let "binding"))
-        ((looking-at -nomis/ec-e/for-form-regexp)    (-nomis/ec-overlay-let "e/for"))
-        ((looking-at -nomis/ec-e/for-by-form-regexp) (-nomis/ec-overlay-for-by "for-by"))
-        ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form)))))))
+    (let* ((case-fold-search nil))
+      (cl-ecase -nomis/ec-electric-version
+        (:v2
+         (cond
+          ((looking-at -nomis/ec-e/client-form-regexp) (-nomis/ec-overlay-site :client))
+          ((looking-at -nomis/ec-e/server-form-regexp) (-nomis/ec-overlay-site :server))
+          ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))))
+        (:v3
+         (cond
+          ((looking-at -nomis/ec-e/defn-form-regexp)   (-nomis/ec-overlay-e/defn))
+          ((looking-at -nomis/ec-e/fn-form-regexp)     (-nomis/ec-overlay-e/fn))
+          ((looking-at -nomis/ec-e/client-form-regexp) (-nomis/ec-overlay-site :client))
+          ((looking-at -nomis/ec-e/server-form-regexp) (-nomis/ec-overlay-site :server))
+          ((looking-at -nomis/ec-dom/-form-regexp)     (-nomis/ec-overlay-dom-xxxx))
+          ((looking-at -nomis/ec-let-form-regexp)      (-nomis/ec-overlay-let "let"))
+          ((looking-at -nomis/ec-binding-form-regexp)  (-nomis/ec-overlay-let "binding"))
+          ((looking-at -nomis/ec-e/for-form-regexp)    (-nomis/ec-overlay-let "e/for"))
+          ((looking-at -nomis/ec-e/for-by-form-regexp) (-nomis/ec-overlay-for-by "for-by"))
+          ((looking-at -nomis/ec-e/electric-call-regexp) (-nomis/ec-overlay-electric-call))
+          ((looking-at -nomis/ec-e/host-call-regexp)   (-nomis/ec-overlay-host-call))
+          ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))
+          (t (-nomis/ec-overlay-symbol-number-etc))))))))
 
 (defun -nomis/ec-buffer-has-text? (s)
   (save-excursion (goto-char 0)
@@ -562,7 +689,8 @@ This can be:
     (-nomis/ec-message-no-disp "==== -nomis/ec-overlay-region %s %s" start end))
   (unless -nomis/ec-electric-version
     (-nomis/ec-detect-electric-version))
-  (let* ((*-nomis/ec-n-lumps-in-current-update* 0))
+  (let* ((*-nomis/ec-bound-vars* '())
+         (*-nomis/ec-n-lumps-in-current-update* 0))
     (save-excursion
       (goto-char start)
       (unless (-nomis/ec-at-top-level?) (beginning-of-defun))
