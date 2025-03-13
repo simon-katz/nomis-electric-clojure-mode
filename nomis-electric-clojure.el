@@ -332,8 +332,8 @@ This can be:
         (while (< (point) end)
           (let* ((start-2 (point))
                  (end-2 (min end
-                             (progn (end-of-line) (1+ (point))))))
-            (unless (= (1+ start-2) end-2) ; don't color blank lines
+                             (progn (end-of-line) (point)))))
+            (unless (= start-2 end-2) ; don't create overlays of zero length
               (-nomis/ec-make-overlay tag nesting-level face start-2 end-2))
             (unless (eobp) (forward-char))
             (when (bolp)
