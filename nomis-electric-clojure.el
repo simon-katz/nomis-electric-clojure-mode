@@ -103,12 +103,22 @@ Electric Clojure client and server code."
 
 ;;;; ___________________________________________________________________________
 
+(defun -nomis/ec-compute-client-face ()
+  (if nomis/ec-use-underline?
+      'nomis/ec-client-face/using-underline
+    'nomis/ec-client-face/using-background))
+
+(defun -nomis/ec-compute-server-face ()
+  (if nomis/ec-use-underline?
+      'nomis/ec-server-face/using-underline
+    'nomis/ec-server-face/using-background))
+
 (defface -nomis/ec-client-face
-  `() ; set by `-nomis/ec-update-faces`
+  `((t ,(list :inherit (-nomis/ec-compute-client-face)))) ; set by `-nomis/ec-update-faces`
   "Face for Electric Clojure client code.")
 
 (defface -nomis/ec-server-face
-  `() ; set by `-nomis/ec-update-faces`
+  `((t ,(list :inherit (-nomis/ec-compute-server-face)))) ; set by `-nomis/ec-update-faces`
   "Face for Electric Clojure server code.")
 
 (defface -nomis/ec-neutral-face
@@ -127,14 +137,10 @@ This can be:
 (defun -nomis/ec-update-faces ()
   (set-face-attribute '-nomis/ec-client-face nil
                       :inherit
-                      (if nomis/ec-use-underline?
-                          'nomis/ec-client-face/using-underline
-                        'nomis/ec-client-face/using-background))
+                      (-nomis/ec-compute-client-face))
   (set-face-attribute '-nomis/ec-server-face nil
                       :inherit
-                      (if nomis/ec-use-underline?
-                          'nomis/ec-server-face/using-underline
-                        'nomis/ec-server-face/using-background)))
+                      (-nomis/ec-compute-server-face)))
 
 ;;;; ___________________________________________________________________________
 
