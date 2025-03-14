@@ -369,21 +369,20 @@ This can be:
   (backward-sexp))
 
 (defun -nomis/ec-with-site* (tag site end print-env? f)
+  (cl-assert site)
   (-nomis/ec-debug tag nil print-env?)
-  (if (null site) ; TODO: Maybe rewrite to not need this.
-      (funcall f)
-    (let* ((start (point))
-           (end (or end
-                    (save-excursion (when (-nomis/ec-can-forward-sexp?)
-                                      (forward-sexp))
-                                    (point))))
-           (*-nomis/ec-level* (1+ *-nomis/ec-level*)))
-      (if (eq site *-nomis/ec-site*)
-          ;; No need for a new overlay.
-          (funcall f)
-        (let* ((*-nomis/ec-site* site))
-          (-nomis/ec-overlay-lump tag site *-nomis/ec-level* start end)
-          (funcall f))))))
+  (let* ((start (point))
+         (end (or end
+                  (save-excursion (when (-nomis/ec-can-forward-sexp?)
+                                    (forward-sexp))
+                                  (point))))
+         (*-nomis/ec-level* (1+ *-nomis/ec-level*)))
+    (if (eq site *-nomis/ec-site*)
+        ;; No need for a new overlay.
+        (funcall f)
+      (let* ((*-nomis/ec-site* site))
+        (-nomis/ec-overlay-lump tag site *-nomis/ec-level* start end)
+        (funcall f)))))
 
 (cl-defmacro -nomis/ec-with-site ((;; TODO: Make all of these keyword args
                                    tag site &optional end print-env?)
@@ -503,75 +502,77 @@ This can be:
                                              operator
                                              site
                                              shape)
+  (cl-assert (member apply-to '(:whole :operator)))
+  (cl-assert (listp shape))
   (save-excursion
     (let* ((inherited-site *-nomis/ec-site*))
-      (-nomis/ec-with-site (operator
-                            (cl-case apply-to
-                              (:whole site)))
-        (cl-labels
-            ((continue (remaining-shape)
-               (when remaining-shape
-                 (when (-nomis/ec-can-forward-sexp?)
-                   (-nomis/ec-bof))
-                 (-nomis/ec-debug (first remaining-shape))
-                 (cl-ecase (first remaining-shape)
+      (cl-labels ((continue (remaining-shape)
+                    (when remaining-shape
+                      (when (-nomis/ec-can-forward-sexp?)
+                        (-nomis/ec-bof))
+                      (-nomis/ec-debug (first remaining-shape))
+                      (cl-ecase (first remaining-shape)
 
-                   (operator
-                    (-nomis/ec-checking-movement (operator
-                                                  (forward-sexp)))
-                    (backward-sexp)
-                    (when (eq apply-to :operator)
-                      (-nomis/ec-with-site ((concat operator "-operator")
-                                            site)
-                        ;; Nothing more.
-                        ))
-                    (forward-sexp)
-                    (continue (rest remaining-shape)))
+                        (operator
+                         (-nomis/ec-checking-movement (operator
+                                                       (forward-sexp)))
+                         (backward-sexp)
+                         (when (eq apply-to :operator)
+                           (-nomis/ec-with-site ((concat operator "-operator")
+                                                 site)
+                             ;; Nothing more.
+                             ))
+                         (forward-sexp)
+                         (continue (rest remaining-shape)))
 
-                   (name
-                    (-nomis/ec-checking-movement (operator
-                                                  (forward-sexp)))
-                    (continue (rest remaining-shape)))
+                        (name
+                         (-nomis/ec-checking-movement (operator
+                                                       (forward-sexp)))
+                         (continue (rest remaining-shape)))
 
-                   (key-function
-                    (-nomis/ec-checking-movement (operator
-                                                  (forward-sexp))
-                      (backward-sexp)
-                      (-nomis/ec-with-site ("key-function"
-                                            inherited-site)
-                        (-nomis/ec-walk-and-overlay))
-                      (forward-sexp)
-                      (continue (rest remaining-shape))))
+                        (key-function
+                         (-nomis/ec-checking-movement (operator
+                                                       (forward-sexp))
+                           (backward-sexp)
+                           (-nomis/ec-with-site ("key-function"
+                                                 inherited-site)
+                             (-nomis/ec-walk-and-overlay))
+                           (forward-sexp)
+                           (continue (rest remaining-shape))))
 
-                   (fn-bindings
-                    (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
-                      (-nomis/ec-overlay-e-fn-bindings operator)
-                      (continue (rest remaining-shape))))
+                        (fn-bindings
+                         (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
+                           (-nomis/ec-overlay-e-fn-bindings operator)
+                           (continue (rest remaining-shape))))
 
-                   (let-bindings
-                    (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
-                      (-nomis-/ec-overlay-let-bindings inherited-site
-                                                       operator)
-                      (continue (rest remaining-shape))))
+                        (let-bindings
+                         (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
+                           (-nomis-/ec-overlay-let-bindings inherited-site
+                                                            operator)
+                           (continue (rest remaining-shape))))
 
-                   (body-inherit-site
-                    (cl-assert (null (rest remaining-shape)))
-                    (-nomis/ec-overlay-body inherited-site))
+                        (body-inherit-site
+                         (cl-assert (null (rest remaining-shape)))
+                         (-nomis/ec-overlay-body inherited-site))
 
-                   (body-neutral
-                    (cl-assert (null (rest remaining-shape)))
-                    (-nomis/ec-overlay-body :neutral))
+                        (body-neutral
+                         (cl-assert (null (rest remaining-shape)))
+                         (-nomis/ec-overlay-body :neutral))
 
-                   (electric-call-args
-                    (while (-nomis/ec-can-forward-sexp?)
-                      (-nomis/ec-bof)
-                      (-nomis/ec-overlay-specially-if-symbol "electric-call-arg"
-                                                             inherited-site)
-                      (forward-sexp)))))))
-
-          (cl-assert (listp shape))
-          (down-list)
-          (continue shape))))))
+                        (electric-call-args
+                         (while (-nomis/ec-can-forward-sexp?)
+                           (-nomis/ec-bof)
+                           (-nomis/ec-overlay-specially-if-symbol "electric-call-arg"
+                                                                  inherited-site)
+                           (forward-sexp))))))
+                  (do-it ()
+                    (down-list)
+                    (continue shape)))
+        (if (eq apply-to :whole)
+            (-nomis/ec-with-site (operator
+                                  site)
+              (do-it))
+          (do-it))))))
 
 (defun -nomis/ec-overlay-e/defn ()
   (-nomis/ec-overlay-using-spec :operator "e/defn"
