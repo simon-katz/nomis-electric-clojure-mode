@@ -349,20 +349,20 @@ This can be:
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay helpers ----
 
-(defun -nomis/ec-checking-movement* (desc move-fn overlay-fn)
-  ;; TODO: Maybe change `-nomis/ec-checking-movement*` to do `save-excursion`.
-  (condition-case _
-      (funcall move-fn)
-    (error (-nomis/ec-message-no-disp
-            "nomis-electric-clojure: Failed to parse %s"
-            desc)))
+(defun -nomis/ec-checking-movement-possible* (desc move-fn overlay-fn)
+  (save-excursion
+    (condition-case _
+        (funcall move-fn)
+      (error (-nomis/ec-message-no-disp
+              "nomis-electric-clojure: Failed to parse %s"
+              desc))))
   (funcall overlay-fn))
 
-(cl-defmacro -nomis/ec-checking-movement ((desc move-form) &body body)
+(cl-defmacro -nomis/ec-checking-movement-possible ((desc move-form) &body body)
   (declare (indent 1))
-  `(-nomis/ec-checking-movement* ,desc
-                                 (lambda () ,move-form)
-                                 (lambda () ,@body)))
+  `(-nomis/ec-checking-movement-possible* ,desc
+                                          (lambda () ,move-form)
+                                          (lambda () ,@body)))
 
 (defun -nomis/ec-bof ()
   (forward-sexp)
@@ -462,8 +462,9 @@ This can be:
 
 (defun -nomis/ec-overlay-e-fn-bindings (operator)
   (save-excursion
-    (-nomis/ec-checking-movement (operator
-                                  (down-list))
+    (-nomis/ec-checking-movement-possible (operator
+                                           (down-list))
+      (down-list)
       (while (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
         ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
@@ -476,11 +477,12 @@ This can be:
 
 (defun -nomis-/ec-overlay-let-bindings (inherited-site operator)
   (save-excursion
-    (-nomis/ec-checking-movement (operator
-                                  ;; TODO: Ensure that we have a list.
-                                  ;;       Otherwise can skip an item.
-                                  ;;       Check all uses of `down-list`.
-                                  (down-list))
+    (-nomis/ec-checking-movement-possible (operator
+                                           ;; TODO: Ensure that we have a list.
+                                           ;;       Otherwise can skip an item.
+                                           ;;       Check all uses of `down-list`.
+                                           (down-list))
+      (down-list)
       (while (-nomis/ec-can-forward-sexp?)
         ;; Note the LHS of the binding:
         (-nomis/ec-bof)
@@ -514,10 +516,10 @@ This can be:
                       (cl-ecase (first remaining-shape)
 
                         (operator
-                         (-nomis/ec-checking-movement (operator
-                                                       (forward-sexp)))
-                         (backward-sexp)
+                         (-nomis/ec-checking-movement-possible (operator
+                                                                (forward-sexp)))
                          (when (eq apply-to :operator)
+                           ;; TODO: Use `list` instead of `concat`.
                            (-nomis/ec-with-site ((concat operator "-operator")
                                                  site)
                              ;; Nothing more.
@@ -526,14 +528,16 @@ This can be:
                          (continue (rest remaining-shape)))
 
                         (name
-                         (-nomis/ec-checking-movement (operator
-                                                       (forward-sexp)))
+                         (-nomis/ec-checking-movement-possible ((list
+                                                                 operator
+                                                                 'name)
+                                                                (forward-sexp)))
+                         (forward-sexp)
                          (continue (rest remaining-shape)))
 
                         (key-function
-                         (-nomis/ec-checking-movement (operator
-                                                       (forward-sexp))
-                           (backward-sexp)
+                         (-nomis/ec-checking-movement-possible (operator
+                                                                (forward-sexp))
                            (-nomis/ec-with-site ("key-function"
                                                  inherited-site)
                              (-nomis/ec-walk-and-overlay))
