@@ -300,7 +300,7 @@ This can be:
 ;;;; Overlay basics
 
 (defun -nomis/ec-make-overlay (tag nesting-level face start end)
-  ;; (-nomis/ec-debug "MAKE-OVERLAY")
+  ;; (-nomis/ec-debug :make-overlay)
   (let* ((ov (make-overlay start end nil t nil)))
     (overlay-put ov 'nomis/tag tag)
     (overlay-put ov 'category 'nomis/ec-overlay)
@@ -313,9 +313,9 @@ This can be:
     ov))
 
 (defun -nomis/ec-overlay-lump (tag site nesting-level start end)
-  (-nomis/ec-debug "OVERLAY-LUMP")
+  (-nomis/ec-debug :overlay-lump)
   (if (= start end)
-      (-nomis/ec-debug "EMPTY-LUMP")
+      (-nomis/ec-debug :empty-lump)
     (cl-incf *-nomis/ec-n-lumps-in-current-update*)
     (let* ((face (cl-ecase site
                    (:client  '-nomis/ec-client-face)
@@ -391,31 +391,31 @@ This can be:
   `(-nomis/ec-with-site* ,tag ,site ,end ,print-env? (lambda () ,@body)))
 
 (defun -nomis/ec-overlay-args-of-form ()
-  (-nomis/ec-debug "args-of-form")
+  (-nomis/ec-debug :args-of-form)
   (save-excursion
     (down-list)
     (forward-sexp)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
-      (-nomis/ec-debug "args-of-form--arg")
+      (-nomis/ec-debug (list :args-of-form :arg))
       (-nomis/ec-walk-and-overlay)
       (forward-sexp))))
 
 (defun -nomis/ec-overlay-site (site)
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag "site"
+                          :tag :site
                           :site site)
       (-nomis/ec-overlay-args-of-form))))
 
 (defun -nomis/ec-overlay-body (site)
-  (-nomis/ec-debug "body")
+  (-nomis/ec-debug :body)
   (save-excursion
     (when (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
       ;; Whole body:
       (-nomis/ec-with-site (;; avoid-stupid-indentation
-                            :tag "body"
+                            :tag :body
                             :site site
                             :end (save-excursion (backward-up-list)
                                                  (forward-sexp)
@@ -541,7 +541,7 @@ This can be:
                          (-nomis/ec-checking-movement-possible (operator
                                                                 (forward-sexp))
                            (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                                 :tag "key-function"
+                                                 :tag :key-function
                                                  :site inherited-site)
                              (-nomis/ec-walk-and-overlay))
                            (forward-sexp)
@@ -583,7 +583,7 @@ This can be:
           (do-it))))))
 
 (defun -nomis/ec-overlay-e/defn ()
-  (-nomis/ec-overlay-using-spec :operator "e/defn"
+  (-nomis/ec-overlay-using-spec :operator :e/defn
                                 :site     :neutral
                                 :apply-to :whole
                                 :shape    '(operator
@@ -592,7 +592,7 @@ This can be:
                                             body-neutral)))
 
 (defun -nomis/ec-overlay-e/fn ()
-  (-nomis/ec-overlay-using-spec :operator "e/fn"
+  (-nomis/ec-overlay-using-spec :operator :e/fn
                                 :site     :neutral
                                 :apply-to :whole
                                 :shape    '(operator
@@ -600,7 +600,7 @@ This can be:
                                             body-neutral)))
 
 (defun -nomis/ec-overlay-dom-xxxx ()
-  (-nomis/ec-overlay-using-spec :operator "dom/xxxx"
+  (-nomis/ec-overlay-using-spec :operator :dom/xxxx
                                 :site     :client
                                 :apply-to :operator
                                 :shape    '(operator
@@ -626,20 +626,20 @@ This can be:
                                               body-inherit-site))))
 
 (defun -nomis/ec-overlay-electric-call ()
-  (-nomis/ec-overlay-using-spec :operator "electric-call"
+  (-nomis/ec-overlay-using-spec :operator :electric-call
                                 :site     :neutral
                                 :apply-to :whole
                                 :shape    '(operator
                                             electric-call-args)))
 
 (defun -nomis/ec-overlay-host-call ()
-  (-nomis/ec-debug "host-call")
+  (-nomis/ec-debug :host-call)
   ;; No need to do anything. This will already be colored (or not) by a parent
   ;; `e/client` or an `e/server`.
   )
 
 (defun -nomis/ec-overlay-other-bracketed-form ()
-  (-nomis/ec-debug "other-bracketed-form")
+  (-nomis/ec-debug :other-bracketed-form)
   (save-excursion
     (down-list)
     (while (-nomis/ec-can-forward-sexp?)
@@ -648,7 +648,7 @@ This can be:
       (forward-sexp))))
 
 (defun -nomis/ec-overlay-symbol-number-etc ()
-  (-nomis/ec-debug "SYMBOL-NUMBER-ETC")
+  (-nomis/ec-debug :symbol-number-etc)
   ;; Nothing to do. Special handling of symbols is done in
   ;; `-nomis/ec-overlay-specially-if-symbol`.
   )
@@ -702,9 +702,9 @@ This can be:
           ((looking-at -nomis/ec-e/client-form-regexp) (-nomis/ec-overlay-site :client))
           ((looking-at -nomis/ec-e/server-form-regexp) (-nomis/ec-overlay-site :server))
           ((looking-at -nomis/ec-dom/-form-regexp)     (-nomis/ec-overlay-dom-xxxx))
-          ((looking-at -nomis/ec-let-form-regexp)      (-nomis/ec-overlay-let "let"))
-          ((looking-at -nomis/ec-binding-form-regexp)  (-nomis/ec-overlay-let "binding"))
-          ((looking-at -nomis/ec-e/for-form-regexp)    (-nomis/ec-overlay-let "e/for"))
+          ((looking-at -nomis/ec-let-form-regexp)      (-nomis/ec-overlay-let :let))
+          ((looking-at -nomis/ec-binding-form-regexp)  (-nomis/ec-overlay-let :binding))
+          ((looking-at -nomis/ec-e/for-form-regexp)    (-nomis/ec-overlay-let :e/for))
           ((looking-at -nomis/ec-e/for-by-form-regexp) (-nomis/ec-overlay-for-by "for-by"))
           ((looking-at -nomis/ec-e/electric-call-regexp) (-nomis/ec-overlay-electric-call))
           ((looking-at -nomis/ec-e/host-call-regexp)   (-nomis/ec-overlay-host-call))
