@@ -445,18 +445,18 @@ This can be:
   (let* ((sym-or-nil (thing-at-point 'symbol t)))
     (if (not sym-or-nil)
         (-nomis/ec-with-site (;; avoid-stupid-indentation
-                              :tag (concat tag "-non-symbol")
+                              :tag (list tag :non-symbol)
                               :site inherited-site)
           (-nomis/ec-walk-and-overlay))
       (if (member sym-or-nil *-nomis/ec-bound-vars*)
           (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                :tag (concat tag "-symbol-bound")
+                                :tag (list tag :symbol-bound)
                                 :site :neutral
                                 :print-env? t)
             ;; Nothing more.
             )
         (-nomis/ec-with-site (;; avoid-stupid-indentation
-                              :tag (concat tag "-symbol-unbound")
+                              :tag (list tag :symbol-unbound)
                               :site inherited-site
                               :print-env? t)
           ;; Nothing more.
@@ -521,9 +521,8 @@ This can be:
                          (-nomis/ec-checking-movement-possible (operator
                                                                 (forward-sexp)))
                          (when (eq apply-to :operator)
-                           ;; TODO: Use `list` instead of `concat`.
                            (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                                 :tag (concat operator "-operator")
+                                                 :tag (list operator :operator)
                                                  :site site)
                              ;; Nothing more.
                              ))
