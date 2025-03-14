@@ -353,9 +353,7 @@ This can be:
   (save-excursion
     (condition-case _
         (funcall move-fn)
-      (error (-nomis/ec-message-no-disp
-              "nomis-electric-clojure: Failed to parse %s"
-              desc))))
+      (error (error "%s is missing or has an incorrect form" desc))))
   (funcall overlay-fn))
 
 (cl-defmacro -nomis/ec-checking-movement-possible ((desc move-form) &body body)
@@ -756,7 +754,10 @@ This can be:
         (while (and (< (point) end-2)
                     (-nomis/ec-can-forward-sexp?))
           (-nomis/ec-bof)
-          (-nomis/ec-walk-and-overlay)
+          (condition-case err
+              (-nomis/ec-walk-and-overlay)
+            (error (-nomis/ec-message-no-disp "nomis-electric-clojure: %s"
+                                              err)))
           (forward-sexp))
         (-nomis/ec-feedback-flash start end start-2 end-2)
         ;; (-nomis/ec-message-no-disp "*-nomis/ec-n-lumps-in-current-update* = %s"
