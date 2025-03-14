@@ -249,6 +249,15 @@ This can be:
                            (point))))
                (error nil))))))
 
+(defun nomis/ec-at-or-before-sexp-start? ()
+  ;; I can't get this to work with a regexp for whitespace followed by
+  ;; a bracketed-sexp-start. So:
+  (and (-nomis/ec-can-forward-sexp?)
+       (save-excursion
+         (forward-sexp)
+         (backward-sexp)
+         (-nomis/ec-looking-at-bracketed-sexp-start))))
+
 ;;;; ___________________________________________________________________________
 ;;;; Flashing of the re-overlayed region, to help with debugging.
 
@@ -349,7 +358,16 @@ This can be:
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay helpers ----
 
+(defun nomis/ec-down-list (desc)
+  "If we are at or before the start of a bracketed s-expression, move
+into that expression -- /ie/ move down one level of parentheses.
+Otherwise throw an exception."
+  (if (nomis/ec-at-or-before-sexp-start?)
+      (down-list)
+    (error "A bracketed s-expression is needed for %s" desc)))
+
 (defun -nomis/ec-checking-movement-possible* (desc move-fn overlay-fn)
+  ;; TODO: Change this to not take `overlay-fn`.
   (save-excursion
     (condition-case _
         (funcall move-fn)
@@ -391,7 +409,7 @@ This can be:
 (defun -nomis/ec-overlay-args-of-form ()
   (-nomis/ec-debug :args-of-form)
   (save-excursion
-    (down-list)
+    (nomis/ec-down-list :args-of-form)
     (forward-sexp)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
@@ -462,42 +480,37 @@ This can be:
 
 (defun -nomis/ec-overlay-e-fn-bindings (operator)
   (save-excursion
-    (-nomis/ec-checking-movement-possible (operator
-                                           (down-list))
-      (down-list)
-      (while (-nomis/ec-can-forward-sexp?)
-        (-nomis/ec-bof)
-        ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
-        ;; to use recursion instead of iteration.
-        (setq *-nomis/ec-bound-vars*
-              (append (-nomis/ec-binding-lhs->vars)
-                      *-nomis/ec-bound-vars*))
-        (forward-sexp))))
+    (nomis/ec-down-list (list operator
+                              :e/fn-bindings))
+    (while (-nomis/ec-can-forward-sexp?)
+      (-nomis/ec-bof)
+      ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
+      ;; to use recursion instead of iteration.
+      (setq *-nomis/ec-bound-vars*
+            (append (-nomis/ec-binding-lhs->vars)
+                    *-nomis/ec-bound-vars*))
+      (forward-sexp)))
   (forward-sexp))
 
 (defun -nomis-/ec-overlay-let-bindings (inherited-site operator)
   (save-excursion
-    (-nomis/ec-checking-movement-possible (operator
-                                           ;; TODO: Ensure that we have a list.
-                                           ;;       Otherwise can skip an item.
-                                           ;;       Check all uses of `down-list`.
-                                           (down-list))
-      (down-list)
-      (while (-nomis/ec-can-forward-sexp?)
-        ;; Note the LHS of the binding:
+    (nomis/ec-down-list (list operator
+                              :let-bindings))
+    (while (-nomis/ec-can-forward-sexp?)
+      ;; Note the LHS of the binding:
+      (-nomis/ec-bof)
+      ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
+      ;; to use recursion instead of iteration.
+      (setq *-nomis/ec-bound-vars*
+            (append (-nomis/ec-binding-lhs->vars)
+                    *-nomis/ec-bound-vars*))
+      (forward-sexp)
+      ;; Walk the RHS of the binding, if there is one:
+      (when (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
-        ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
-        ;; to use recursion instead of iteration.
-        (setq *-nomis/ec-bound-vars*
-              (append (-nomis/ec-binding-lhs->vars)
-                      *-nomis/ec-bound-vars*))
-        (forward-sexp)
-        ;; Walk the RHS of the binding, if there is one:
-        (when (-nomis/ec-can-forward-sexp?)
-          (-nomis/ec-bof)
-          (-nomis/ec-overlay-specially-if-symbol "binding-rhs"
-                                                 inherited-site)
-          (forward-sexp)))))
+        (-nomis/ec-overlay-specially-if-symbol "binding-rhs"
+                                               inherited-site)
+        (forward-sexp))))
   (forward-sexp))
 
 (cl-defun -nomis/ec-overlay-using-spec (&key apply-to
@@ -571,7 +584,7 @@ This can be:
                                                                   inherited-site)
                            (forward-sexp))))))
                   (do-it ()
-                    (down-list)
+                    (nomis/ec-down-list operator)
                     (continue shape)))
         (if (eq apply-to :whole)
             (-nomis/ec-with-site (;; avoid-stupid-indentation
@@ -639,7 +652,7 @@ This can be:
 (defun -nomis/ec-overlay-other-bracketed-form ()
   (-nomis/ec-debug :other-bracketed-form)
   (save-excursion
-    (down-list)
+    (nomis/ec-down-list :other-bracketed-form)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
       (-nomis/ec-walk-and-overlay)
