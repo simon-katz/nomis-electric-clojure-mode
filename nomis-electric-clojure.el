@@ -40,6 +40,9 @@
 
 ;;;; ___________________________________________________________________________
 
+;;;; TODO: If we are using `parseclj`, how to make sure it is available to users
+;;;;       of this library?
+
 ;;;; TODO: Handle destructuring in `-nomis/ec-binding-lhs->vars`.
 
 ;;;; TODO: Handle all syntax in `e/defn` -- eg doc strings, attr map,
@@ -47,6 +50,9 @@
 
 ;;;; TODO: Handle all syntax in `e/fn` -- eg function name, same stuff as
 ;;;;       for `e/defn`.
+;;;; ___________________________________________________________________________
+
+(require 'parseclj) ; TODO: How to make sure this is available to users of this library?
 
 ;;;; ___________________________________________________________________________
 ;;;; Customizable things
@@ -494,12 +500,55 @@ Otherwise throw an exception."
           (-nomis/ec-walk-and-overlay)
           (forward-sexp))))))
 
-(defun -nomis/ec-binding-lhs->vars ()
+(defun -nomis/ec-binding-lhs->vars-v1 ()
   (let* ((sym-or-nil (thing-at-point 'symbol t)))
     (unless sym-or-nil
-      (-nomis/ec-message-no-disp "**** TODO: Unhandled binding LHS %s"
-                                 (thing-at-point 'sexp t)))
+      (-nomis/ec-message-no-disp
+       "nomis-electric-clojure-mode: INFO: Unhandled binding LHS %s"
+       (thing-at-point 'sexp t)))
     (list sym-or-nil)))
+
+(defun -nomis/ec-binding-lhs->vars ()
+  (cl-case 2
+    (1 (-nomis/ec-binding-lhs->vars-v1))
+    (2
+     ;; TODO: WIP.
+     (cl-labels ((get-prop (ast prop)
+                   (cdr (assoc prop ast)))
+                 (get-type (ast) (get-prop ast :node-type))
+                 (get-childen (ast) (get-prop ast :children))
+                 (get-form (ast) (get-prop ast :form))
+                 (get-value (ast) (get-prop ast :value)) ; maybe won't use this
+                 (ast->vars (ast)
+                   (let* ((sofar '()))
+                     (cl-labels ((helper (ast)
+                                   ;; Possible problem with `cl-case` -- see
+                                   ;; https://github.com/clojure-emacs/parseclj/pull/34
+                                   (cond ((eq (get-type ast) :symbol)
+                                          (push (get-form ast) sofar))
+                                         ((member (get-type ast) '(:root
+                                                                   :vector))
+                                          (mapc #'helper (get-childen ast)))
+                                         ((eq (get-type ast) :map)
+                                          (let* ((found-keys? nil))
+                                            (cl-loop
+                                             for (k v) on (get-childen ast) by #'cddr
+                                             when (eq (get-value k) :keys)
+                                             do (progn
+                                                  (setq found-keys? t)
+                                                  (mapc #'helper (get-childen v))))
+                                            (unless found-keys?
+                                              (error "Unhandled binding, map without :keys"
+                                                     (get-type ast)))))
+                                         (t
+                                          (error "Unhandled binding, of type %s"
+                                                 (get-type ast))))))
+                       (helper ast))
+                     ;; (-nomis/ec-message-no-disp "sofar = %s"
+                     ;;                            (cl-format nil "~s" sofar))
+                     sofar)))
+       (let* ((ast (parseclj-parse-clojure (thing-at-point 'sexp t))))
+         (ast->vars ast))))))
 
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay ----
@@ -705,6 +754,10 @@ Otherwise throw an exception."
   (-nomis/ec-debug :host-call)
   ;; No need to do anything. This will already be colored (or not) by a parent
   ;; `e/client` or an `e/server`.
+  ;; TODO: Not true! If there are Electric calls nested inside, we need to
+  ;;       not color Electric values there.
+  ;;       Maybe don't need to color Electric values that are args im a
+  ;;       host call, either (which would be what happens naturally).
   )
 
 (defun -nomis/ec-overlay-other-bracketed-form ()

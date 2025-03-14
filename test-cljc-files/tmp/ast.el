@@ -1,0 +1,57 @@
+((:node-type . :root)
+ (:position . 1)
+ (:children ((:node-type . :symbol)
+             (:position . 1)
+             (:form . "x")
+             (:value . x))))
+
+((:node-type . :root)
+ (:position . 1)
+ (:children ((:node-type . :vector)
+             (:position . 1)
+             (:children ((:node-type . :symbol)
+                         (:position . 2)
+                         (:form . "y1")
+                         (:value . y1))
+                        ((:node-type . :symbol)
+                         (:position . 5)
+                         (:form . "y2")
+                         (:value . y2))))))
+
+
+((:node-type . :root) (:position . 1)
+ (:children
+  ((:node-type . :vector)
+   (:position . 1)
+   (:children
+    ((:node-type . :symbol)
+     (:position . 2)
+     (:form . "x")
+     (:value . x))
+    ((:node-type . :vector)
+     (:position . 4)
+     (:children
+      ((:node-type . :symbol) (:position . 5) (:form . "y1") (:value . y1))
+      ((:node-type . :symbol) (:position . 8) (:form . "y2") (:value . y2))))
+    ((:node-type . :map)
+     (:position . 12)
+     (:children
+
+      ((:node-type . :keyword)
+       (:position . 13)
+       (:form . ":keys")
+       (:value . :keys))
+      ((:node-type . :vector)
+       (:position . 19)
+       (:children
+        ((:node-type . :symbol) (:position . 20) (:form . "z1") (:value . z1))
+        ((:node-type . :symbol) (:position . 23) (:form . "z2") (:value . z2))))
+
+      ((:node-type . :keyword)
+       (:position . 51)
+       (:form . ":another-key")
+       (:value . :another-key))
+      ((:node-type . :number)
+       (:position . 64)
+       (:form . "123")
+       (:value . 123))))))))
