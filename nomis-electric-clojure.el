@@ -369,6 +369,7 @@ This can be:
   (backward-sexp))
 
 (defun -nomis/ec-with-site* (tag site end print-env? f)
+  (cl-assert tag)
   (cl-assert site)
   (-nomis/ec-debug tag nil print-env?)
   (let* ((start (point))
@@ -384,8 +385,7 @@ This can be:
         (-nomis/ec-overlay-lump tag site *-nomis/ec-level* start end)
         (funcall f)))))
 
-(cl-defmacro -nomis/ec-with-site ((;; TODO: Make all of these keyword args
-                                   tag site &optional end print-env?)
+(cl-defmacro -nomis/ec-with-site ((&key tag site end print-env?)
                                   &body body)
   (declare (indent 1))
   `(-nomis/ec-with-site* ,tag ,site ,end ,print-env? (lambda () ,@body)))
@@ -403,7 +403,9 @@ This can be:
 
 (defun -nomis/ec-overlay-site (site)
   (save-excursion
-    (-nomis/ec-with-site ("site" site)
+    (-nomis/ec-with-site (;; avoid-stupid-indentation
+                          :tag "site"
+                          :site site)
       (-nomis/ec-overlay-args-of-form))))
 
 (defun -nomis/ec-overlay-body (site)
@@ -412,14 +414,13 @@ This can be:
     (when (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
       ;; Whole body:
-      (-nomis/ec-with-site ("body"
-                            site
-                            (let ((body-end
-                                   (save-excursion (backward-up-list)
-                                                   (forward-sexp)
-                                                   (backward-char)
-                                                   (point))))
-                              body-end))
+      (-nomis/ec-with-site (;; avoid-stupid-indentation
+                            :tag "body"
+                            :site site
+                            :end (save-excursion (backward-up-list)
+                                                 (forward-sexp)
+                                                 (backward-char)
+                                                 (point)))
         ;; Each body form:
         (while (-nomis/ec-can-forward-sexp?)
           (-nomis/ec-bof)
@@ -443,20 +444,21 @@ This can be:
 (defun -nomis/ec-overlay-specially-if-symbol (tag inherited-site)
   (let* ((sym-or-nil (thing-at-point 'symbol t)))
     (if (not sym-or-nil)
-        (-nomis/ec-with-site ((concat tag "-non-symbol")
-                              inherited-site)
+        (-nomis/ec-with-site (;; avoid-stupid-indentation
+                              :tag (concat tag "-non-symbol")
+                              :site inherited-site)
           (-nomis/ec-walk-and-overlay))
       (if (member sym-or-nil *-nomis/ec-bound-vars*)
-          (-nomis/ec-with-site ((concat tag "-symbol-bound")
-                                :neutral
-                                nil
-                                t)
+          (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                :tag (concat tag "-symbol-bound")
+                                :site :neutral
+                                :print-env? t)
             ;; Nothing more.
             )
-        (-nomis/ec-with-site ((concat tag "-symbol-unbound")
-                              inherited-site
-                              nil
-                              t)
+        (-nomis/ec-with-site (;; avoid-stupid-indentation
+                              :tag (concat tag "-symbol-unbound")
+                              :site inherited-site
+                              :print-env? t)
           ;; Nothing more.
           )))))
 
@@ -520,8 +522,9 @@ This can be:
                                                                 (forward-sexp)))
                          (when (eq apply-to :operator)
                            ;; TODO: Use `list` instead of `concat`.
-                           (-nomis/ec-with-site ((concat operator "-operator")
-                                                 site)
+                           (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                                 :tag (concat operator "-operator")
+                                                 :site site)
                              ;; Nothing more.
                              ))
                          (forward-sexp)
@@ -538,8 +541,9 @@ This can be:
                         (key-function
                          (-nomis/ec-checking-movement-possible (operator
                                                                 (forward-sexp))
-                           (-nomis/ec-with-site ("key-function"
-                                                 inherited-site)
+                           (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                                 :tag "key-function"
+                                                 :site inherited-site)
                              (-nomis/ec-walk-and-overlay))
                            (forward-sexp)
                            (continue (rest remaining-shape))))
@@ -573,8 +577,9 @@ This can be:
                     (down-list)
                     (continue shape)))
         (if (eq apply-to :whole)
-            (-nomis/ec-with-site (operator
-                                  site)
+            (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                  :tag operator
+                                  :site site)
               (do-it))
           (do-it))))))
 
