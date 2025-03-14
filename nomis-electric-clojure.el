@@ -345,6 +345,7 @@ This can be:
 ;;;; ---- Parse and overlay helpers ----
 
 (defun -nomis/ec-checking-movement* (desc move-fn overlay-fn)
+  ;; TODO: Maybe change `-nomis/ec-checking-movement*` to do `save-excursion`.
   (condition-case _
       (funcall move-fn)
     (error (-nomis/ec-message-no-disp
