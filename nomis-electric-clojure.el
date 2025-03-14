@@ -366,19 +366,11 @@ Otherwise throw an exception."
       (down-list)
     (error "A bracketed s-expression is needed for %s" desc)))
 
-(defun -nomis/ec-checking-movement-possible* (desc move-fn overlay-fn)
-  ;; TODO: Change this to not take `overlay-fn`.
+(defun -nomis/ec-check-movement-possible (desc move-fn)
   (save-excursion
     (condition-case _
         (funcall move-fn)
-      (error (error "%s is missing or has an incorrect form" desc))))
-  (funcall overlay-fn))
-
-(cl-defmacro -nomis/ec-checking-movement-possible ((desc move-form) &body body)
-  (declare (indent 1))
-  `(-nomis/ec-checking-movement-possible* ,desc
-                                          (lambda () ,move-form)
-                                          (lambda () ,@body)))
+      (error (error "%s is missing or has an incorrect form" desc)))))
 
 (defun -nomis/ec-bof ()
   (forward-sexp)
@@ -529,8 +521,9 @@ Otherwise throw an exception."
                       (cl-ecase (first remaining-shape)
 
                         (operator
-                         (-nomis/ec-checking-movement-possible (operator
-                                                                (forward-sexp)))
+                         (-nomis/ec-check-movement-possible operator
+                                                            (lambda ()
+                                                              (forward-sexp)))
                          (when (eq apply-to :operator)
                            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                                  :tag (list operator :operator)
@@ -541,22 +534,24 @@ Otherwise throw an exception."
                          (continue (rest remaining-shape)))
 
                         (name
-                         (-nomis/ec-checking-movement-possible ((list
-                                                                 operator
-                                                                 'name)
-                                                                (forward-sexp)))
+                         (-nomis/ec-check-movement-possible (list
+                                                             operator
+                                                             'name)
+                                                            (lambda ()
+                                                              (forward-sexp)))
                          (forward-sexp)
                          (continue (rest remaining-shape)))
 
                         (key-function
-                         (-nomis/ec-checking-movement-possible (operator
-                                                                (forward-sexp))
-                           (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                                 :tag :key-function
-                                                 :site inherited-site)
-                             (-nomis/ec-walk-and-overlay))
-                           (forward-sexp)
-                           (continue (rest remaining-shape))))
+                         (-nomis/ec-check-movement-possible operator
+                                                            (lambda ()
+                                                              (forward-sexp)))
+                         (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                               :tag :key-function
+                                               :site inherited-site)
+                           (-nomis/ec-walk-and-overlay))
+                         (forward-sexp)
+                         (continue (rest remaining-shape)))
 
                         (fn-bindings
                          (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
