@@ -309,35 +309,37 @@ This can be:
 
 (defun -nomis/ec-overlay-lump (tag site nesting-level start end)
   (-nomis/ec-debug "OVERLAY-LUMP")
-  (cl-incf *-nomis/ec-n-lumps-in-current-update*)
-  (let* ((face (cl-ecase site
-                 (:client  '-nomis/ec-client-face)
-                 (:server  '-nomis/ec-server-face)
-                 (:neutral '-nomis/ec-neutral-face))))
-    (if nomis/ec-color-initial-whitespace?
-        (let* ((start
-                ;; When a form has only whitespace between its start and the
-                ;; beginning of the line, color from the start of the line.
-                (if (and (not (bolp))
-                         (= (point)
-                            (save-excursion
-                              (beginning-of-line)
-                              (forward-whitespace 1))))
-                    (save-excursion
-                      (beginning-of-line)
-                      (point))
-                  start)))
-          (-nomis/ec-make-overlay tag nesting-level face start end))
-      (save-excursion
-        (while (< (point) end)
-          (let* ((start-2 (point))
-                 (end-2 (min end
-                             (progn (end-of-line) (point)))))
-            (unless (= start-2 end-2) ; don't create overlays of zero length
-              (-nomis/ec-make-overlay tag nesting-level face start-2 end-2))
-            (unless (eobp) (forward-char))
-            (when (bolp)
-              (back-to-indentation))))))))
+  (if (= start end)
+      (-nomis/ec-debug "EMPTY-LUMP")
+    (cl-incf *-nomis/ec-n-lumps-in-current-update*)
+    (let* ((face (cl-ecase site
+                   (:client  '-nomis/ec-client-face)
+                   (:server  '-nomis/ec-server-face)
+                   (:neutral '-nomis/ec-neutral-face))))
+      (if nomis/ec-color-initial-whitespace?
+          (let* ((start
+                  ;; When a form has only whitespace between its start and the
+                  ;; beginning of the line, color from the start of the line.
+                  (if (and (not (bolp))
+                           (= (point)
+                              (save-excursion
+                                (beginning-of-line)
+                                (forward-whitespace 1))))
+                      (save-excursion
+                        (beginning-of-line)
+                        (point))
+                    start)))
+            (-nomis/ec-make-overlay tag nesting-level face start end))
+        (save-excursion
+          (while (< (point) end)
+            (let* ((start-2 (point))
+                   (end-2 (min end
+                               (progn (end-of-line) (point)))))
+              (unless (= start-2 end-2) ; don't create overlays of zero length
+                (-nomis/ec-make-overlay tag nesting-level face start-2 end-2))
+              (unless (eobp) (forward-char))
+              (when (bolp)
+                (back-to-indentation)))))))))
 
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay helpers ----
