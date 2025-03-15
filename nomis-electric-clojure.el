@@ -654,8 +654,7 @@ Otherwise throw an exception."
                                                :tag (first remaining-shape)
                                                :site :unparsable)
                            ;; Nothing more.
-                           ))
-                        )))
+                           )))))
                   (do-it ()
                     (nomis/ec-down-list operator)
                     (continue shape)))
