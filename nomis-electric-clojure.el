@@ -724,12 +724,6 @@ Otherwise throw an exception."
                                 :shape    '(operator
                                             electric-call-args)))
 
-(defun -nomis/ec-overlay-host-call ()
-  (-nomis/ec-debug :host-call)
-  ;; No need to do anything. This will already be colored (or not) by a parent
-  ;; `e/client` or an `e/server`.
-  )
-
 (defun -nomis/ec-overlay-other-bracketed-form ()
   (-nomis/ec-debug :other-bracketed-form)
   (save-excursion
@@ -799,7 +793,7 @@ Otherwise throw an exception."
           ((looking-at -nomis/ec-e/for-form-regexp)    (-nomis/ec-overlay-let :e/for))
           ((looking-at -nomis/ec-e/for-by-form-regexp) (-nomis/ec-overlay-for-by "for-by"))
           ((looking-at -nomis/ec-e/electric-call-regexp) (-nomis/ec-overlay-electric-call))
-          ((looking-at -nomis/ec-e/host-call-regexp)   (-nomis/ec-overlay-host-call))
+          ((looking-at -nomis/ec-e/host-call-regexp)   (-nomis/ec-overlay-other-bracketed-form))
           ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))
           (t (-nomis/ec-overlay-symbol-number-etc))))))))
 
