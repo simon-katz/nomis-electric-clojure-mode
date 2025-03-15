@@ -474,25 +474,6 @@ Otherwise throw an exception."
                           :site site)
       (-nomis/ec-overlay-args-of-form))))
 
-(defun -nomis/ec-overlay-using-spec/body (site) ; TODO: Move
-  (-nomis/ec-debug :body)
-  (save-excursion
-    (when (-nomis/ec-can-forward-sexp?)
-      (-nomis/ec-bof)
-      ;; Whole body:
-      (-nomis/ec-with-site (;; avoid-stupid-indentation
-                            :tag :body
-                            :site site
-                            :end (save-excursion (backward-up-list)
-                                                 (forward-sexp)
-                                                 (backward-char)
-                                                 (point)))
-        ;; Each body form:
-        (while (-nomis/ec-can-forward-sexp?)
-          (-nomis/ec-bof)
-          (-nomis/ec-walk-and-overlay)
-          (forward-sexp))))))
-
 (defun -nomis/ec-binding-lhs->vars ()
   (let* ((sym-or-nil (thing-at-point 'symbol t)))
     (unless sym-or-nil
@@ -520,39 +501,6 @@ Otherwise throw an exception."
                               :print-env? t)
           ;; Nothing more.
           )))))
-
-(defun -nomis/ec-overlay-using-spec/e-fn-bindings (operator) ; TODO: Move.
-  (save-excursion
-    (nomis/ec-down-list (list operator
-                              :e/fn-bindings))
-    (while (-nomis/ec-can-forward-sexp?)
-      (-nomis/ec-bof)
-      ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
-      ;; to use recursion instead of iteration.
-      (setq *-nomis/ec-bound-vars*
-            (append (-nomis/ec-binding-lhs->vars)
-                    *-nomis/ec-bound-vars*))
-      (forward-sexp))))
-
-(defun -nomis-/ec-overlay-using-spec/let-bindings (inherited-site operator) ; TODO: Move.
-  (save-excursion
-    (nomis/ec-down-list (list operator
-                              :let-bindings))
-    (while (-nomis/ec-can-forward-sexp?)
-      ;; Note the LHS of the binding:
-      (-nomis/ec-bof)
-      ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
-      ;; to use recursion instead of iteration.
-      (setq *-nomis/ec-bound-vars*
-            (append (-nomis/ec-binding-lhs->vars)
-                    *-nomis/ec-bound-vars*))
-      (forward-sexp)
-      ;; Walk the RHS of the binding, if there is one:
-      (when (-nomis/ec-can-forward-sexp?)
-        (-nomis/ec-bof)
-        (-nomis/ec-overlay-specially-if-symbol "binding-rhs"
-                                               inherited-site)
-        (forward-sexp)))))
 
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay ----
@@ -582,6 +530,58 @@ Otherwise throw an exception."
                         :tag :key-function
                         :site inherited-site)
     (-nomis/ec-walk-and-overlay)))
+
+(defun -nomis/ec-overlay-using-spec/e-fn-bindings (operator)
+  (save-excursion
+    (nomis/ec-down-list (list operator
+                              :e/fn-bindings))
+    (while (-nomis/ec-can-forward-sexp?)
+      (-nomis/ec-bof)
+      ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
+      ;; to use recursion instead of iteration.
+      (setq *-nomis/ec-bound-vars*
+            (append (-nomis/ec-binding-lhs->vars)
+                    *-nomis/ec-bound-vars*))
+      (forward-sexp))))
+
+(defun -nomis-/ec-overlay-using-spec/let-bindings (inherited-site operator)
+  (save-excursion
+    (nomis/ec-down-list (list operator
+                              :let-bindings))
+    (while (-nomis/ec-can-forward-sexp?)
+      ;; Note the LHS of the binding:
+      (-nomis/ec-bof)
+      ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
+      ;; to use recursion instead of iteration.
+      (setq *-nomis/ec-bound-vars*
+            (append (-nomis/ec-binding-lhs->vars)
+                    *-nomis/ec-bound-vars*))
+      (forward-sexp)
+      ;; Walk the RHS of the binding, if there is one:
+      (when (-nomis/ec-can-forward-sexp?)
+        (-nomis/ec-bof)
+        (-nomis/ec-overlay-specially-if-symbol "binding-rhs"
+                                               inherited-site)
+        (forward-sexp)))))
+
+(defun -nomis/ec-overlay-using-spec/body (site)
+  (-nomis/ec-debug :body)
+  (save-excursion
+    (when (-nomis/ec-can-forward-sexp?)
+      (-nomis/ec-bof)
+      ;; Whole body:
+      (-nomis/ec-with-site (;; avoid-stupid-indentation
+                            :tag :body
+                            :site site
+                            :end (save-excursion (backward-up-list)
+                                                 (forward-sexp)
+                                                 (backward-char)
+                                                 (point)))
+        ;; Each body form:
+        (while (-nomis/ec-can-forward-sexp?)
+          (-nomis/ec-bof)
+          (-nomis/ec-walk-and-overlay)
+          (forward-sexp))))))
 
 (defun -nomis/ec-overlay-using-spec/electric-call-args (inherited-site)
   (while (-nomis/ec-can-forward-sexp?)
