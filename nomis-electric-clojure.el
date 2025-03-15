@@ -39,6 +39,16 @@
 ;;;; Permalink: https://gitlab.com/xificurC/hf-electric.el/-/blob/5e6e3d69e42a64869f1eecd8b804cf4b679f9501/hf-electric.el
 
 ;;;; ___________________________________________________________________________
+
+;;;; TODO: Handle destructuring in `-nomis/ec-binding-lhs->vars`.
+
+;;;; TODO: Handle all syntax in `e/defn` -- eg doc strings, attr map,
+;;;;       multiple arities
+
+;;;; TODO: Handle all syntax in `e/fn` -- eg function name, same stuff as
+;;;;       for `e/defn`.
+
+;;;; ___________________________________________________________________________
 ;;;; Customizable things
 
 (defcustom nomis/ec-auto-enable? t
@@ -434,10 +444,6 @@ Otherwise throw an exception."
           (-nomis/ec-bof)
           (-nomis/ec-walk-and-overlay)
           (forward-sexp))))))
-
-;; TODO: Handle destructuring in `-nomis/ec-binding-lhs->vars`.
-;; TODO: Handle all syntax in `e/defn` -- eg doc strings, attr map, multiple arities
-;; TODO: Handle all syntax in `e/fn` -- eg function name, same stuff as for `e/defn`.
 
 (defun -nomis/ec-binding-lhs->vars ()
   (let* ((sym-or-nil (thing-at-point 'symbol t)))
