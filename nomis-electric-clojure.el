@@ -44,14 +44,14 @@
 
 ;;;; TODO: Handle destructuring in `-nomis/ec-binding-lhs->vars`.
 
+;;;; TODO: Make parsing more data-driven -- so that it will be trivial to
+;;;;       make it extensible.
+
 ;;;; TODO: Handle all syntax in `e/defn` -- eg doc strings, attr map,
 ;;;;       multiple arities
 
 ;;;; TODO: Handle all syntax in `e/fn` -- eg function name, same stuff as
 ;;;;       for `e/defn`.
-
-;;;; TODO: Make parsing more data-driven -- so that it will be trivial to
-;;;;       make it extensible.
 
 ;;;; ___________________________________________________________________________
 ;;;; Customizable things
