@@ -768,7 +768,7 @@ Otherwise throw an exception."
 (defconst -nomis/ec-e/electric-call-regexp    (-nomis/ec-operator-call-regexp
                                                -nomis/ec-electric-function-name-regexp))
 
-(defconst -nomis/ec-e/host-call-regexp
+(defconst -nomis/ec-e/hosted-call-regexp
   ;; We rely on `-nomis/ec-operator-call-regexp` being tried first.
   (-nomis/ec-operator-call-regexp -nomis/ec-host-function-name-regexp))
 
@@ -793,7 +793,7 @@ Otherwise throw an exception."
           ((looking-at -nomis/ec-e/for-form-regexp)    (-nomis/ec-overlay-let :e/for))
           ((looking-at -nomis/ec-e/for-by-form-regexp) (-nomis/ec-overlay-for-by "for-by"))
           ((looking-at -nomis/ec-e/electric-call-regexp) (-nomis/ec-overlay-electric-call))
-          ((looking-at -nomis/ec-e/host-call-regexp)   (-nomis/ec-overlay-other-bracketed-form))
+          ((looking-at -nomis/ec-e/hosted-call-regexp) (-nomis/ec-overlay-other-bracketed-form))
           ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))
           (t (-nomis/ec-overlay-symbol-number-etc))))))))
 
