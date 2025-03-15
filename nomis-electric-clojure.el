@@ -769,12 +769,12 @@ Otherwise throw an exception."
 (defconst -nomis/ec-electric-lambda-call-regexp
   "(e/fn")
 
-(defconst -nomis/ec-e/electric-call-regexp (concat
-                                            (-nomis/ec-operator-call-regexp
-                                             -nomis/ec-electric-function-name-regexp)
-                                            "\\|"
-                                            (-nomis/ec-operator-call-regexp
-                                             -nomis/ec-electric-lambda-call-regexp)))
+(defconst -nomis/ec-electric-call-regexp (concat
+                                          (-nomis/ec-operator-call-regexp
+                                           -nomis/ec-electric-function-name-regexp)
+                                          "\\|"
+                                          (-nomis/ec-operator-call-regexp
+                                           -nomis/ec-electric-lambda-call-regexp)))
 
 (defun -nomis/ec-walk-and-overlay ()
   (save-excursion
@@ -796,7 +796,7 @@ Otherwise throw an exception."
           ((looking-at -nomis/ec-binding-form-regexp)  (-nomis/ec-overlay-let :binding))
           ((looking-at -nomis/ec-e/for-form-regexp)    (-nomis/ec-overlay-let :e/for))
           ((looking-at -nomis/ec-e/for-by-form-regexp) (-nomis/ec-overlay-for-by "for-by"))
-          ((looking-at -nomis/ec-e/electric-call-regexp) (-nomis/ec-overlay-electric-call))
+          ((looking-at -nomis/ec-electric-call-regexp) (-nomis/ec-overlay-electric-call))
           ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))
           (t (-nomis/ec-overlay-symbol-number-etc))))))))
 
