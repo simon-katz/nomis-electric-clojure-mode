@@ -97,6 +97,12 @@ Electric Clojure client and server code."
     (t ,(list :background "#ffc5c5")))
   "Face for Electric Clojure server code when using background color.")
 
+(defface nomis/ec-unparsable-face/using-background
+  `((((background dark)) ,(list :background "Orange"))
+    (t ,(list :background "Orange")))
+  "Face for unparsable Electric Clojure code when using background color.
+This includes both bad syntax and parts of Clojure that we don't know about.")
+
 (defface nomis/ec-client-face/using-underline
   `((((background dark)) ,(list :underline (list :color "Chartreuse"
                                                  :style 'wave)))
@@ -111,6 +117,18 @@ Electric Clojure client and server code."
                                :style 'wave))))
   "Face for Electric Clojure server code when using underline.")
 
+(defface nomis/ec-unparsable-face/using-underline
+  `((((background dark)) ,(list :underline (list :color "Orange"
+                                                 :style 'wave)))
+    (t ,(list :underline (list :color "Orange"
+                               :style 'wave))))
+  "Face for unparsable Electric Clojure code when using underline.
+This includes both bad syntax and parts of Clojure that we don't know about.")
+
+;;;; ___________________________________________________________________________
+
+(define-error '-nomis/ec-parse-error "nomis-electric-clojure-mode: Cannot parse")
+
 ;;;; ___________________________________________________________________________
 
 (defun -nomis/ec-compute-client-face ()
@@ -123,6 +141,11 @@ Electric Clojure client and server code."
       'nomis/ec-server-face/using-underline
     'nomis/ec-server-face/using-background))
 
+(defun -nomis/ec-compute-unparsable-face ()
+  (if nomis/ec-use-underline?
+      'nomis/ec-unparsable-face/using-underline
+    'nomis/ec-unparsable-face/using-background))
+
 (defface -nomis/ec-client-face
   `((t ,(list :inherit (-nomis/ec-compute-client-face)))) ; set by `-nomis/ec-update-faces`
   "Face for Electric Clojure client code.")
@@ -131,13 +154,20 @@ Electric Clojure client and server code."
   `((t ,(list :inherit (-nomis/ec-compute-server-face)))) ; set by `-nomis/ec-update-faces`
   "Face for Electric Clojure server code.")
 
+(defface -nomis/ec-unparsable-face
+  `((t ,(list :inherit (-nomis/ec-compute-unparsable-face)))) ; set by `-nomis/ec-update-faces`
+  "Face for unparsable Electric Clojure code.")
+
 (defun -nomis/ec-update-faces ()
   (set-face-attribute '-nomis/ec-client-face nil
                       :inherit
                       (-nomis/ec-compute-client-face))
   (set-face-attribute '-nomis/ec-server-face nil
                       :inherit
-                      (-nomis/ec-compute-server-face)))
+                      (-nomis/ec-compute-server-face))
+  (set-face-attribute '-nomis/ec-unparsable-face nil
+                      :inherit
+                      (-nomis/ec-compute-unparsable-face)))
 
 (defface -nomis/ec-neutral-face
   `((t ,(list :background "unspecified-bg"
@@ -337,9 +367,10 @@ This can be:
       (-nomis/ec-debug :empty-lump)
     (cl-incf *-nomis/ec-n-lumps-in-current-update*)
     (let* ((face (cl-ecase site
-                   (:client  '-nomis/ec-client-face)
-                   (:server  '-nomis/ec-server-face)
-                   (:neutral '-nomis/ec-neutral-face))))
+                   (:client     '-nomis/ec-client-face)
+                   (:server     '-nomis/ec-server-face)
+                   (:neutral    '-nomis/ec-neutral-face)
+                   (:unparsable '-nomis/ec-unparsable-face))))
       (if nomis/ec-color-initial-whitespace?
           (let* ((start
                   ;; When a form has only whitespace between its start and the
