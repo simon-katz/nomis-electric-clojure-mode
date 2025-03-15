@@ -40,6 +40,8 @@
 
 ;;;; ___________________________________________________________________________
 
+;;;; TODO: Handle lambdas -- both host and Electric -- in the function position.
+
 ;;;; TODO: Handle destructuring in `-nomis/ec-binding-lhs->vars`.
 
 ;;;; TODO: Handle all syntax in `e/defn` -- eg doc strings, attr map,
