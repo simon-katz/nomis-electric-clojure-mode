@@ -40,8 +40,6 @@
 
 ;;;; ___________________________________________________________________________
 
-;;;; TODO: Handle lambdas -- both host and Electric -- in the function position.
-
 ;;;; TODO: Handle destructuring in `-nomis/ec-binding-lhs->vars`.
 
 ;;;; TODO: Make parsing more data-driven -- so that it will be trivial to
@@ -519,7 +517,10 @@ Otherwise throw an exception."
                           :tag (list operator :operator)
                           :site site)
       ;; Nothing more.
-      )))
+      ))
+  ;; Operators don't have to be symbols; they can be lambdas. So:
+  (unless (thing-at-point 'symbol t)
+    (-nomis/ec-walk-and-overlay)))
 
 (defun -nomis/ec-overlay-using-spec/name (operator)
   (-nomis/ec-check-movement-possible (list operator 'name)
@@ -765,12 +766,15 @@ Otherwise throw an exception."
   (concat "[A-Z]"
           -nomis/ec-host-function-name-regexp))
 
-(defconst -nomis/ec-e/electric-call-regexp    (-nomis/ec-operator-call-regexp
-                                               -nomis/ec-electric-function-name-regexp))
+(defconst -nomis/ec-electric-lambda-call-regexp
+  "(e/fn")
 
-(defconst -nomis/ec-e/hosted-call-regexp
-  ;; We rely on `-nomis/ec-operator-call-regexp` being tried first.
-  (-nomis/ec-operator-call-regexp -nomis/ec-host-function-name-regexp))
+(defconst -nomis/ec-e/electric-call-regexp (concat
+                                            (-nomis/ec-operator-call-regexp
+                                             -nomis/ec-electric-function-name-regexp)
+                                            "\\|"
+                                            (-nomis/ec-operator-call-regexp
+                                             -nomis/ec-electric-lambda-call-regexp)))
 
 (defun -nomis/ec-walk-and-overlay ()
   (save-excursion
@@ -793,7 +797,6 @@ Otherwise throw an exception."
           ((looking-at -nomis/ec-e/for-form-regexp)    (-nomis/ec-overlay-let :e/for))
           ((looking-at -nomis/ec-e/for-by-form-regexp) (-nomis/ec-overlay-for-by "for-by"))
           ((looking-at -nomis/ec-e/electric-call-regexp) (-nomis/ec-overlay-electric-call))
-          ((looking-at -nomis/ec-e/hosted-call-regexp) (-nomis/ec-overlay-other-bracketed-form))
           ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))
           (t (-nomis/ec-overlay-symbol-number-etc))))))))
 
