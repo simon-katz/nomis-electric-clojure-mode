@@ -131,6 +131,14 @@ Electric Clojure client and server code."
   `((t ,(list :inherit (-nomis/ec-compute-server-face)))) ; set by `-nomis/ec-update-faces`
   "Face for Electric Clojure server code.")
 
+(defun -nomis/ec-update-faces ()
+  (set-face-attribute '-nomis/ec-client-face nil
+                      :inherit
+                      (-nomis/ec-compute-client-face))
+  (set-face-attribute '-nomis/ec-server-face nil
+                      :inherit
+                      (-nomis/ec-compute-server-face)))
+
 (defface -nomis/ec-neutral-face
   `((t ,(list :background "unspecified-bg"
               :underline nil)))
@@ -144,14 +152,6 @@ This can be:
 - code that is neither client nor server; for example:
   - in Electric v3:
     - symbols that are being bound; /eg/ the LHS of `let` bindings.")
-
-(defun -nomis/ec-update-faces ()
-  (set-face-attribute '-nomis/ec-client-face nil
-                      :inherit
-                      (-nomis/ec-compute-client-face))
-  (set-face-attribute '-nomis/ec-server-face nil
-                      :inherit
-                      (-nomis/ec-compute-server-face)))
 
 ;;;; ___________________________________________________________________________
 
