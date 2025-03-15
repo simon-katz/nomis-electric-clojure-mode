@@ -598,66 +598,70 @@ Otherwise throw an exception."
   (cl-assert (listp shape))
   (save-excursion
     (let* ((inherited-site *-nomis/ec-site*))
-      (cl-labels ((continue (remaining-shape)
-                    (when remaining-shape
-                      (when (-nomis/ec-can-forward-sexp?)
-                        (-nomis/ec-bof))
-                      (-nomis/ec-debug (first remaining-shape))
-                      (condition-case err
-                          (cl-ecase (first remaining-shape)
+      (cl-labels
+          ((next (remaining-shape)
+             (cl-ecase (first remaining-shape)
 
-                            (operator
-                             (-nomis/ec-overlay-using-spec/operator operator
-                                                                    apply-to
-                                                                    site)
-                             (forward-sexp)
-                             (continue (rest remaining-shape)))
+               (operator
+                (-nomis/ec-overlay-using-spec/operator operator
+                                                       apply-to
+                                                       site)
+                (forward-sexp)
+                (continue (rest remaining-shape)))
 
-                            (name
-                             (-nomis/ec-overlay-using-spec/name operator)
-                             (forward-sexp)
-                             (continue (rest remaining-shape)))
+               (name
+                (-nomis/ec-overlay-using-spec/name operator)
+                (forward-sexp)
+                (continue (rest remaining-shape)))
 
-                            (key-function
-                             (-nomis/ec-overlay-using-spec/key-function operator
-                                                                        inherited-site)
-                             (forward-sexp)
-                             (continue (rest remaining-shape)))
+               (key-function
+                (-nomis/ec-overlay-using-spec/key-function operator
+                                                           inherited-site)
+                (forward-sexp)
+                (continue (rest remaining-shape)))
 
-                            (fn-bindings
-                             (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
-                               (-nomis/ec-overlay-using-spec/e-fn-bindings operator)
-                               (forward-sexp)
-                               (continue (rest remaining-shape))))
+               (fn-bindings
+                (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
+                  (-nomis/ec-overlay-using-spec/e-fn-bindings operator)
+                  (forward-sexp)
+                  (continue (rest remaining-shape))))
 
-                            (let-bindings
-                             (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
-                               (-nomis-/ec-overlay-using-spec/let-bindings inherited-site
-                                                                           operator)
-                               (forward-sexp)
-                               (continue (rest remaining-shape))))
+               (let-bindings
+                (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
+                  (-nomis-/ec-overlay-using-spec/let-bindings inherited-site
+                                                              operator)
+                  (forward-sexp)
+                  (continue (rest remaining-shape))))
 
-                            (body-inherit-site
-                             (cl-assert (null (rest remaining-shape)))
-                             (-nomis/ec-overlay-using-spec/body inherited-site))
+               (body-inherit-site
+                (cl-assert (null (rest remaining-shape)))
+                (-nomis/ec-overlay-using-spec/body inherited-site))
 
-                            (body-neutral
-                             (cl-assert (null (rest remaining-shape)))
-                             (-nomis/ec-overlay-using-spec/body :neutral))
+               (body-neutral
+                (cl-assert (null (rest remaining-shape)))
+                (-nomis/ec-overlay-using-spec/body :neutral))
 
-                            (electric-call-args
-                             (cl-assert (null (rest remaining-shape)))
-                             (-nomis/ec-overlay-using-spec/electric-call-args inherited-site)))
-                        (-nomis/ec-parse-error
-                         (goto-char (cddr err))
-                         (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                               :tag (first remaining-shape)
-                                               :site :unparsable)
-                           ;; Nothing more.
-                           )))))
-                  (do-it ()
-                    (nomis/ec-down-list operator)
-                    (continue shape)))
+               (electric-call-args
+                (cl-assert (null (rest remaining-shape)))
+                (-nomis/ec-overlay-using-spec/electric-call-args inherited-site))))
+
+           (continue (remaining-shape)
+             (when remaining-shape
+               (when (-nomis/ec-can-forward-sexp?)
+                 (-nomis/ec-bof))
+               (-nomis/ec-debug (first remaining-shape))
+               (condition-case err
+                   (next remaining-shape)
+                 (-nomis/ec-parse-error
+                  (goto-char (cddr err))
+                  (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                        :tag (first remaining-shape)
+                                        :site :unparsable)
+                    ;; Nothing more.
+                    )))))
+           (do-it ()
+             (nomis/ec-down-list operator)
+             (continue shape)))
         (if (eq apply-to :whole)
             (-nomis/ec-with-site (;; avoid-stupid-indentation
                                   :tag operator
