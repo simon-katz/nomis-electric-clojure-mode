@@ -48,6 +48,9 @@
 ;;;; TODO: Handle all syntax in `e/fn` -- eg function name, same stuff as
 ;;;;       for `e/defn`.
 
+;;;; TODO: Make parsing more data-driven -- so that it will be trivial to
+;;;;       make it extensible.
+
 ;;;; ___________________________________________________________________________
 ;;;; Customizable things
 
