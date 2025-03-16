@@ -506,7 +506,7 @@ Otherwise throw an exception."
       ;; Nothing more.
       ))
   ;; Operators don't have to be symbols; they can be lambdas. So:
-  (unless (thing-at-point 'symbol t)
+  (unless (thing-at-point 'symbol)
     (-nomis/ec-walk-and-overlay)))
 
 (defun -nomis/ec-overlay-using-spec/name (operator)
