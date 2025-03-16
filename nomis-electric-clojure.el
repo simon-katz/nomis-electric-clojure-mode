@@ -394,14 +394,18 @@ This can be:
 into that expression -- /ie/ move down one level of parentheses.
 Otherwise throw an exception."
   (cond ((not (-nomis/ec-can-forward-sexp?))
-         (error (-nomis/ec-message-no-disp "Missing %s" desc)
-                (signal '-nomis/ec-parse-error (cons desc (save-excursion
-                                                            (backward-up-list)
-                                                            (point))))))
+         (let* ((msg (format "Missing %s" desc)))
+           (error (-nomis/ec-message-no-disp "%s" msg)
+                  (signal '-nomis/ec-parse-error
+                          (list desc msg (save-excursion
+                                           (backward-up-list)
+                                           (point)))))))
         ((not (nomis/ec-at-or-before-sexp-start?))
-         (error (-nomis/ec-message-no-disp "A bracketed s-expression is needed for %s"
-                                           desc)
-                (signal '-nomis/ec-parse-error (cons desc (point)))))
+         (let* ((msg (format "A bracketed s-expression is needed for %s"
+                             desc)))
+           (error (-nomis/ec-message-no-disp "%s" msg)
+                  (signal '-nomis/ec-parse-error
+                          (list desc msg (point))))))
         (t
          (down-list))))
 
@@ -412,13 +416,14 @@ Otherwise throw an exception."
     (let* ((start (point)))
       (condition-case _
           (funcall move-fn)
-        (error (-nomis/ec-message-no-disp "%s is missing or has an incorrect form"
-                                          desc)
-               (signal '-nomis/ec-parse-error
-                       (cons desc
-                             (progn (goto-char start)
-                                    (funcall error-position-fn)
-                                    (point)))))))))
+        (error
+         (let* ((msg (format "%s is missing or has an incorrect form"
+                             desc)))
+           (-nomis/ec-message-no-disp "%s" msg)
+           (signal '-nomis/ec-parse-error
+                   (list desc msg (progn (goto-char start)
+                                         (funcall error-position-fn)
+                                         (point))))))))))
 
 (defun -nomis/ec-bof ()
   (forward-sexp)
@@ -646,7 +651,7 @@ Otherwise throw an exception."
                (condition-case err
                    (next remaining-shape)
                  (-nomis/ec-parse-error
-                  (goto-char (cddr err))
+                  (goto-char (third (cdr err)))
                   (-nomis/ec-with-site (;; avoid-stupid-indentation
                                         :tag (first remaining-shape)
                                         :site :unparsable)
