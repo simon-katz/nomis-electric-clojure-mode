@@ -752,16 +752,20 @@ Otherwise throw an exception."
 (defconst -nomis/ec-e/for-form-regexp    (-nomis/ec-operator-call-regexp "e/for"))
 (defconst -nomis/ec-e/for-by-form-regexp (-nomis/ec-operator-call-regexp "e/for-by"))
 
-(defconst -nomis/ec-symbol-chars "-a-zA-Z0-9$&*+_<>/'.=?!")
+(rx-define -nomis/ec-symbol-char-no-slash-rx
+  (any upper
+       lower
+       digit
+       "-$&*+_<>'.=?!"))
 
-(defconst -nomis/ec-host-function-name-regexp
-  (concat "["
-          -nomis/ec-symbol-chars
-          "]*"))
+(rx-define -nomis/ec-electric-function-name-rx
+  (seq (? (seq (+ -nomis/ec-symbol-char-no-slash-rx)
+               "/"))
+       (seq upper
+            (* -nomis/ec-symbol-char-no-slash-rx))))
 
 (defconst -nomis/ec-electric-function-name-regexp
-  (concat "[A-Z]"
-          -nomis/ec-host-function-name-regexp))
+  (rx -nomis/ec-electric-function-name-rx))
 
 (defconst -nomis/ec-electric-lambda-call-regexp
   "(e/fn")
