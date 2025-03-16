@@ -59,7 +59,7 @@ nomis-electric-clojure-mode does the following:
 
 - Does not apply a color to regions that may be either client or server.
 
-The mode does not look at the call tree, so regions of code that are not colored may in fact always run on one site.
+The mode analyses each Electric function separately — it does not look at the call tree. So regions of code that are not colored may in fact always run on one site.
 
 
 # Coloring Initial Whitespace
