@@ -338,20 +338,21 @@ This can be:
 ;;;; ___________________________________________________________________________
 ;;;; Overlay basics
 
-(defun -nomis/ec-make-overlay (tag nesting-level face start end)
+(defun -nomis/ec-make-overlay (tag nesting-level face start end description)
   ;; (-nomis/ec-debug :make-overlay)
   (let* ((ov (make-overlay start end nil t nil)))
     (overlay-put ov 'nomis/tag tag)
     (overlay-put ov 'category 'nomis/ec-overlay)
     (overlay-put ov 'face face)
     (overlay-put ov 'evaporate t)
+    (when description (overlay-put ov 'help-echo description))
     (unless nomis/ec-color-initial-whitespace?
       ;; We have multiple overlays in the same place, so we need to
       ;; specify their priority.
       (overlay-put ov 'priority (cons nil nesting-level)))
     ov))
 
-(defun -nomis/ec-overlay-lump (tag site nesting-level start end)
+(defun -nomis/ec-overlay-lump (tag site nesting-level start end description)
   (-nomis/ec-debug :overlay-lump)
   (if (= start end)
       (-nomis/ec-debug :empty-lump)
@@ -361,30 +362,32 @@ This can be:
                    (:server     '-nomis/ec-server-face)
                    (:neutral    '-nomis/ec-neutral-face)
                    (:unparsable '-nomis/ec-unparsable-face))))
-      (if nomis/ec-color-initial-whitespace?
-          (let* ((start
-                  ;; When a form has only whitespace between its start and the
-                  ;; beginning of the line, color from the start of the line.
-                  (if (and (not (bolp))
-                           (= (point)
-                              (save-excursion
-                                (beginning-of-line)
-                                (forward-whitespace 1))))
-                      (save-excursion
-                        (beginning-of-line)
-                        (point))
-                    start)))
-            (-nomis/ec-make-overlay tag nesting-level face start end))
-        (save-excursion
-          (while (< (point) end)
-            (let* ((start-2 (point))
-                   (end-2 (min end
-                               (progn (end-of-line) (point)))))
-              (unless (= start-2 end-2) ; don't create overlays of zero length
-                (-nomis/ec-make-overlay tag nesting-level face start-2 end-2))
-              (unless (eobp) (forward-char))
-              (when (bolp)
-                (back-to-indentation)))))))))
+      (cl-flet ((overlay (s e)
+                  (-nomis/ec-make-overlay tag nesting-level face s e description)))
+        (if nomis/ec-color-initial-whitespace?
+            (let* ((start
+                    ;; When a form has only whitespace between its start and the
+                    ;; beginning of the line, color from the start of the line.
+                    (if (and (not (bolp))
+                             (= (point)
+                                (save-excursion
+                                  (beginning-of-line)
+                                  (forward-whitespace 1))))
+                        (save-excursion
+                          (beginning-of-line)
+                          (point))
+                      start)))
+              (overlay start end))
+          (save-excursion
+            (while (< (point) end)
+              (let* ((start-2 (point))
+                     (end-2 (min end
+                                 (progn (end-of-line) (point)))))
+                (unless (= start-2 end-2) ; don't create overlays of zero length
+                  (overlay start-2 end-2))
+                (unless (eobp) (forward-char))
+                (when (bolp)
+                  (back-to-indentation))))))))))
 
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay helpers ----
@@ -429,7 +432,7 @@ Otherwise throw an exception."
   (forward-sexp)
   (backward-sexp))
 
-(defun -nomis/ec-with-site* (tag site end print-env? f)
+(defun -nomis/ec-with-site* (tag site end description print-env? f)
   (cl-assert tag)
   (cl-assert site)
   (-nomis/ec-debug tag nil print-env?)
@@ -443,13 +446,14 @@ Otherwise throw an exception."
                       (save-excursion (when (-nomis/ec-can-forward-sexp?)
                                         (forward-sexp))
                                       (point)))))
-        (-nomis/ec-overlay-lump tag site *-nomis/ec-level* start end)
+        (-nomis/ec-overlay-lump tag site *-nomis/ec-level* start end description)
         (funcall f)))))
 
-(cl-defmacro -nomis/ec-with-site ((&key tag site end print-env?)
+(cl-defmacro -nomis/ec-with-site ((&key tag site end description print-env?)
                                   &body body)
   (declare (indent 1))
-  `(-nomis/ec-with-site* ,tag ,site ,end ,print-env? (lambda () ,@body)))
+  `(-nomis/ec-with-site* ,tag ,site ,end ,description ,print-env?
+                         (lambda () ,@body)))
 
 (defun -nomis/ec-overlay-args-of-form ()
   (-nomis/ec-debug :args-of-form)
@@ -654,7 +658,8 @@ Otherwise throw an exception."
                   (goto-char (third (cdr err)))
                   (-nomis/ec-with-site (;; avoid-stupid-indentation
                                         :tag (first remaining-shape)
-                                        :site :unparsable)
+                                        :site :unparsable
+                                        :description (second (cdr err)))
                     ;; Nothing more.
                     )))))
            (do-it ()
