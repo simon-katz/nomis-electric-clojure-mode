@@ -39,19 +39,6 @@
 ;;;; Permalink: https://gitlab.com/xificurC/hf-electric.el/-/blob/5e6e3d69e42a64869f1eecd8b804cf4b679f9501/hf-electric.el
 
 ;;;; ___________________________________________________________________________
-
-;;;; TODO: Handle destructuring in `-nomis/ec-binding-lhs->vars`.
-
-;;;; TODO: Make parsing more data-driven -- so that it will be trivial to
-;;;;       make it extensible.
-
-;;;; TODO: Handle all syntax in `e/defn` -- eg doc strings, attr map,
-;;;;       multiple arities
-
-;;;; TODO: Handle all syntax in `e/fn` -- eg function name, same stuff as
-;;;;       for `e/defn`.
-
-;;;; ___________________________________________________________________________
 ;;;; Customizable things
 
 (defcustom nomis/ec-auto-enable? t
