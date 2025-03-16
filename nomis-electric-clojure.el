@@ -428,16 +428,16 @@ Otherwise throw an exception."
   (cl-assert tag)
   (cl-assert site)
   (-nomis/ec-debug tag nil print-env?)
-  (let* ((start (point))
-         (end (or end
-                  (save-excursion (when (-nomis/ec-can-forward-sexp?)
-                                    (forward-sexp))
-                                  (point))))
-         (*-nomis/ec-level* (1+ *-nomis/ec-level*)))
+  (let* ((*-nomis/ec-level* (1+ *-nomis/ec-level*)))
     (if (eq site *-nomis/ec-site*)
         ;; No need for a new overlay.
         (funcall f)
-      (let* ((*-nomis/ec-site* site))
+      (let* ((*-nomis/ec-site* site)
+             (start (point))
+             (end (or end
+                      (save-excursion (when (-nomis/ec-can-forward-sexp?)
+                                        (forward-sexp))
+                                      (point)))))
         (-nomis/ec-overlay-lump tag site *-nomis/ec-level* start end)
         (funcall f)))))
 
