@@ -499,7 +499,7 @@ Otherwise throw an exception."
   (-nomis/ec-check-movement-possible operator
                                      #'forward-sexp
                                      #'backward-up-list)
-  (when (eq apply-to :operator)
+  (when (eq apply-to 'operator)
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (list operator :operator)
                           :site site)
@@ -585,7 +585,7 @@ Otherwise throw an exception."
                                              operator
                                              site
                                              shape)
-  (cl-assert (or (null apply-to) (member apply-to '(:whole :operator))))
+  (cl-assert (or (null apply-to) (member apply-to '(whole operator))))
   (cl-assert (or (not apply-to) site))
   (cl-assert (listp shape))
   (save-excursion
@@ -655,7 +655,7 @@ Otherwise throw an exception."
            (do-it ()
              (nomis/ec-down-list operator)
              (continue shape)))
-        (if (eq apply-to :whole)
+        (if (eq apply-to 'whole)
             (-nomis/ec-with-site (;; avoid-stupid-indentation
                                   :tag operator
                                   :site site)
@@ -665,7 +665,7 @@ Otherwise throw an exception."
 (defun -nomis/ec-overlay-e/defn ()
   (-nomis/ec-overlay-using-spec :operator :e/defn
                                 :site     :neutral
-                                :apply-to :whole
+                                :apply-to 'whole
                                 :shape    '(operator
                                             name
                                             doc-string?
@@ -675,7 +675,7 @@ Otherwise throw an exception."
 (defun -nomis/ec-overlay-e/fn ()
   (-nomis/ec-overlay-using-spec :operator :e/fn
                                 :site     :neutral
-                                :apply-to :whole
+                                :apply-to 'whole
                                 :shape    '(operator
                                             fn-bindings
                                             body)))
@@ -683,7 +683,7 @@ Otherwise throw an exception."
 (defun -nomis/ec-overlay-dom-xxxx ()
   (-nomis/ec-overlay-using-spec :operator :dom/xxxx
                                 :site     :client
-                                :apply-to :operator
+                                :apply-to 'operator
                                 :shape    '(operator
                                             body)))
 
@@ -705,7 +705,7 @@ Otherwise throw an exception."
 (defun -nomis/ec-overlay-electric-call ()
   (-nomis/ec-overlay-using-spec :operator :electric-call
                                 :site     :neutral
-                                :apply-to :whole
+                                :apply-to 'whole
                                 :shape    '(operator
                                             electric-call-args)))
 
