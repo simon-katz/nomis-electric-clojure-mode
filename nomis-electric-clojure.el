@@ -225,11 +225,7 @@ This can be:
                                  (make-string (* 2 *-nomis/ec-level*) ?\s)
                                  *-nomis/ec-site*
                                  (let* ((s (with-output-to-string (princ what))))
-                                   (cl-case 2
-                                     (1 (-nomis/ec-pad-or-truncate-string
-                                         s
-                                         32))
-                                     (2 (-nomis/ec-pad-string s 32))))
+                                   (-nomis/ec-pad-string s 32))
                                  (-nomis/ec-a-few-current-chars)
                                  (if print-env?
                                      (format " ---- env = %s" *-nomis/ec-bound-vars*)
