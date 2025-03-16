@@ -607,6 +607,11 @@ Otherwise throw an exception."
                 (forward-sexp)
                 (continue (rest remaining-shape)))
 
+               (doc-string?
+                (when (thing-at-point 'string)
+                  (forward-sexp))
+                (continue (rest remaining-shape)))
+
                (key-function
                 (-nomis/ec-overlay-using-spec/key-function operator
                                                            inherited-site)
@@ -668,6 +673,7 @@ Otherwise throw an exception."
                                 :apply-to :whole
                                 :shape    '(operator
                                             name
+                                            doc-string?
                                             fn-bindings
                                             body-neutral)))
 
