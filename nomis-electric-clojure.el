@@ -38,6 +38,12 @@
 ;;;; https://gitlab.com/xificurC/hf-electric.el/-/blob/master/hf-electric.el
 ;;;; Permalink: https://gitlab.com/xificurC/hf-electric.el/-/blob/5e6e3d69e42a64869f1eecd8b804cf4b679f9501/hf-electric.el
 
+;;;; avoid-case-bug-with-keywords
+;;;; Note that we avoid `cl-case` and `cl-ecase` with keywords because of
+;;;; a weird bug in some versions of Emacs.
+;;;; See
+;;;; https://github.com/clojure-emacs/cider/issues/2967#issuecomment-760714791
+
 ;;;; ___________________________________________________________________________
 ;;;; Customizable things
 
@@ -353,11 +359,12 @@ This can be:
   (if (= start end)
       (-nomis/ec-debug :empty-lump)
     (cl-incf *-nomis/ec-n-lumps-in-current-update*)
-    (let* ((face (cl-ecase site
-                   (:client     '-nomis/ec-client-face)
-                   (:server     '-nomis/ec-server-face)
-                   (:neutral    '-nomis/ec-neutral-face)
-                   (:unparsable '-nomis/ec-unparsable-face))))
+    (let* ((face (cond ; See avoid-case-bug-with-keywords at top of file.
+                  ((eq site :client)     '-nomis/ec-client-face)
+                  ((eq site :server)     '-nomis/ec-server-face)
+                  ((eq site :neutral)    '-nomis/ec-neutral-face)
+                  ((eq site :unparsable) '-nomis/ec-unparsable-face)
+                  (t (error "Bad case")))))
       (cl-flet ((overlay (s e)
                   (-nomis/ec-make-overlay tag nesting-level face s e description)))
         (if nomis/ec-color-initial-whitespace?
@@ -769,26 +776,27 @@ Otherwise throw an exception."
 (defun -nomis/ec-walk-and-overlay ()
   (save-excursion
     (let* ((case-fold-search nil))
-      (cl-ecase -nomis/ec-electric-version
-        (:v2
-         (cond
-          ((looking-at -nomis/ec-e/client-form-regexp) (-nomis/ec-overlay-site :client))
-          ((looking-at -nomis/ec-e/server-form-regexp) (-nomis/ec-overlay-site :server))
-          ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))))
-        (:v3
-         (cond
-          ((looking-at -nomis/ec-e/defn-form-regexp)   (-nomis/ec-overlay-e/defn))
-          ((looking-at -nomis/ec-e/fn-form-regexp)     (-nomis/ec-overlay-e/fn))
-          ((looking-at -nomis/ec-e/client-form-regexp) (-nomis/ec-overlay-site :client))
-          ((looking-at -nomis/ec-e/server-form-regexp) (-nomis/ec-overlay-site :server))
-          ((looking-at -nomis/ec-dom/-form-regexp)     (-nomis/ec-overlay-dom-xxxx))
-          ((looking-at -nomis/ec-let-form-regexp)      (-nomis/ec-overlay-let :let))
-          ((looking-at -nomis/ec-binding-form-regexp)  (-nomis/ec-overlay-let :binding))
-          ((looking-at -nomis/ec-e/for-form-regexp)    (-nomis/ec-overlay-let :e/for))
-          ((looking-at -nomis/ec-e/for-by-form-regexp) (-nomis/ec-overlay-for-by "for-by"))
-          ((looking-at -nomis/ec-electric-call-regexp) (-nomis/ec-overlay-electric-call))
-          ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))
-          (t (-nomis/ec-overlay-symbol-number-etc))))))))
+      (cond ; See avoid-case-bug-with-keywords at top of file.
+       ((eq -nomis/ec-electric-version :v2)
+        (cond
+         ((looking-at -nomis/ec-e/client-form-regexp) (-nomis/ec-overlay-site :client))
+         ((looking-at -nomis/ec-e/server-form-regexp) (-nomis/ec-overlay-site :server))
+         ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))))
+       ((eq -nomis/ec-electric-version :v3)
+        (cond
+         ((looking-at -nomis/ec-e/defn-form-regexp)   (-nomis/ec-overlay-e/defn))
+         ((looking-at -nomis/ec-e/fn-form-regexp)     (-nomis/ec-overlay-e/fn))
+         ((looking-at -nomis/ec-e/client-form-regexp) (-nomis/ec-overlay-site :client))
+         ((looking-at -nomis/ec-e/server-form-regexp) (-nomis/ec-overlay-site :server))
+         ((looking-at -nomis/ec-dom/-form-regexp)     (-nomis/ec-overlay-dom-xxxx))
+         ((looking-at -nomis/ec-let-form-regexp)      (-nomis/ec-overlay-let :let))
+         ((looking-at -nomis/ec-binding-form-regexp)  (-nomis/ec-overlay-let :binding))
+         ((looking-at -nomis/ec-e/for-form-regexp)    (-nomis/ec-overlay-let :e/for))
+         ((looking-at -nomis/ec-e/for-by-form-regexp) (-nomis/ec-overlay-for-by "for-by"))
+         ((looking-at -nomis/ec-electric-call-regexp) (-nomis/ec-overlay-electric-call))
+         ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))
+         (t (-nomis/ec-overlay-symbol-number-etc))))
+       (t (error "Bad case"))))))
 
 (defun -nomis/ec-buffer-has-text? (s)
   (save-excursion (goto-char 0)
