@@ -526,36 +526,42 @@ Otherwise throw an exception."
 
 (defun -nomis/ec-overlay-using-spec/e-fn-bindings (operator)
   (save-excursion
-    (nomis/ec-down-list (list operator
-                              :e/fn-bindings))
-    (while (-nomis/ec-can-forward-sexp?)
-      (-nomis/ec-bof)
-      ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
-      ;; to use recursion instead of iteration.
-      (setq *-nomis/ec-bound-vars*
-            (append (-nomis/ec-binding-lhs->vars)
-                    *-nomis/ec-bound-vars*))
-      (forward-sexp))))
+    (-nomis/ec-with-site (;; avoid-stupid-indentation
+                          :tag operator
+                          :site :neutral)
+      (nomis/ec-down-list (list operator
+                                :e/fn-bindings))
+      (while (-nomis/ec-can-forward-sexp?)
+        (-nomis/ec-bof)
+        ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
+        ;; to use recursion instead of iteration.
+        (setq *-nomis/ec-bound-vars*
+              (append (-nomis/ec-binding-lhs->vars)
+                      *-nomis/ec-bound-vars*))
+        (forward-sexp)))))
 
 (defun -nomis-/ec-overlay-using-spec/let-bindings (inherited-site operator)
   (save-excursion
-    (nomis/ec-down-list (list operator
-                              :let-bindings))
-    (while (-nomis/ec-can-forward-sexp?)
-      ;; Note the LHS of the binding:
-      (-nomis/ec-bof)
-      ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
-      ;; to use recursion instead of iteration.
-      (setq *-nomis/ec-bound-vars*
-            (append (-nomis/ec-binding-lhs->vars)
-                    *-nomis/ec-bound-vars*))
-      (forward-sexp)
-      ;; Walk the RHS of the binding, if there is one:
-      (when (-nomis/ec-can-forward-sexp?)
+    (-nomis/ec-with-site (;; avoid-stupid-indentation
+                          :tag operator
+                          :site :neutral)
+      (nomis/ec-down-list (list operator
+                                :let-bindings))
+      (while (-nomis/ec-can-forward-sexp?)
+        ;; Note the LHS of the binding:
         (-nomis/ec-bof)
-        (-nomis/ec-overlay-specially-if-symbol "binding-rhs"
-                                               inherited-site)
-        (forward-sexp)))))
+        ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
+        ;; to use recursion instead of iteration.
+        (setq *-nomis/ec-bound-vars*
+              (append (-nomis/ec-binding-lhs->vars)
+                      *-nomis/ec-bound-vars*))
+        (forward-sexp)
+        ;; Walk the RHS of the binding, if there is one:
+        (when (-nomis/ec-can-forward-sexp?)
+          (-nomis/ec-bof)
+          (-nomis/ec-overlay-specially-if-symbol "binding-rhs"
+                                                 inherited-site)
+          (forward-sexp))))))
 
 (defun -nomis/ec-overlay-using-spec/body (site)
   (-nomis/ec-debug :body)
@@ -587,7 +593,8 @@ Otherwise throw an exception."
                                              operator
                                              site
                                              shape)
-  (cl-assert (member apply-to '(:whole :operator)))
+  (cl-assert (or (null apply-to) (member apply-to '(:whole :operator))))
+  (cl-assert (or (not apply-to) site))
   (cl-assert (listp shape))
   (save-excursion
     (let* ((inherited-site *-nomis/ec-site*))
@@ -694,8 +701,6 @@ Otherwise throw an exception."
 
 (defun -nomis/ec-overlay-let (operator)
   (-nomis/ec-overlay-using-spec :operator operator
-                                :site     :neutral
-                                :apply-to :whole
                                 :shape    '(operator
                                             let-bindings
                                             body-inherit-site)))
@@ -704,8 +709,6 @@ Otherwise throw an exception."
   (-nomis/ec-debug operator)
   (save-excursion
     (-nomis/ec-overlay-using-spec :operator operator
-                                  :site     :neutral
-                                  :apply-to :whole
                                   :shape    '(operator
                                               key-function
                                               let-bindings
