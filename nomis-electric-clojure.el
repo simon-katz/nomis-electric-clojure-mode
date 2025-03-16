@@ -563,24 +563,16 @@ Otherwise throw an exception."
                                                  inherited-site)
           (forward-sexp))))))
 
-(defun -nomis/ec-overlay-using-spec/body (site)
+(defun -nomis/ec-overlay-using-spec/body ()
   (-nomis/ec-debug :body)
   (save-excursion
     (when (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
-      ;; Whole body:
-      (-nomis/ec-with-site (;; avoid-stupid-indentation
-                            :tag :body
-                            :site site
-                            :end (save-excursion (backward-up-list)
-                                                 (forward-sexp)
-                                                 (backward-char)
-                                                 (point)))
-        ;; Each body form:
-        (while (-nomis/ec-can-forward-sexp?)
-          (-nomis/ec-bof)
-          (-nomis/ec-walk-and-overlay)
-          (forward-sexp))))))
+      ;; Each body form:
+      (while (-nomis/ec-can-forward-sexp?)
+        (-nomis/ec-bof)
+        (-nomis/ec-walk-and-overlay)
+        (forward-sexp)))))
 
 (defun -nomis/ec-overlay-using-spec/electric-call-args (inherited-site)
   (while (-nomis/ec-can-forward-sexp?)
@@ -638,13 +630,9 @@ Otherwise throw an exception."
                   (forward-sexp)
                   (continue (rest remaining-shape))))
 
-               (body-inherit-site
+               (body
                 (cl-assert (null (rest remaining-shape)))
-                (-nomis/ec-overlay-using-spec/body inherited-site))
-
-               (body-neutral
-                (cl-assert (null (rest remaining-shape)))
-                (-nomis/ec-overlay-using-spec/body :neutral))
+                (-nomis/ec-overlay-using-spec/body))
 
                (electric-call-args
                 (cl-assert (null (rest remaining-shape)))
@@ -682,7 +670,7 @@ Otherwise throw an exception."
                                             name
                                             doc-string?
                                             fn-bindings
-                                            body-neutral)))
+                                            body)))
 
 (defun -nomis/ec-overlay-e/fn ()
   (-nomis/ec-overlay-using-spec :operator :e/fn
@@ -690,20 +678,20 @@ Otherwise throw an exception."
                                 :apply-to :whole
                                 :shape    '(operator
                                             fn-bindings
-                                            body-neutral)))
+                                            body)))
 
 (defun -nomis/ec-overlay-dom-xxxx ()
   (-nomis/ec-overlay-using-spec :operator :dom/xxxx
                                 :site     :client
                                 :apply-to :operator
                                 :shape    '(operator
-                                            body-inherit-site)))
+                                            body)))
 
 (defun -nomis/ec-overlay-let (operator)
   (-nomis/ec-overlay-using-spec :operator operator
                                 :shape    '(operator
                                             let-bindings
-                                            body-inherit-site)))
+                                            body)))
 
 (defun -nomis/ec-overlay-for-by (operator)
   (-nomis/ec-debug operator)
@@ -712,7 +700,7 @@ Otherwise throw an exception."
                                   :shape    '(operator
                                               key-function
                                               let-bindings
-                                              body-inherit-site))))
+                                              body))))
 
 (defun -nomis/ec-overlay-electric-call ()
   (-nomis/ec-overlay-using-spec :operator :electric-call
