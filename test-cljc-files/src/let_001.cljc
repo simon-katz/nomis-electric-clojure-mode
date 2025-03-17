@@ -20,6 +20,6 @@
       (e/client
         (ElectricCall global-1 local-1 local-2 local-3 local-4 local-5 local-6)
         (hosted-call global-1 local-1 local-2 local-3 local-4 local-5 local-6)))
-    ;; `local-2` etc are  no longer local:
+    ;; `local-2` etc are out of scope:
     (ElectricCall global-1 local-1 local-2 local-2 local-3 local-4 local-5 local-6)
     (hosted-call global-1 local-2 local-2 local-2 local-3 local-4 local-5 local-6)))

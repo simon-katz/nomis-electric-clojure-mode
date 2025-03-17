@@ -14,7 +14,7 @@
     (e/for-by hash [local-1 (.listFiles h)]
       (ElectricCall global-1 local-1)
       (hosted-call global-1 local-1))
-    ;; `local-1` is no longer local:
+    ;; `local-1` is out of scope:
     (ElectricCall global-1 local-1)
     (hosted-call global-1 local-1)))
 
@@ -32,6 +32,6 @@
       (e/client
         (ElectricCall global-1 local-1 local-2 local-3 local-4 local-5 local-6 local-7)
         (hosted-call global-1 local-1 local-2 local-3 local-4 local-5 local-6 local-7)))
-    ;; `local-2` etc are  no longer local:
+    ;; `local-2` etc are out of scope:
     (ElectricCall global-1 local-1 local-2 local-3 local-4 local-5 local-6 local-7)
     (hosted-call global-1 local-1 local-2 local-3 local-4 local-5 local-6 local-7)))

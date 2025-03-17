@@ -21,6 +21,6 @@
                 (hosted-call global-1 local-1 local-2 local-3)))]
       (F local-1
          global-1)
-      ;; `local-2` etc are no longer local:
+      ;; `local-2` etc are out of scope:
       (ElectricCall global-1 local-1 local-2 local-3)
       (hosted-call global-1 local-1 local-2 local-3))))
