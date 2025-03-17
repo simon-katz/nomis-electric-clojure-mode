@@ -2,9 +2,17 @@
 
 ## Unreleased
 
-- Don't color Electric calls or Electric values in Electric calls.
+- Don't color Electric calls.
+
+- Don't color bound symbols when used in certain contexts:
+  - as an arg in an Electric call
+  - as the RHS of a binding pair.
 
 - Provide an extension mechanism so that you can teach the mode about user-land binding macros.
+
+- Support destructuring in `let-bindings` forms and `fn-bindings` forms.
+
+- Understand that functions can have doc strings.
 
 
 ## Version 0.3 — 2025-03-12 — Commit hash 14aa527
