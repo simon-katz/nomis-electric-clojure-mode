@@ -59,6 +59,8 @@ nomis-electric-clojure-mode does the following:
 
 - Does not apply a color to regions that may be either client or server.
 
+- Provides an extension mechanism so that you can teach the mode about user-land binding macros.
+
 The mode analyses each Electric function separately — it does not look at the call tree. So regions of code that are not colored may in fact always run on one site.
 
 
@@ -87,6 +89,56 @@ Here's an example:
 # Cycling Through Combinations of Options
 
 You can cycle through combinations of `nomis/ec-color-initial-whitespace?` and `nomis/ec-use-underline?` using `M-x nomis/ec-cycle-options`.
+
+
+# Adding New Parser Specs
+
+The mode provides an extension mechanism.
+
+See the function `nomis/ec-add-parser-spec` and the definition of the built-in parsers at the end of the source file.
+
+Time will tell how useful this is. Perhaps the mechanism will need to be extended.
+
+For a taste, here are some examples of built-in parser definitions:
+
+```
+(nomis/ec-add-parser-spec '(
+                            :operator "e/client"
+                            :site     :client
+                            :apply-to whole
+                            :shape    (operator
+                                       body)))
+
+(nomis/ec-add-parser-spec '(
+                            :operator "e/server"
+                            :site     :server
+                            :apply-to whole
+                            :shape    (operator
+                                       body)))
+
+(nomis/ec-add-parser-spec '(:operator "let"
+                            :shape    (operator
+                                       let-bindings
+                                       body)))
+
+(nomis/ec-add-parser-spec '(:operator "e/for"
+                            :shape    (operator
+                                       let-bindings
+                                       body)))
+
+(nomis/ec-add-parser-spec '(:operator "e/for-by"
+                            :shape    (operator
+                                       key-function
+                                       let-bindings
+                                       body)))
+
+(nomis/ec-add-parser-spec '(:operator       "dom/"
+                            :no-symbol-end? t
+                            :site           :client
+                            :apply-to       operator
+                            :shape          (operator
+                                             body)))
+```
 
 
 # Troubleshooting

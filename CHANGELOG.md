@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Don't color Electric calls or Electric values in Electric calls.
+
+- Provide an extension mechanism so that you can teach the mode about user-land binding macros.
+
+
 ## Version 0.3 — 2025-03-12 — Commit hash 14aa527
 
 - Add `nomis/ec-use-underline?`.
