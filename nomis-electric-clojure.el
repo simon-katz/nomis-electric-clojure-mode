@@ -507,13 +507,13 @@ Otherwise throw an exception."
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay ----
 
-(defun -nomis/ec-overlay-using-spec/operator (operator apply-to site)
-  (-nomis/ec-check-movement-possible operator
+(defun -nomis/ec-overlay-using-spec/operator (operator-id apply-to site)
+  (-nomis/ec-check-movement-possible operator-id
                                      #'forward-sexp
                                      #'backward-up-list)
   (when (eq apply-to 'operator)
     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag (list operator :operator)
+                          :tag (list operator-id :operator)
                           :site site)
       ;; Nothing more.
       ))
@@ -521,14 +521,14 @@ Otherwise throw an exception."
   (unless (thing-at-point 'symbol)
     (-nomis/ec-walk-and-overlay)))
 
-(defun -nomis/ec-overlay-using-spec/name (operator)
-  (-nomis/ec-check-movement-possible (list operator 'name)
+(defun -nomis/ec-overlay-using-spec/name (operator-id)
+  (-nomis/ec-check-movement-possible (list operator-id 'name)
                                      #'forward-sexp
                                      #'backward-up-list))
 
-(defun -nomis/ec-overlay-using-spec/key-function (operator
+(defun -nomis/ec-overlay-using-spec/key-function (operator-id
                                                   inherited-site)
-  (-nomis/ec-check-movement-possible (list operator 'key-function)
+  (-nomis/ec-check-movement-possible (list operator-id 'key-function)
                                      #'forward-sexp
                                      #'backward-up-list)
   (-nomis/ec-with-site (;; avoid-stupid-indentation
@@ -536,12 +536,12 @@ Otherwise throw an exception."
                         :site inherited-site)
     (-nomis/ec-walk-and-overlay)))
 
-(defun -nomis/ec-overlay-using-spec/e-fn-bindings (operator)
+(defun -nomis/ec-overlay-using-spec/e-fn-bindings (operator-id)
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag operator
+                          :tag operator-id
                           :site :neutral)
-      (nomis/ec-down-list (list operator
+      (nomis/ec-down-list (list operator-id
                                 :e/fn-bindings))
       (while (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
@@ -552,12 +552,12 @@ Otherwise throw an exception."
                       *-nomis/ec-bound-vars*))
         (forward-sexp)))))
 
-(defun -nomis-/ec-overlay-using-spec/let-bindings (inherited-site operator)
+(defun -nomis-/ec-overlay-using-spec/let-bindings (inherited-site operator-id)
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag operator
+                          :tag operator-id
                           :site :neutral)
-      (nomis/ec-down-list (list operator
+      (nomis/ec-down-list (list operator-id
                                 :let-bindings))
       (while (-nomis/ec-can-forward-sexp?)
         ;; Note the LHS of the binding:
@@ -593,8 +593,8 @@ Otherwise throw an exception."
                                            inherited-site)
     (forward-sexp)))
 
-(cl-defun -nomis/ec-overlay-using-spec (&key apply-to
-                                             operator
+(cl-defun -nomis/ec-overlay-using-spec (&key operator-id
+                                             apply-to
                                              site
                                              shape)
   (cl-assert (or (null apply-to) (member apply-to '(whole operator))))
@@ -607,14 +607,14 @@ Otherwise throw an exception."
              (cl-ecase (first remaining-shape)
 
                (operator
-                (-nomis/ec-overlay-using-spec/operator operator
+                (-nomis/ec-overlay-using-spec/operator operator-id
                                                        apply-to
                                                        site)
                 (forward-sexp)
                 (continue (rest remaining-shape)))
 
                (name
-                (-nomis/ec-overlay-using-spec/name operator)
+                (-nomis/ec-overlay-using-spec/name operator-id)
                 (forward-sexp)
                 (continue (rest remaining-shape)))
 
@@ -624,21 +624,21 @@ Otherwise throw an exception."
                 (continue (rest remaining-shape)))
 
                (key-function
-                (-nomis/ec-overlay-using-spec/key-function operator
+                (-nomis/ec-overlay-using-spec/key-function operator-id
                                                            inherited-site)
                 (forward-sexp)
                 (continue (rest remaining-shape)))
 
                (fn-bindings
                 (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
-                  (-nomis/ec-overlay-using-spec/e-fn-bindings operator)
+                  (-nomis/ec-overlay-using-spec/e-fn-bindings operator-id)
                   (forward-sexp)
                   (continue (rest remaining-shape))))
 
                (let-bindings
                 (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
                   (-nomis-/ec-overlay-using-spec/let-bindings inherited-site
-                                                              operator)
+                                                              operator-id)
                   (forward-sexp)
                   (continue (rest remaining-shape))))
 
@@ -666,61 +666,61 @@ Otherwise throw an exception."
                     ;; Nothing more.
                     )))))
            (do-it ()
-             (nomis/ec-down-list operator)
+             (nomis/ec-down-list operator-id)
              (continue shape)))
         (if (eq apply-to 'whole)
             (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                  :tag operator
+                                  :tag operator-id
                                   :site site)
               (do-it))
           (do-it))))))
 
 (defun -nomis/ec-overlay-e/defn ()
-  (-nomis/ec-overlay-using-spec :operator :e/defn
-                                :site     :neutral
-                                :apply-to 'whole
-                                :shape    '(operator
-                                            name
-                                            doc-string?
-                                            fn-bindings
-                                            body)))
+  (-nomis/ec-overlay-using-spec :operator-id :e/defn
+                                :site        :neutral
+                                :apply-to    'whole
+                                :shape       '(operator
+                                               name
+                                               doc-string?
+                                               fn-bindings
+                                               body)))
 
 (defun -nomis/ec-overlay-e/fn ()
-  (-nomis/ec-overlay-using-spec :operator :e/fn
-                                :site     :neutral
-                                :apply-to 'whole
-                                :shape    '(operator
-                                            fn-bindings
-                                            body)))
+  (-nomis/ec-overlay-using-spec :operator-id :e/fn
+                                :site        :neutral
+                                :apply-to    'whole
+                                :shape       '(operator
+                                               fn-bindings
+                                               body)))
 
 (defun -nomis/ec-overlay-dom-xxxx ()
-  (-nomis/ec-overlay-using-spec :operator :dom/xxxx
-                                :site     :client
-                                :apply-to 'operator
-                                :shape    '(operator
-                                            body)))
+  (-nomis/ec-overlay-using-spec :operator-id :dom/xxxx
+                                :site        :client
+                                :apply-to    'operator
+                                :shape       '(operator
+                                               body)))
 
 (defun -nomis/ec-overlay-let (operator)
-  (-nomis/ec-overlay-using-spec :operator operator
-                                :shape    '(operator
-                                            let-bindings
-                                            body)))
+  (-nomis/ec-overlay-using-spec :operator-id operator
+                                :shape       '(operator
+                                               let-bindings
+                                               body)))
 
 (defun -nomis/ec-overlay-for-by (operator)
   (-nomis/ec-debug operator)
   (save-excursion
-    (-nomis/ec-overlay-using-spec :operator operator
-                                  :shape    '(operator
-                                              key-function
-                                              let-bindings
-                                              body))))
+    (-nomis/ec-overlay-using-spec :operator-id operator
+                                  :shape       '(operator
+                                                 key-function
+                                                 let-bindings
+                                                 body))))
 
 (defun -nomis/ec-overlay-electric-call ()
-  (-nomis/ec-overlay-using-spec :operator :electric-call
-                                :site     :neutral
-                                :apply-to 'whole
-                                :shape    '(operator
-                                            electric-call-args)))
+  (-nomis/ec-overlay-using-spec :operator-id :electric-call
+                                :site        :neutral
+                                :apply-to    'whole
+                                :shape       '(operator
+                                               electric-call-args)))
 
 (defun -nomis/ec-overlay-other-bracketed-form ()
   (-nomis/ec-debug :other-bracketed-form)
