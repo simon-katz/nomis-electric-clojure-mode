@@ -1,13 +1,12 @@
 # Changelog
 
-
-## 2025-03-11
+## Version 0.3 — 2025-03-12 — Commit hash 14aa527
 
 - Add `nomis/ec-use-underline?`.
 - Add `M-x nomis/ec-cycle-options` to cycle through combinations of `nomis/ec-color-initial-whitespace?` and `nomis/ec-use-underline?`.
 
 
-## 2025-03-10
+## Version 0.2 — 2025-03-10 — Commit hash f79f10d
 
 - Add `e/for` in v3.
 - Add `e/for-by` in v3.
@@ -15,6 +14,6 @@
   - For example, `( e/client ...)`.
 
 
-## 2025-03-09
+## Version 0.1 – 2025-03-09 – Commit hash f6c2d55
 
 Initial version.
