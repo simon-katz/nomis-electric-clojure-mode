@@ -675,53 +675,6 @@ Otherwise throw an exception."
               (do-it))
           (do-it))))))
 
-(defun -nomis/ec-overlay-e/defn ()
-  (-nomis/ec-overlay-using-spec :operator-id :e/defn
-                                :site        :neutral
-                                :apply-to    'whole
-                                :shape       '(operator
-                                               name
-                                               doc-string?
-                                               fn-bindings
-                                               body)))
-
-(defun -nomis/ec-overlay-e/fn ()
-  (-nomis/ec-overlay-using-spec :operator-id :e/fn
-                                :site        :neutral
-                                :apply-to    'whole
-                                :shape       '(operator
-                                               fn-bindings
-                                               body)))
-
-(defun -nomis/ec-overlay-dom-xxxx ()
-  (-nomis/ec-overlay-using-spec :operator-id :dom/xxxx
-                                :site        :client
-                                :apply-to    'operator
-                                :shape       '(operator
-                                               body)))
-
-(defun -nomis/ec-overlay-let (operator)
-  (-nomis/ec-overlay-using-spec :operator-id operator
-                                :shape       '(operator
-                                               let-bindings
-                                               body)))
-
-(defun -nomis/ec-overlay-for-by (operator)
-  (-nomis/ec-debug operator)
-  (save-excursion
-    (-nomis/ec-overlay-using-spec :operator-id operator
-                                  :shape       '(operator
-                                                 key-function
-                                                 let-bindings
-                                                 body))))
-
-(defun -nomis/ec-overlay-electric-call ()
-  (-nomis/ec-overlay-using-spec :operator-id :electric-call
-                                :site        :neutral
-                                :apply-to    'whole
-                                :shape       '(operator
-                                               electric-call-args)))
-
 (defun -nomis/ec-overlay-other-bracketed-form ()
   (-nomis/ec-debug 'other-bracketed-form)
   (save-excursion
@@ -742,16 +695,6 @@ Otherwise throw an exception."
           operator-regexp
           (if no-symbol-end? "" "\\_>")))
 
-(defconst -nomis/ec-e/defn-form-regexp   (-nomis/ec-operator-call-regexp "e/defn"))
-(defconst -nomis/ec-e/client-form-regexp (-nomis/ec-operator-call-regexp "e/client"))
-(defconst -nomis/ec-e/server-form-regexp (-nomis/ec-operator-call-regexp "e/server"))
-(defconst -nomis/ec-e/fn-form-regexp     (-nomis/ec-operator-call-regexp "e/fn"))
-(defconst -nomis/ec-dom/-form-regexp     (-nomis/ec-operator-call-regexp "dom/" t))
-(defconst -nomis/ec-let-form-regexp      (-nomis/ec-operator-call-regexp "let"))
-(defconst -nomis/ec-binding-form-regexp  (-nomis/ec-operator-call-regexp "binding"))
-(defconst -nomis/ec-e/for-form-regexp    (-nomis/ec-operator-call-regexp "e/for"))
-(defconst -nomis/ec-e/for-by-form-regexp (-nomis/ec-operator-call-regexp "e/for-by"))
-
 (rx-define -nomis/ec-symbol-char-no-slash-rx
   (any upper
        lower
@@ -767,15 +710,74 @@ Otherwise throw an exception."
 (defconst -nomis/ec-electric-function-name-regexp
   (rx -nomis/ec-electric-function-name-rx))
 
-(defconst -nomis/ec-electric-lambda-call-regexp
-  "(e/fn")
+(defvar -nomis/ec-regexp->parser-spec '())
 
-(defconst -nomis/ec-electric-call-regexp (concat
-                                          (-nomis/ec-operator-call-regexp
-                                           -nomis/ec-electric-function-name-regexp)
-                                          "\\|"
-                                          (-nomis/ec-operator-call-regexp
-                                           -nomis/ec-electric-lambda-call-regexp)))
+;; Some useful things for debugging:
+
+;; (length -nomis/ec-regexp->parser-spec)
+
+;; (mapcar (lambda (entry) (-> entry cdr (plist-get :operator-id)))
+;;         -nomis/ec-regexp->parser-spec)
+
+;; (nth 3 -nomis/ec-regexp->parser-spec)
+
+(cl-defun nomis/ec-add-parser-spec ((&key operator
+                                          no-symbol-end?
+                                          regexp?
+                                          (operator-id
+                                           (if regexp?
+                                               (error "operator-id must be supplied when regexp? is true")
+                                             operator))
+                                          apply-to
+                                          site
+                                          shape))
+  "Add a spec for parsing Elecric Clojure code.
+
+- See uses at the end of this file for the built-in parsers.
+
+- OPERATOR can be an ordinary string or a regexp. This is controlled
+  by REGEXP?.
+
+- OPERATOR-ID defaults to OPERATOR. When REGEXP? is true
+  OPERATOR-ID must be supplied.
+
+- Order is important -- first match wins.
+
+- If there is an existing entry for the same OPERATOR, it is replaced;
+  otherwise a new entry is added at the end. New entries are created
+  at the end so that the (likely) most common operators (the built-in
+  ones) are found quickly to get efficient look-ups.
+
+- If you are developing new parsers you can end up with a different
+  order to when you reload from scratch. The function
+  NOMIS/EC-RESET-TO-BUILT-IN-PARSER-SPECS will be useful."
+  (let* ((operator-regexp (if regexp? operator (regexp-quote operator)))
+         (regexp (-nomis/ec-operator-call-regexp operator-regexp
+                                                 no-symbol-end?))
+         (spec (list :operator-id operator-id
+                     :apply-to    apply-to
+                     :site        site
+                     :shape       shape))
+         (new-entry (cons regexp spec)))
+    (let* ((existing-operator-id? nil))
+      (setq -nomis/ec-regexp->parser-spec
+            (cl-loop
+             for old-entry in -nomis/ec-regexp->parser-spec
+             collect (cl-destructuring-bind (regexp . spec) old-entry
+                       (if (equal operator-id (plist-get spec :operator-id))
+                           (progn (setq existing-operator-id? t)
+                                  new-entry)
+                         old-entry))))
+      (unless existing-operator-id?
+        (setq -nomis/ec-regexp->parser-spec
+              (append -nomis/ec-regexp->parser-spec
+                      (list new-entry)))))))
+
+(defun -nomis/ec-overlay-if-spec-ified ()
+  (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
+           when (looking-at regexp)
+           return (progn (apply #'-nomis/ec-overlay-using-spec spec)
+                         t)))
 
 (defun -nomis/ec-walk-and-overlay ()
   (save-excursion
@@ -783,23 +785,19 @@ Otherwise throw an exception."
       (cond ; See avoid-case-bug-with-keywords at top of file.
        ((eq -nomis/ec-electric-version :v2)
         (cond
-         ((looking-at -nomis/ec-e/client-form-regexp) (-nomis/ec-overlay-site :client))
-         ((looking-at -nomis/ec-e/server-form-regexp) (-nomis/ec-overlay-site :server))
-         ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))))
+         ((looking-at (-nomis/ec-operator-call-regexp "e/client"))
+          (-nomis/ec-overlay-site :client))
+         ((looking-at (-nomis/ec-operator-call-regexp "e/server"))
+          (-nomis/ec-overlay-site :server))
+         ((-nomis/ec-looking-at-bracketed-sexp-start)
+          (-nomis/ec-overlay-other-bracketed-form))))
        ((eq -nomis/ec-electric-version :v3)
-        (cond
-         ((looking-at -nomis/ec-e/defn-form-regexp)   (-nomis/ec-overlay-e/defn))
-         ((looking-at -nomis/ec-e/fn-form-regexp)     (-nomis/ec-overlay-e/fn))
-         ((looking-at -nomis/ec-e/client-form-regexp) (-nomis/ec-overlay-site :client))
-         ((looking-at -nomis/ec-e/server-form-regexp) (-nomis/ec-overlay-site :server))
-         ((looking-at -nomis/ec-dom/-form-regexp)     (-nomis/ec-overlay-dom-xxxx))
-         ((looking-at -nomis/ec-let-form-regexp)      (-nomis/ec-overlay-let :let))
-         ((looking-at -nomis/ec-binding-form-regexp)  (-nomis/ec-overlay-let :binding))
-         ((looking-at -nomis/ec-e/for-form-regexp)    (-nomis/ec-overlay-let :e/for))
-         ((looking-at -nomis/ec-e/for-by-form-regexp) (-nomis/ec-overlay-for-by "for-by"))
-         ((looking-at -nomis/ec-electric-call-regexp) (-nomis/ec-overlay-electric-call))
-         ((-nomis/ec-looking-at-bracketed-sexp-start) (-nomis/ec-overlay-other-bracketed-form))
-         (t (-nomis/ec-overlay-symbol-number-etc))))
+        (or (-nomis/ec-overlay-if-spec-ified)
+            (cond
+             ((-nomis/ec-looking-at-bracketed-sexp-start)
+              (-nomis/ec-overlay-other-bracketed-form))
+             (t
+              (-nomis/ec-overlay-symbol-number-etc)))))
        (t (error "Bad case"))))))
 
 (defun -nomis/ec-buffer-has-text? (s)
@@ -994,6 +992,91 @@ This is very DIY. Is there a better way?")
                                      "")
                                    (overlay-get ov 'nomis/tag))))
     (message "No. of overlays = %s" (length ovs))))
+
+;;;; ___________________________________________________________________________
+;;;; Built-in parser specs
+
+(defun -nomis/ec-add-built-in-parser-specs ()
+  (nomis/ec-add-parser-spec '(
+                              :operator "e/client"
+                              :site     :client
+                              :apply-to whole
+                              :shape    (operator
+                                         body)))
+  (nomis/ec-add-parser-spec '(
+                              :operator "e/server"
+                              :site     :server
+                              :apply-to whole
+                              :shape    (operator
+                                         body)))
+  (nomis/ec-add-parser-spec '(
+                              :operator       "dom/"
+                              :no-symbol-end? t
+                              :site           :client
+                              :apply-to       operator
+                              :shape          (operator
+                                               body)))
+  (nomis/ec-add-parser-spec '(
+                              :operator "e/defn"
+                              :site     :neutral
+                              :apply-to whole
+                              :shape    (operator
+                                         name
+                                         doc-string?
+                                         fn-bindings
+                                         body)))
+  (nomis/ec-add-parser-spec '(
+                              :operator "e/fn"
+                              :site     :neutral
+                              :apply-to whole
+                              :shape    (operator
+                                         fn-bindings
+                                         body)))
+  (nomis/ec-add-parser-spec '(
+                              :operator "let"
+                              :shape    (operator
+                                         let-bindings
+                                         body)))
+  (nomis/ec-add-parser-spec '(
+                              :operator "binding"
+                              :shape    (operator
+                                         let-bindings
+                                         body)))
+  (nomis/ec-add-parser-spec '(
+                              :operator "e/for"
+                              :shape    (operator
+                                         let-bindings
+                                         body)))
+  (nomis/ec-add-parser-spec '(
+                              :operator "e/for-by"
+                              :shape    (operator
+                                         key-function
+                                         let-bindings
+                                         body)))
+  (nomis/ec-add-parser-spec `(
+                              :operator-id electric-call
+                              :operator    ,-nomis/ec-electric-function-name-regexp
+                              :regexp?     t
+                              :site        :neutral
+                              :apply-to    whole
+                              :shape       (operator
+                                            electric-call-args)))
+  (nomis/ec-add-parser-spec '(
+                              :operator-id electric-lambda-in-fun-position
+                              :operator    "(e/fn" ; Note the open parenthesis here, for lambda in function position.
+                              :site        :neutral
+                              :apply-to    whole
+                              :shape       (operator
+                                            electric-call-args))))
+
+(-nomis/ec-add-built-in-parser-specs)
+
+(defun nomis/ec-reset-to-built-in-parser-specs ()
+  ;; Useful when developing new parser specs.
+  (setq -nomis/ec-regexp->parser-spec '())
+  (-nomis/ec-add-built-in-parser-specs)
+  t ; avoid returning a large value
+  )
 
 ;;;; ___________________________________________________________________________
 
