@@ -143,6 +143,11 @@ For a taste, here are some examples of built-in parser definitions:
 
 # Troubleshooting
 
+## The Coloring Changes When I Add or Remove Whitespace
+
+I've sometimes seen Emacs overlays get muddled and the coloring flip between being correct and incorrect when I simply change whitespace. I've found that restarting Emacs makes the problem go away.
+
+
 ## nomis-electric-clojure-mode thinks code is v3 but actually it's v2, or vice versa
 
 This can happen in a newly-created file or if the `:require` form in the namespace declaration is changed.
