@@ -94,8 +94,7 @@ Electric Clojure client and server code."
   "Face for Electric Clojure server code when using background color.")
 
 (defface nomis/ec-unparsable-face/using-background
-  `((((background dark)) ,(list :background "Orange"))
-    (t ,(list :background "Orange")))
+  `((t ,(list :box (list :color "Red"))))
   "Face for unparsable Electric Clojure code when using background color.
 This includes both bad syntax and parts of Clojure that we don't know about.")
 
@@ -114,10 +113,7 @@ This includes both bad syntax and parts of Clojure that we don't know about.")
   "Face for Electric Clojure server code when using underline.")
 
 (defface nomis/ec-unparsable-face/using-underline
-  `((((background dark)) ,(list :underline (list :color "Orange"
-                                                 :style 'wave)))
-    (t ,(list :underline (list :color "Orange"
-                               :style 'wave))))
+  `((t ,(list :box (list :color "Red"))))
   "Face for unparsable Electric Clojure code when using underline.
 This includes both bad syntax and parts of Clojure that we don't know about.")
 
