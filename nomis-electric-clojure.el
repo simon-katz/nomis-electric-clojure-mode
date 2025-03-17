@@ -45,6 +45,10 @@
 ;;;; https://github.com/clojure-emacs/cider/issues/2967#issuecomment-760714791
 
 ;;;; ___________________________________________________________________________
+
+(require 'parseclj) ; TODO: How to make sure this is available to users of this library?
+
+;;;; ___________________________________________________________________________
 ;;;; Customizable things
 
 (defcustom nomis/ec-auto-enable? t
@@ -448,6 +452,16 @@ Otherwise throw an exception."
         (-nomis/ec-overlay-lump tag site *-nomis/ec-level* start end description)
         (funcall f)))))
 
+(defun -nomis/ec-overlay-unparsable (pos tag description)
+  (save-excursion
+    (goto-char pos)
+    (-nomis/ec-with-site (;; avoid-stupid-indentation
+                          :tag tag
+                          :site :unparsable
+                          :description description)
+      ;; Nothing more.
+      )))
+
 (cl-defmacro -nomis/ec-with-site ((&key tag site end description print-env?)
                                   &body body)
   (declare (indent 1))
@@ -473,11 +487,76 @@ Otherwise throw an exception."
       (-nomis/ec-overlay-args-of-form))))
 
 (defun -nomis/ec-binding-lhs->vars ()
-  (let* ((sym-or-nil (thing-at-point 'symbol t)))
-    (unless sym-or-nil
-      (-nomis/ec-message-no-disp "**** TODO: Unhandled binding LHS %s"
-                                 (thing-at-point 'sexp t)))
-    (list sym-or-nil)))
+  (cl-labels
+      ((get-prop (ast prop)
+         (cdr (assoc prop ast)))
+       (get-type (ast) (get-prop ast :node-type))
+       (get-position (ast) (1- ; we'll be zero-based
+                            (get-prop ast :position)))
+       (get-childen (ast) (get-prop ast :children))
+       (get-form (ast) (get-prop ast :form))
+       (get-value (ast) (get-prop ast :value))
+       (ast->vars (ast)
+         (let* ((sofar '())
+                (unhandled-things '()))
+           (cl-labels
+               ((note-unhandled-thing (msg pos)
+                  (push (list msg pos) unhandled-things))
+                (name-after-any-slash (name)
+                  (let* ((slash-pos (cl-search "/" name)))
+                    (if slash-pos
+                        (substring name (1+ slash-pos))
+                      name)))
+                (helper (ast)
+                  (cond ((eq (get-type ast) :symbol)
+                         (let* ((name (get-form ast)))
+                           (push (name-after-any-slash name)
+                                 sofar)))
+                        ((eq (get-type ast) :keyword)
+                         ;; This isn't allowed in all contexts, but we won't
+                         ;; worry about that.
+                         (let* ((name (substring (symbol-name (get-value ast))
+                                                 1)))
+                           (push (name-after-any-slash name)
+                                 sofar)))
+                        ((member (get-type ast) '(:root
+                                                  :vector))
+                         (cl-loop for x in (get-childen ast)
+                                  do (unless (member (get-value x)
+                                                     '(:as &))
+                                       (helper x))))
+                        ((eq (get-type ast) :map)
+                         (cl-loop
+                          for (k v) on (get-childen ast) by #'cddr
+                          do (let ((kk (get-value k)))
+                               (cond
+                                ((eq kk :keys)
+                                 (mapc #'helper (get-childen v)))
+                                ((cl-search "/" (get-form k))
+                                 (cl-loop for x in (get-childen v)
+                                          do (helper x)))
+                                ((eq kk :as)
+                                 (helper v))
+                                (t
+                                 (helper k))))))
+                        (t
+                         (let* ((msg (format "Unhandled binding, of type %s"
+                                             (get-type ast))))
+                           (-nomis/ec-message-no-disp "%s" msg)
+                           (note-unhandled-thing msg
+                                                 (+ (point)
+                                                    (get-position ast))))))))
+             (helper ast))
+           (cl-loop for (msg pos) in unhandled-things
+                    do (-nomis/ec-overlay-unparsable pos
+                                                     'bindings
+                                                     msg))
+           ;; For debugging:
+           ;; (-nomis/ec-message-no-disp "sofar = %s"
+           ;;                            (cl-format nil "~s" sofar))
+           sofar)))
+    (let* ((ast (parseclj-parse-clojure (thing-at-point 'sexp t))))
+      (ast->vars ast))))
 
 (defun -nomis/ec-overlay-specially-if-symbol (tag inherited-site)
   (let* ((sym-or-nil (thing-at-point 'symbol t)))
@@ -655,12 +734,9 @@ Otherwise throw an exception."
                    (next remaining-shape)
                  (-nomis/ec-parse-error
                   (goto-char (third (cdr err)))
-                  (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                        :tag (first remaining-shape)
-                                        :site :unparsable
-                                        :description (second (cdr err)))
-                    ;; Nothing more.
-                    )))))
+                  (-nomis/ec-overlay-unparsable (point)
+                                                (first remaining-shape)
+                                                (second (cdr err)))))))
            (do-it ()
              (nomis/ec-down-list operator-id)
              (continue shape)))
