@@ -459,20 +459,20 @@ Otherwise throw an exception."
                          (lambda () ,@body)))
 
 (defun -nomis/ec-overlay-args-of-form ()
-  (-nomis/ec-debug :args-of-form)
+  (-nomis/ec-debug 'args-of-form)
   (save-excursion
-    (nomis/ec-down-list :args-of-form)
+    (nomis/ec-down-list 'args-of-form)
     (forward-sexp)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
-      (-nomis/ec-debug (list :args-of-form :arg))
+      (-nomis/ec-debug (list 'args-of-form 'arg))
       (-nomis/ec-walk-and-overlay)
       (forward-sexp))))
 
 (defun -nomis/ec-overlay-site (site)
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag :site
+                          :tag 'site
                           :site site)
       (-nomis/ec-overlay-args-of-form))))
 
@@ -487,18 +487,18 @@ Otherwise throw an exception."
   (let* ((sym-or-nil (thing-at-point 'symbol t)))
     (if (not sym-or-nil)
         (-nomis/ec-with-site (;; avoid-stupid-indentation
-                              :tag (list tag :non-symbol)
+                              :tag (list tag 'non-symbol)
                               :site inherited-site)
           (-nomis/ec-walk-and-overlay))
       (if (member sym-or-nil *-nomis/ec-bound-vars*)
           (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                :tag (list tag :symbol-bound)
+                                :tag (list tag 'symbol-bound)
                                 :site :neutral
                                 :print-env? t)
             ;; Nothing more.
             )
         (-nomis/ec-with-site (;; avoid-stupid-indentation
-                              :tag (list tag :symbol-unbound)
+                              :tag (list tag 'symbol-unbound)
                               :site inherited-site
                               :print-env? t)
           ;; Nothing more.
@@ -513,7 +513,7 @@ Otherwise throw an exception."
                                      #'backward-up-list)
   (when (eq apply-to 'operator)
     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag (list operator-id :operator)
+                          :tag (list operator-id 'operator)
                           :site site)
       ;; Nothing more.
       ))
@@ -542,7 +542,7 @@ Otherwise throw an exception."
                           :tag operator-id
                           :site :neutral)
       (nomis/ec-down-list (list operator-id
-                                :e/fn-bindings))
+                                'e/fn-bindings))
       (while (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
         ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
@@ -558,7 +558,7 @@ Otherwise throw an exception."
                           :tag operator-id
                           :site :neutral)
       (nomis/ec-down-list (list operator-id
-                                :let-bindings))
+                                'let-bindings))
       (while (-nomis/ec-can-forward-sexp?)
         ;; Note the LHS of the binding:
         (-nomis/ec-bof)
@@ -576,7 +576,7 @@ Otherwise throw an exception."
           (forward-sexp))))))
 
 (defun -nomis/ec-overlay-using-spec/body ()
-  (-nomis/ec-debug :body)
+  (-nomis/ec-debug 'body)
   (save-excursion
     (when (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
@@ -723,16 +723,16 @@ Otherwise throw an exception."
                                                electric-call-args)))
 
 (defun -nomis/ec-overlay-other-bracketed-form ()
-  (-nomis/ec-debug :other-bracketed-form)
+  (-nomis/ec-debug 'other-bracketed-form)
   (save-excursion
-    (nomis/ec-down-list :other-bracketed-form)
+    (nomis/ec-down-list 'other-bracketed-form)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
       (-nomis/ec-walk-and-overlay)
       (forward-sexp))))
 
 (defun -nomis/ec-overlay-symbol-number-etc ()
-  (-nomis/ec-debug :symbol-number-etc)
+  (-nomis/ec-debug 'symbol-number-etc)
   ;; Nothing to do. Special handling of symbols is done in
   ;; `-nomis/ec-overlay-specially-if-symbol`.
   )
