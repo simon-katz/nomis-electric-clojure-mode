@@ -102,15 +102,13 @@ Time will tell how useful this is. Perhaps the mechanism will need to be extende
 For a taste, here are some examples of built-in parser definitions:
 
 ```
-(nomis/ec-add-parser-spec '(
-                            :operator "e/client"
+(nomis/ec-add-parser-spec '(:operator "e/client"
                             :site     :client
                             :apply-to whole
                             :shape    (operator
                                        body)))
 
-(nomis/ec-add-parser-spec '(
-                            :operator "e/server"
+(nomis/ec-add-parser-spec '(:operator "e/server"
                             :site     :server
                             :apply-to whole
                             :shape    (operator
