@@ -737,9 +737,9 @@ Otherwise throw an exception."
   ;; `-nomis/ec-overlay-specially-if-symbol`.
   )
 
-(defun -nomis/ec-operator-call-regexp (operator &optional no-symbol-end?)
+(defun -nomis/ec-operator-call-regexp (operator-regexp &optional no-symbol-end?)
   (concat "(\\([[:space:]]\\|\n\\)*"
-          operator
+          operator-regexp
           (if no-symbol-end? "" "\\_>")))
 
 (defconst -nomis/ec-e/defn-form-regexp   (-nomis/ec-operator-call-regexp "e/defn"))
