@@ -64,6 +64,13 @@ nomis-electric-clojure-mode does the following:
 The mode analyses each Electric function separately — it does not look at the call tree. So regions of code that are not colored may in fact always run on one site.
 
 
+# A Suggestion
+
+The colors of nomis-electric-clojure-mode can it hard to read your code and any feedback provided by other modes, so you will at least sometimes want to turn it off. You might even choose to generally have the mode off and only turn it on when you want to focus on what's on the client and what's on the server.
+
+In any case it's useful to be able to turn the mode off and on very quickly, so I suggest setting up a keyboard shortcut for this. See the [Keyboard Shortcuts](#keyboard-shortcuts) section.
+
+
 # Coloring Initial Whitespace
 
 By default, initial whitespace is not colored.
@@ -90,6 +97,15 @@ Here's an example:
 
 You can cycle through combinations of `nomis/ec-color-initial-whitespace?` and `nomis/ec-use-underline?` using `M-x nomis/ec-cycle-options`.
 
+
+# Keyboard Shortcuts
+
+I use the following keyboard shortcuts:
+
+```
+(define-key clojure-mode-map (kbd "M-E") 'nomis-electric-clojure-mode)
+(define-key clojure-mode-map (kbd "C-M-e") 'nomis/ec-cycle-options)
+```
 
 # Adding New Parser Specs
 
