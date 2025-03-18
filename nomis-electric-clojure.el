@@ -739,6 +739,14 @@ Otherwise throw an exception."
              (when remaining-shape
                (when (-nomis/ec-can-forward-sexp?)
                  (-nomis/ec-bof))
+               ;; Skip any metadata:
+               (while (looking-at (regexp-quote "^"))
+                 (progn (-nomis/ec-message-no-disp "Skipping metadata")
+                        (forward-char)
+                        (forward-sexp))
+                 (when (-nomis/ec-can-forward-sexp?)
+                   (-nomis/ec-bof)))
+               ;; No more metadata. Carry on:
                (-nomis/ec-debug (first remaining-shape))
                (condition-case err
                    (next remaining-shape)

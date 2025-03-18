@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Skip metadata.
+
 
 ## Version 0.4 — 2025-03-18
 
