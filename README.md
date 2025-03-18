@@ -6,6 +6,8 @@ Here's an example (code taken from [dir-tree example at Electric v3 tutorial](ht
 
 ![dir-tree-example.png](docs/dir-tree-example.png)
 
+See the [Screenshot Gallery](docs/screenshot-gallery.md) for more examples.
+
 
 # Installation
 
