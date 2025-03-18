@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 0.4 — 2025-03-18
 
 - Don't color Electric calls.
 
@@ -17,7 +17,7 @@
 - Understand that an `e/fn` can have a name.
 
 
-## Version 0.3 — 2025-03-12 — Commit hash 14aa527
+## Version 0.3 — 2025-03-12
 
 - Add `nomis/ec-use-underline?`.
 - Add `M-x nomis/ec-cycle-options` to cycle through combinations of `nomis/ec-color-initial-whitespace?` and `nomis/ec-use-underline?`.
@@ -31,6 +31,6 @@
   - For example, `( e/client ...)`.
 
 
-## Version 0.1 – 2025-03-09 – Commit hash f6c2d55
+## Version 0.1 – 2025-03-09
 
 Initial version.
