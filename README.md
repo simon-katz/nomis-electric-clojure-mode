@@ -4,7 +4,7 @@ This is an Emacs minor mode for [Electric Clojure](https://github.com/hyperfiddl
 
 Here's an example (code taken from [dir-tree example at Electric v3 tutorial](https://electric.hyperfiddle.net/tutorial/dir_tree)):
 
-![dir-tree-example.png](docs/dir-tree-example.png)
+![dir-tree.png](docs/screenshots/dir-tree.png)
 
 See the [Screenshot Gallery](docs/screenshot-gallery.md) for more examples.
 
@@ -89,7 +89,7 @@ You can change this by customizing `nomis/ec-color-initial-whitespace?` and you 
 
 Here's an example:
 
-![dir-tree-example-initial-whitespace.png](docs/dir-tree-example-initial-whitespace.png)
+![dir-tree-initial-whitespace.png](docs/screenshots/dir-tree-initial-whitespace.png)
 
 
 # Using Underlining Instead of Background
@@ -100,7 +100,7 @@ You can use underlining instead by customizing `nomis/ec-use-underline?` and you
 
 Here's an example:
 
-![dir-tree-example-underlining.png](docs/dir-tree-example-underlining.png)
+![dir-tree-underlining.png](docs/screenshots/dir-tree-underlining.png)
 
 
 # Cycling Through Combinations of Options
