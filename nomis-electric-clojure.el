@@ -486,7 +486,7 @@ Otherwise throw an exception."
                           :site site)
       (-nomis/ec-overlay-args-of-form))))
 
-(defun -nomis/ec-binding-lhs->vars ()
+(defun -nomis/ec-binding-structure->vars ()
   (cl-labels
       ((get-prop (ast prop)
          (cdr (assoc prop ast)))
@@ -623,7 +623,7 @@ Otherwise throw an exception."
         ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
         ;; to use recursion instead of iteration.
         (setq *-nomis/ec-bound-vars*
-              (append (-nomis/ec-binding-lhs->vars)
+              (append (-nomis/ec-binding-structure->vars)
                       *-nomis/ec-bound-vars*))
         (forward-sexp)))))
 
@@ -640,7 +640,7 @@ Otherwise throw an exception."
         ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
         ;; to use recursion instead of iteration.
         (setq *-nomis/ec-bound-vars*
-              (append (-nomis/ec-binding-lhs->vars)
+              (append (-nomis/ec-binding-structure->vars)
                       *-nomis/ec-bound-vars*))
         (forward-sexp)
         ;; Walk the RHS of the binding, if there is one:
