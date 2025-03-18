@@ -29,8 +29,6 @@ Copy the file `nomis-electric-clojure.el` to a place where it will be found by y
   (require 'nomis-electric-clojure)
 ```
 
-When you update `nomis-electric-clojure.el` to a new version, it is safest to restart Emacs rather than just evaluating the new code.
-
 ### Option 2
 
 For Emacs 30+:
@@ -41,6 +39,11 @@ For Emacs 30+:
        :rev "newest")
   :ensure t)
 ```
+
+## A Note About Updating nomis-electric-clojure
+
+When you update `nomis-electric-clojure.el` to a new version, it is safest to restart Emacs rather than just evaluating the new code.
+
 
 # How nomis-electric-clojure Recognises Electric Buffers
 
