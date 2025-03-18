@@ -191,7 +191,7 @@ For Electric v2 I don't think there's anything further to do.
 
 For Electric v3:
 
-- Handle all syntax in `e/defn` and `e/fn` — attr map, multiple arities, for `e/fn` a function name.
+- Need to handle multiple arities in `e/defn` and `e/fn`.
 
 - I still need to finish going through the Electric v3 tutorial. I think I may want to add understanding of the contents of the `hyperfiddle.electric-forms3` namespace, or at least some of it.
 

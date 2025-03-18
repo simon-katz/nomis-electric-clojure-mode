@@ -703,6 +703,11 @@ Otherwise throw an exception."
                   (forward-sexp))
                 (continue (rest remaining-shape)))
 
+               (attr-map?
+                (when (looking-at "{")
+                  (forward-sexp))
+                (continue (rest remaining-shape)))
+
                (key-function
                 (-nomis/ec-overlay-using-spec/key-function operator-id
                                                            inherited-site)
@@ -1107,6 +1112,7 @@ This is very DIY. Is there a better way?")
                               :shape    (operator
                                          name
                                          doc-string?
+                                         attr-map?
                                          fn-bindings
                                          body)))
   (nomis/ec-add-parser-spec '(

@@ -11,7 +11,7 @@
   []
   42)
 
-(e/defn Foo3 [xs]
+(e/defn Foo3 {:some-metadata 42} [xs] ; <-- attr-map
   (e/server
     (let [F (e/fn MyName [[x & xs]] ; <-- function name
               (when x

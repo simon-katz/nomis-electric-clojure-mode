@@ -12,7 +12,7 @@
 
 - Support destructuring in `let-bindings` forms and `fn-bindings` forms.
 
-- Understand that functions can have doc strings.
+- Understand that functions can have doc strings and attr-maps.
 
 - Understand that an `e/fn` can have a name.
 
