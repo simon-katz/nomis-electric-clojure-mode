@@ -949,6 +949,8 @@ This is very DIY. Is there a better way?")
 
 (defun -nomis/ec-enable ()
   (cl-pushnew (current-buffer) -nomis/ec-buffers)
+  ;; Note: To get a debugger up when there are errors, use
+  ;; `jit-lock-debug-mode`.
   (jit-lock-register '-nomis/ec-overlay-region t))
 
 (defun -nomis/ec-disable (&optional reverting?)
