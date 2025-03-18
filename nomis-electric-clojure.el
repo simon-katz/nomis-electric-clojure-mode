@@ -46,7 +46,7 @@
 
 ;;;; ___________________________________________________________________________
 
-(require 'parseclj) ; TODO: How to make sure this is available to users of this library?
+(require 'parseclj)
 
 ;;;; ___________________________________________________________________________
 ;;;; Customizable things

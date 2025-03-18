@@ -9,9 +9,17 @@ Here's an example (code taken from [dir-tree example at Electric v3 tutorial](ht
 
 # Installation
 
-Here are some options:
+## Prerequisites
 
-## Option 1
+nomis-electric-clojure depends on the parseclj Emacs library. I've been using version 20231203.1905 successfully.
+
+I don't know how to package up Emacs libraries — how to specify dependencies etc — so for now you will have to separately make sure that parseclj is available.  (TODO: Improve this.)
+
+## Installing nomis-electric-clojure itself
+
+Here are some options for installing nomis-electric-clojure itself:
+
+### Option 1
 
 Copy the file `nomis-electric-clojure.el` to a place where it will be found by your Emacs and add the following to your init file:
 
@@ -21,7 +29,7 @@ Copy the file `nomis-electric-clojure.el` to a place where it will be found by y
 
 When you update `nomis-electric-clojure.el` to a new version, it is safest to restart Emacs rather than just evaluating the new code.
 
-## Option 2
+### Option 2
 
 For Emacs 30+:
 
