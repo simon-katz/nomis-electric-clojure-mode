@@ -159,12 +159,14 @@ For a taste, here are some examples of built-in parser definitions:
                                        let-bindings
                                        body)))
 
-(nomis/ec-add-parser-spec '(:operator       "dom/"
-                            :no-symbol-end? t
-                            :site           :client
-                            :apply-to       operator
-                            :shape          (operator
-                                             body)))
+(nomis/ec-add-parser-spec `(:operator-id "dom/xxxx"
+                            :operator    ,(concat "dom/"
+                                                     -nomis/ec-symbol-no-slash-regexp)
+                            :regexp?     t
+                            :site        :client
+                            :apply-to    operator
+                            :shape       (operator
+                                          body)))
 ```
 
 

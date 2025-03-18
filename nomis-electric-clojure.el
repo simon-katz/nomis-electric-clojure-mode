@@ -780,16 +780,19 @@ Otherwise throw an exception."
   ;; `-nomis/ec-overlay-specially-if-symbol`.
   )
 
-(defun -nomis/ec-operator-call-regexp (operator-regexp &optional no-symbol-end?)
+(defun -nomis/ec-operator-call-regexp (operator-regexp)
   (concat "(\\([[:space:]]\\|\n\\)*"
           operator-regexp
-          (if no-symbol-end? "" "\\_>")))
+          "\\_>"))
 
 (rx-define -nomis/ec-symbol-char-no-slash-rx
   (any upper
        lower
        digit
        "-$&*+_<>'.=?!"))
+
+(defconst -nomis/ec-symbol-no-slash-regexp
+  (rx (+ -nomis/ec-symbol-char-no-slash-rx)))
 
 (rx-define -nomis/ec-electric-function-name-rx
   (seq (? (seq (+ -nomis/ec-symbol-char-no-slash-rx)
@@ -812,7 +815,6 @@ Otherwise throw an exception."
 ;; (nth 3 -nomis/ec-regexp->parser-spec)
 
 (cl-defun nomis/ec-add-parser-spec ((&key operator
-                                          no-symbol-end?
                                           regexp?
                                           (operator-id
                                            (if regexp?
@@ -842,8 +844,7 @@ Otherwise throw an exception."
   order to when you reload from scratch. The function
   NOMIS/EC-RESET-TO-BUILT-IN-PARSER-SPECS will be useful."
   (let* ((operator-regexp (if regexp? operator (regexp-quote operator)))
-         (regexp (-nomis/ec-operator-call-regexp operator-regexp
-                                                 no-symbol-end?))
+         (regexp (-nomis/ec-operator-call-regexp operator-regexp))
          (spec (list :operator-id operator-id
                      :apply-to    apply-to
                      :site        site
@@ -1108,13 +1109,15 @@ This is very DIY. Is there a better way?")
                               :apply-to whole
                               :shape    (operator
                                          body)))
-  (nomis/ec-add-parser-spec '(
-                              :operator       "dom/"
-                              :no-symbol-end? t
-                              :site           :client
-                              :apply-to       operator
-                              :shape          (operator
-                                               body)))
+  (nomis/ec-add-parser-spec `(
+                              :operator-id "dom/xxxx"
+                              :operator    ,(concat "dom/"
+                                                       -nomis/ec-symbol-no-slash-regexp)
+                              :regexp?     t
+                              :site        :client
+                              :apply-to    operator
+                              :shape       (operator
+                                            body)))
   (nomis/ec-add-parser-spec '(
                               :operator "e/defn"
                               :site     :neutral
