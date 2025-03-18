@@ -693,6 +693,11 @@ Otherwise throw an exception."
                 (forward-sexp)
                 (continue (rest remaining-shape)))
 
+               (name?
+                (when (thing-at-point 'symbol)
+                  (forward-sexp))
+                (continue (rest remaining-shape)))
+
                (doc-string?
                 (when (thing-at-point 'string)
                   (forward-sexp))
@@ -1102,6 +1107,7 @@ This is very DIY. Is there a better way?")
                               :site     :neutral
                               :apply-to whole
                               :shape    (operator
+                                         name?
                                          fn-bindings
                                          body)))
   (nomis/ec-add-parser-spec '(

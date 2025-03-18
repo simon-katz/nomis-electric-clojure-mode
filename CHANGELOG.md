@@ -14,6 +14,8 @@
 
 - Understand that functions can have doc strings.
 
+- Understand that an `e/fn` can have a name.
+
 
 ## Version 0.3 — 2025-03-12 — Commit hash 14aa527
 
