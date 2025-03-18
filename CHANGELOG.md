@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+
+
 ## Version 0.4 — 2025-03-18
 
 - Don't color Electric calls.
