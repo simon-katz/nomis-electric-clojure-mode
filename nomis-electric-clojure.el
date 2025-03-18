@@ -990,6 +990,16 @@ This is very DIY. Is there a better way?")
 ;;;; ___________________________________________________________________________
 ;;;; ---- Interactive commands ----
 
+(defun -nomis/ec-redraw ()
+  (-nomis/ec-disable)
+  (-nomis/ec-enable))
+
+(defun -nomis/ec-redraw-all-buffers ()
+  (dolist (b (buffer-list))
+    (with-current-buffer b
+      (when nomis-electric-clojure-mode
+        (-nomis/ec-redraw)))))
+
 (defun -nomis/ec-check-nomis-electric-clojure-mode ()
   (when (not nomis-electric-clojure-mode)
     (user-error "nomis-electric-clojure-mode is not turned on")))
@@ -998,8 +1008,7 @@ This is very DIY. Is there a better way?")
   (interactive)
   (if (not nomis-electric-clojure-mode)
       (nomis-electric-clojure-mode)
-    (-nomis/ec-disable)
-    (-nomis/ec-enable)))
+    (-nomis/ec-redraw)))
 
 (defun nomis/ec-toggle-color-initial-whitespace ()
   (interactive)
@@ -1007,8 +1016,7 @@ This is very DIY. Is there a better way?")
       (nomis-electric-clojure-mode)
     (setq nomis/ec-color-initial-whitespace?
           (not nomis/ec-color-initial-whitespace?))
-    (-nomis/ec-disable)
-    (-nomis/ec-enable)))
+    (-nomis/ec-redraw-all-buffers)))
 
 (defun nomis/ec-toggle-use-underline ()
   (interactive)
@@ -1032,8 +1040,7 @@ This is very DIY. Is there a better way?")
       (setq nomis/ec-color-initial-whitespace? (not (zerop (logand 1 new-v))))
       (setq nomis/ec-use-underline?            (not (zerop (logand 2 new-v))))
       (-nomis/ec-update-faces)
-      (-nomis/ec-disable)
-      (-nomis/ec-enable))))
+      (-nomis/ec-redraw-all-buffers))))
 
 (defun nomis/ec-toggle-debug-feedback-flash ()
   (interactive)
