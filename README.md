@@ -56,7 +56,7 @@ There's a customizable variable, `nomis/ec-bound-for-electric-require-search` (d
 
 By default, the mode is turned on automatically for any `.cljc` buffer that is recognised to be Electric source code. You can disable this by customizing `nomis/ec-auto-enable?`.
 
-To turn the mode on or off manually, run `M-x nomis-electric-clojure-mode`. If the mode can't determine the Electric Version, it assumes v3.
+To turn the mode on or off manually, run `M-x nomis-electric-clojure-mode`. If the mode can't determine the Electric version, it assumes v3.
 
 
 # Overview of Features
