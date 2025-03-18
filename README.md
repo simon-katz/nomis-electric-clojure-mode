@@ -79,7 +79,7 @@ The mode analyses each Electric function separately — it does not look at the 
 
 # A Suggestion
 
-The colors of nomis-electric-clojure-mode can it hard to read your code and any feedback provided by other modes, so you will at least sometimes want to turn it off. You might even choose to generally have the mode off and only turn it on when you want to focus on what's on the client and what's on the server.
+The colors of nomis-electric-clojure-mode can make it hard to read your code and any feedback provided by other modes, so you will at least sometimes want to turn it off. You might even choose to generally have the mode off and only turn it on when you want to focus on what's on the client and what's on the server.
 
 In any case it's useful to be able to turn the mode off and on very quickly, so I suggest setting up a keyboard shortcut for this. See the [Keyboard Shortcuts](#keyboard-shortcuts) section.
 
