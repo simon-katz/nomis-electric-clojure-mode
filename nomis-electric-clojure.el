@@ -220,7 +220,7 @@ This can be:
 
 (defvar -nomis/ec-debug? nil)
 
-(defun -nomis/ec-debug (what &optional force? print-env?)
+(defun -nomis/ec-debug (site what &optional force? print-env?)
   (when (or force? -nomis/ec-debug?)
     (let* ((inhibit-message t))
       (-nomis/ec-message-no-disp "%s %s ---- %s %s => %s%s"
@@ -229,7 +229,7 @@ This can be:
                                   5
                                   t)
                                  (make-string (* 2 *-nomis/ec-level*) ?\s)
-                                 *-nomis/ec-site*
+                                 site
                                  (let* ((s (with-output-to-string (princ what))))
                                    (-nomis/ec-pad-string s 32))
                                  (-nomis/ec-a-few-current-chars)
@@ -341,7 +341,7 @@ This can be:
 ;;;; Overlay basics
 
 (defun -nomis/ec-make-overlay (tag nesting-level face start end description)
-  ;; (-nomis/ec-debug :make-overlay)
+  ;; (-nomis/ec-debug *-nomis/ec-site* :make-overlay)
   (let* ((ov (make-overlay start end nil t nil)))
     (overlay-put ov 'nomis/tag tag)
     (overlay-put ov 'category 'nomis/ec-overlay)
@@ -355,9 +355,9 @@ This can be:
     ov))
 
 (defun -nomis/ec-overlay-lump (tag site nesting-level start end description)
-  (-nomis/ec-debug :overlay-lump)
+  (-nomis/ec-debug site :overlay-lump)
   (if (= start end)
-      (-nomis/ec-debug :empty-lump)
+      (-nomis/ec-debug site :empty-lump)
     (cl-incf *-nomis/ec-n-lumps-in-current-update*)
     (let* ((face (cond ; See avoid-case-bug-with-keywords at top of file.
                   ((eq site :client)     '-nomis/ec-client-face)
@@ -438,7 +438,7 @@ Otherwise throw an exception."
 (defun -nomis/ec-with-site* (tag site end description print-env? f)
   (cl-assert tag)
   (cl-assert site)
-  (-nomis/ec-debug tag nil print-env?)
+  (-nomis/ec-debug site tag nil print-env?)
   (let* ((*-nomis/ec-level* (1+ *-nomis/ec-level*)))
     (if (eq site *-nomis/ec-site*)
         ;; No need for a new overlay.
@@ -469,13 +469,13 @@ Otherwise throw an exception."
                          (lambda () ,@body)))
 
 (defun -nomis/ec-overlay-args-of-form-v2 ()
-  (-nomis/ec-debug 'args-of-form)
+  (-nomis/ec-debug *-nomis/ec-site* 'args-of-form)
   (save-excursion
     (nomis/ec-down-list 'args-of-form)
     (forward-sexp)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
-      (-nomis/ec-debug (list 'args-of-form 'arg))
+      (-nomis/ec-debug *-nomis/ec-site* (list 'args-of-form 'arg))
       (-nomis/ec-walk-and-overlay)
       (forward-sexp))))
 
@@ -746,7 +746,7 @@ Otherwise throw an exception."
                  (when (-nomis/ec-can-forward-sexp?)
                    (-nomis/ec-bof)))
                ;; No more metadata. Carry on:
-               (-nomis/ec-debug (first remaining-shape))
+               (-nomis/ec-debug *-nomis/ec-site* (first remaining-shape))
                (condition-case err
                    (next remaining-shape)
                  (-nomis/ec-parse-error
@@ -765,7 +765,7 @@ Otherwise throw an exception."
           (do-it))))))
 
 (defun -nomis/ec-overlay-other-bracketed-form ()
-  (-nomis/ec-debug 'other-bracketed-form)
+  (-nomis/ec-debug *-nomis/ec-site* 'other-bracketed-form)
   (save-excursion
     (nomis/ec-down-list 'other-bracketed-form)
     (while (-nomis/ec-can-forward-sexp?)
@@ -774,7 +774,7 @@ Otherwise throw an exception."
       (forward-sexp))))
 
 (defun -nomis/ec-overlay-symbol-number-etc ()
-  (-nomis/ec-debug 'symbol-number-etc)
+  (-nomis/ec-debug *-nomis/ec-site* 'symbol-number-etc)
   ;; Nothing to do. Special handling of symbols is done in
   ;; `-nomis/ec-overlay-specially-if-symbol`.
   )
