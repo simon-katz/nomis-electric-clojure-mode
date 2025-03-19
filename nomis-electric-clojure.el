@@ -651,7 +651,6 @@ Otherwise throw an exception."
           (forward-sexp))))))
 
 (defun -nomis/ec-overlay-using-spec/body ()
-  (-nomis/ec-debug 'body)
   (save-excursion
     (when (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
