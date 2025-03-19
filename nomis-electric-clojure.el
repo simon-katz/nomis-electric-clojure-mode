@@ -468,7 +468,7 @@ Otherwise throw an exception."
   `(-nomis/ec-with-site* ,tag ,site ,end ,description ,print-env?
                          (lambda () ,@body)))
 
-(defun -nomis/ec-overlay-args-of-form ()
+(defun -nomis/ec-overlay-args-of-form-v2 ()
   (-nomis/ec-debug 'args-of-form)
   (save-excursion
     (nomis/ec-down-list 'args-of-form)
@@ -479,12 +479,12 @@ Otherwise throw an exception."
       (-nomis/ec-walk-and-overlay)
       (forward-sexp))))
 
-(defun -nomis/ec-overlay-site (site)
+(defun -nomis/ec-overlay-site-v2 (site)
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag 'site
                           :site site)
-      (-nomis/ec-overlay-args-of-form))))
+      (-nomis/ec-overlay-args-of-form-v2))))
 
 (defun -nomis/ec-binding-structure->vars ()
   (cl-labels
@@ -867,9 +867,9 @@ Otherwise throw an exception."
   (save-excursion
     (cond
      ((looking-at (-nomis/ec-operator-call-regexp "e/client"))
-      (-nomis/ec-overlay-site :client))
+      (-nomis/ec-overlay-site-v2 :client))
      ((looking-at (-nomis/ec-operator-call-regexp "e/server"))
-      (-nomis/ec-overlay-site :server))
+      (-nomis/ec-overlay-site-v2 :server))
      ((-nomis/ec-looking-at-bracketed-sexp-start)
       (-nomis/ec-overlay-other-bracketed-form)))))
 
