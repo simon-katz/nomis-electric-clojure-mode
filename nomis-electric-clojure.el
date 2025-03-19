@@ -864,29 +864,35 @@ Otherwise throw an exception."
               (append -nomis/ec-regexp->parser-spec
                       (list new-entry)))))))
 
-(defun -nomis/ec-walk-and-overlay ()
+(defun -nomis/ec-walk-and-overlay-v2 ()
   (save-excursion
-    (let* ((case-fold-search nil))
-      (cond ; See avoid-case-bug-with-keywords at top of file.
-       ((eq -nomis/ec-electric-version :v2)
+    (cond
+     ((looking-at (-nomis/ec-operator-call-regexp "e/client"))
+      (-nomis/ec-overlay-site :client))
+     ((looking-at (-nomis/ec-operator-call-regexp "e/server"))
+      (-nomis/ec-overlay-site :server))
+     ((-nomis/ec-looking-at-bracketed-sexp-start)
+      (-nomis/ec-overlay-other-bracketed-form)))))
+
+(defun -nomis/ec-walk-and-overlay-v3 ()
+  (let ((case-fold-search nil))
+    (or (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
+                 when (looking-at regexp)
+                 return (progn (apply #'-nomis/ec-overlay-using-spec spec)
+                               t))
         (cond
-         ((looking-at (-nomis/ec-operator-call-regexp "e/client"))
-          (-nomis/ec-overlay-site :client))
-         ((looking-at (-nomis/ec-operator-call-regexp "e/server"))
-          (-nomis/ec-overlay-site :server))
          ((-nomis/ec-looking-at-bracketed-sexp-start)
-          (-nomis/ec-overlay-other-bracketed-form))))
-       ((eq -nomis/ec-electric-version :v3)
-        (or (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
-                     when (looking-at regexp)
-                     return (progn (apply #'-nomis/ec-overlay-using-spec spec)
-                                   t))
-            (cond
-             ((-nomis/ec-looking-at-bracketed-sexp-start)
-              (-nomis/ec-overlay-other-bracketed-form))
-             (t
-              (-nomis/ec-overlay-symbol-number-etc)))))
-       (t (error "Bad case"))))))
+          (-nomis/ec-overlay-other-bracketed-form))
+         (t
+          (-nomis/ec-overlay-symbol-number-etc))))))
+
+(defun -nomis/ec-walk-and-overlay ()
+  (cond ; See avoid-case-bug-with-keywords at top of file.
+   ((eq -nomis/ec-electric-version :v2)
+    (-nomis/ec-walk-and-overlay-v2))
+   ((eq -nomis/ec-electric-version :v3)
+    (-nomis/ec-walk-and-overlay-v3))
+   (t (error "Bad case"))))
 
 (defun -nomis/ec-buffer-has-text? (s)
   (save-excursion (goto-char 0)
