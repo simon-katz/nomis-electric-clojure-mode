@@ -327,13 +327,13 @@ This can be:
 
 ;;;; ___________________________________________________________________________
 
-(defvar *-nomis/ec-n-lumps-in-current-update*)
+(defvar *-nomis/ec-n-lumps-in-current-update* 0)
 
 (defvar *-nomis/ec-site* :neutral
   "The site of the code currently being analysed. One of `:neutral`,
 `:client` or `:server`.")
 
-(defvar *-nomis/ec-bound-vars*)
+(defvar *-nomis/ec-bound-vars* '())
 
 (defvar *-nomis/ec-level* 0)
 
@@ -875,7 +875,7 @@ Otherwise throw an exception."
       (-nomis/ec-overlay-other-bracketed-form)))))
 
 (defun -nomis/ec-walk-and-overlay-v3 ()
-  (let ((case-fold-search nil))
+  (let* ((case-fold-search nil))
     (or (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
                  when (looking-at regexp)
                  return (progn (apply #'-nomis/ec-overlay-using-spec spec)
@@ -925,29 +925,27 @@ Otherwise throw an exception."
     (-nomis/ec-message-no-disp "==== -nomis/ec-overlay-region %s %s" start end))
   (unless -nomis/ec-electric-version
     (-nomis/ec-detect-electric-version))
-  (let* ((*-nomis/ec-bound-vars* '())
-         (*-nomis/ec-n-lumps-in-current-update* 0))
-    (save-excursion
-      (goto-char start)
-      (unless (-nomis/ec-at-top-level?) (beginning-of-defun))
-      (let* ((start-2 (point))
-             (end-2 (save-excursion (goto-char end)
-                                    (unless (-nomis/ec-at-top-level?)
-                                      (end-of-defun))
-                                    (point))))
-        (remove-overlays start-2 end-2 'category 'nomis/ec-overlay)
-        (while (and (< (point) end-2)
-                    (-nomis/ec-can-forward-sexp?))
-          (-nomis/ec-bof)
-          (condition-case err
-              (-nomis/ec-walk-and-overlay)
-            (error (-nomis/ec-message-no-disp "nomis-electric-clojure: %s"
-                                              err)))
-          (forward-sexp))
-        (-nomis/ec-feedback-flash start end start-2 end-2)
-        ;; (-nomis/ec-message-no-disp "*-nomis/ec-n-lumps-in-current-update* = %s"
-        ;;                            *-nomis/ec-n-lumps-in-current-update*)
-        `(jit-lock-bounds ,start-2 . ,end-2)))))
+  (save-excursion
+    (goto-char start)
+    (unless (-nomis/ec-at-top-level?) (beginning-of-defun))
+    (let* ((start-2 (point))
+           (end-2 (save-excursion (goto-char end)
+                                  (unless (-nomis/ec-at-top-level?)
+                                    (end-of-defun))
+                                  (point))))
+      (remove-overlays start-2 end-2 'category 'nomis/ec-overlay)
+      (while (and (< (point) end-2)
+                  (-nomis/ec-can-forward-sexp?))
+        (-nomis/ec-bof)
+        (condition-case err
+            (-nomis/ec-walk-and-overlay)
+          (error (-nomis/ec-message-no-disp "nomis-electric-clojure: %s"
+                                            err)))
+        (forward-sexp))
+      (-nomis/ec-feedback-flash start end start-2 end-2)
+      ;; (-nomis/ec-message-no-disp "*-nomis/ec-n-lumps-in-current-update* = %s"
+      ;;                            *-nomis/ec-n-lumps-in-current-update*)
+      `(jit-lock-bounds ,start-2 . ,end-2))))
 
 ;;;; ___________________________________________________________________________
 
