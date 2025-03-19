@@ -16,15 +16,14 @@
     (e/server (PrintInfo x)))
   x)
 
+(e/defn Main* [a b c d e f]
+  (hosted-call (ElectricCall (hosted-call a)))
+  (e/client (hosted-call (ElectricCall (hosted-call b))))
+  (e/server (hosted-call (ElectricCall (hosted-call c))))
+  ;;
+  (ElectricCall (hosted-call (ElectricCall d)))
+  (e/client (ElectricCall (hosted-call (ElectricCall e))))
+  (e/server (ElectricCall (hosted-call (ElectricCall f)))))
+
 (e/defn Main []
-  (let [v 0]
-    (hosted-call (let [v (inc v)]
-                   (ElectricCall (hosted-call v)))))
-  (let [v 10]
-    (e/client
-      (hosted-call (let [v (inc v)]
-                     (ElectricCall (hosted-call v))))))
-  (let [v 100]
-    (e/server
-      (hosted-call (let [v (inc v)]
-                     (ElectricCall (hosted-call v)))))))
+  (Main* 1 2 3 4 5 6))
