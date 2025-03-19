@@ -864,12 +864,6 @@ Otherwise throw an exception."
               (append -nomis/ec-regexp->parser-spec
                       (list new-entry)))))))
 
-(defun -nomis/ec-overlay-if-spec-ified ()
-  (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
-           when (looking-at regexp)
-           return (progn (apply #'-nomis/ec-overlay-using-spec spec)
-                         t)))
-
 (defun -nomis/ec-walk-and-overlay ()
   (save-excursion
     (let* ((case-fold-search nil))
@@ -883,7 +877,10 @@ Otherwise throw an exception."
          ((-nomis/ec-looking-at-bracketed-sexp-start)
           (-nomis/ec-overlay-other-bracketed-form))))
        ((eq -nomis/ec-electric-version :v3)
-        (or (-nomis/ec-overlay-if-spec-ified)
+        (or (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
+                     when (looking-at regexp)
+                     return (progn (apply #'-nomis/ec-overlay-using-spec spec)
+                                   t))
             (cond
              ((-nomis/ec-looking-at-bracketed-sexp-start)
               (-nomis/ec-overlay-other-bracketed-form))
