@@ -650,15 +650,23 @@ Otherwise throw an exception."
                                                  inherited-site)
           (forward-sexp))))))
 
-(defun -nomis/ec-overlay-using-spec/body ()
+(defun -nomis/ec-overlay-using-spec/body (site operator-id)
   (save-excursion
     (when (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
-      ;; Each body form:
-      (while (-nomis/ec-can-forward-sexp?)
-        (-nomis/ec-bof)
-        (-nomis/ec-walk-and-overlay)
-        (forward-sexp)))))
+      ;; Whole body:
+      (-nomis/ec-with-site (;; avoid-stupid-indentation
+                            :tag (list 'body operator-id)
+                            :site site
+                            :end (save-excursion (backward-up-list)
+                                                 (forward-sexp)
+                                                 (backward-char)
+                                                 (point)))
+        ;; Each body form:
+        (while (-nomis/ec-can-forward-sexp?)
+          (-nomis/ec-bof)
+          (-nomis/ec-walk-and-overlay)
+          (forward-sexp))))))
 
 (defun -nomis/ec-overlay-using-spec/electric-call-args (inherited-site)
   (while (-nomis/ec-can-forward-sexp?)
@@ -728,7 +736,15 @@ Otherwise throw an exception."
 
                (body
                 (cl-assert (null (rest remaining-shape)))
-                (-nomis/ec-overlay-using-spec/body))
+                (-nomis/ec-overlay-using-spec/body *-nomis/ec-site*  operator-id))
+
+               (body-inherit-site ; currently unused
+                (cl-assert (null (rest remaining-shape)))
+                (-nomis/ec-overlay-using-spec/body inherited-site operator-id))
+
+               (body-neutral ; currently unused
+                (cl-assert (null (rest remaining-shape)))
+                (-nomis/ec-overlay-using-spec/body :neutral operator-id))
 
                (electric-call-args
                 (cl-assert (null (rest remaining-shape)))
