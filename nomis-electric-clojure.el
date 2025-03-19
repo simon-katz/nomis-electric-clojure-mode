@@ -601,14 +601,13 @@ Otherwise throw an exception."
                                      #'forward-sexp
                                      #'backward-up-list))
 
-(defun -nomis/ec-overlay-using-spec/key-function (operator-id
-                                                  inherited-site)
   (-nomis/ec-check-movement-possible (list operator-id 'key-function)
+(defun -nomis/ec-overlay-using-spec/key-function (site operator-id)
                                      #'forward-sexp
                                      #'backward-up-list)
   (-nomis/ec-with-site (;; avoid-stupid-indentation
                         :tag :key-function
-                        :site inherited-site)
+                        :site site)
     (-nomis/ec-walk-and-overlay)))
 
 (defun -nomis/ec-overlay-using-spec/e-fn-bindings (operator-id)
@@ -716,8 +715,8 @@ Otherwise throw an exception."
                 (continue (rest remaining-shape)))
 
                (key-function
-                (-nomis/ec-overlay-using-spec/key-function operator-id
-                                                           inherited-site)
+                (-nomis/ec-overlay-using-spec/key-function *-nomis/ec-site*
+                                                           operator-id)
                 (forward-sexp)
                 (continue (rest remaining-shape)))
 
