@@ -452,6 +452,12 @@ Otherwise throw an exception."
         (-nomis/ec-overlay-lump tag site *-nomis/ec-level* start end description)
         (funcall f)))))
 
+(cl-defmacro -nomis/ec-with-site ((&key tag site end description print-env?)
+                                  &body body)
+  (declare (indent 1))
+  `(-nomis/ec-with-site* ,tag ,site ,end ,description ,print-env?
+                         (lambda () ,@body)))
+
 (defun -nomis/ec-overlay-unparsable (pos tag description)
   (save-excursion
     (goto-char pos)
@@ -461,12 +467,6 @@ Otherwise throw an exception."
                           :description description)
       ;; Nothing more.
       )))
-
-(cl-defmacro -nomis/ec-with-site ((&key tag site end description print-env?)
-                                  &body body)
-  (declare (indent 1))
-  `(-nomis/ec-with-site* ,tag ,site ,end ,description ,print-env?
-                         (lambda () ,@body)))
 
 (defun -nomis/ec-overlay-args-of-form-v2 ()
   (-nomis/ec-debug *-nomis/ec-site* 'args-of-form)
