@@ -601,22 +601,21 @@ Otherwise throw an exception."
                                      #'forward-sexp
                                      #'backward-up-list))
 
-  (-nomis/ec-check-movement-possible (list operator-id 'key-function)
 (defun -nomis/ec-overlay-using-spec/key-function (site operator-id)
+  (-nomis/ec-check-movement-possible (list 'key-function operator-id)
                                      #'forward-sexp
                                      #'backward-up-list)
   (-nomis/ec-with-site (;; avoid-stupid-indentation
-                        :tag :key-function
+                        :tag (list 'key-function operator-id)
                         :site site)
     (-nomis/ec-walk-and-overlay)))
 
 (defun -nomis/ec-overlay-using-spec/e-fn-bindings (operator-id)
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag operator-id
+                          :tag (list 'e/fn-bindings operator-id)
                           :site :neutral)
-      (nomis/ec-down-list (list operator-id
-                                'e/fn-bindings))
+      (nomis/ec-down-list (list 'e/fn-bindings operator-id))
       (while (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
         ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
