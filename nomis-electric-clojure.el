@@ -338,6 +338,8 @@ This can be:
   "The site of the code currently being analysed. One of `:neutral`,
 `:client` or `:server`.")
 
+(defvar *-nomis/ec-top-level-of-host-call-or-data-structure?* nil)
+
 (defvar *-nomis/ec-bound-vars* '())
 
 (defvar *-nomis/ec-level* 0)
@@ -571,27 +573,6 @@ Otherwise throw an exception."
     (let* ((ast (parseclj-parse-clojure (thing-at-point 'sexp t))))
       (ast->vars ast))))
 
-(defun -nomis/ec-overlay-specially-if-symbol (tag inherited-site)
-  (let* ((sym-or-nil (thing-at-point 'symbol t)))
-    (if (not sym-or-nil)
-        (-nomis/ec-with-site (;; avoid-stupid-indentation
-                              :tag (list tag 'non-symbol)
-                              :site inherited-site)
-          (-nomis/ec-walk-and-overlay))
-      (if (member sym-or-nil *-nomis/ec-bound-vars*)
-          (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                :tag (list tag 'symbol-bound)
-                                :site :neutral
-                                :print-env? t)
-            ;; Nothing more.
-            )
-        (-nomis/ec-with-site (;; avoid-stupid-indentation
-                              :tag (list tag 'symbol-unbound)
-                              :site inherited-site
-                              :print-env? t)
-          ;; Nothing more.
-          )))))
-
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay ----
 
@@ -643,8 +624,7 @@ Otherwise throw an exception."
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag operator-id
                           :site :neutral)
-      (nomis/ec-down-list (list operator-id
-                                'let-bindings))
+      (nomis/ec-down-list (list 'let-bindings operator-id))
       (while (-nomis/ec-can-forward-sexp?)
         ;; Note the LHS of the binding:
         (-nomis/ec-bof)
@@ -657,8 +637,12 @@ Otherwise throw an exception."
         ;; Walk the RHS of the binding, if there is one:
         (when (-nomis/ec-can-forward-sexp?)
           (-nomis/ec-bof)
-          (-nomis/ec-overlay-specially-if-symbol "binding-rhs"
-                                                 inherited-site)
+          (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                :tag (list 'binding-rhs
+                                           'let-bindings
+                                           operator-id)
+                                :site inherited-site)
+            (-nomis/ec-walk-and-overlay))
           (forward-sexp))))))
 
 (defun -nomis/ec-overlay-using-spec/body (site operator-id)
@@ -682,13 +666,16 @@ Otherwise throw an exception."
 (defun -nomis/ec-overlay-using-spec/electric-call-args (inherited-site)
   (while (-nomis/ec-can-forward-sexp?)
     (-nomis/ec-bof)
-    (-nomis/ec-overlay-specially-if-symbol "electric-call-arg"
-                                           inherited-site)
+    (-nomis/ec-with-site (;; avoid-stupid-indentation
+                          :tag (list 'electric-call-arg)
+                          :site inherited-site)
+      (-nomis/ec-walk-and-overlay))
     (forward-sexp)))
 
 (cl-defun -nomis/ec-overlay-using-spec (&key operator-id
                                              apply-to
                                              site
+                                             top-level-host-call?
                                              shape)
   (cl-assert (or (null apply-to) (member apply-to '(whole operator))))
   (cl-assert (or (not apply-to) site))
@@ -784,12 +771,15 @@ Otherwise throw an exception."
            (do-it ()
              (nomis/ec-down-list operator-id)
              (continue shape)))
-        (if (eq apply-to 'whole)
-            (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                  :tag operator-id
-                                  :site site)
-              (do-it))
-          (do-it))))))
+        (let* ((*-nomis/ec-top-level-of-host-call-or-data-structure?*
+                (or top-level-host-call?
+                    *-nomis/ec-top-level-of-host-call-or-data-structure?*)))
+          (if (eq apply-to 'whole)
+              (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                    :tag operator-id
+                                    :site site)
+                (do-it))
+            (do-it)))))))
 
 (defun -nomis/ec-overlay-other-bracketed-form ()
   (-nomis/ec-debug *-nomis/ec-site* 'other-bracketed-form)
@@ -802,9 +792,22 @@ Otherwise throw an exception."
 
 (defun -nomis/ec-overlay-symbol-number-etc ()
   (-nomis/ec-debug *-nomis/ec-site* 'symbol-number-etc)
-  ;; Nothing to do. Special handling of symbols is done in
-  ;; `-nomis/ec-overlay-specially-if-symbol`.
-  )
+  (let* ((sym (thing-at-point 'symbol t)))
+    (cond ((null sym)
+           (unless (thing-at-point 'string t)
+             (let* ((sexp (thing-at-point 'sexp t)))
+               (-nomis/ec-message-no-disp
+                "nomis-electric-clojure-mode: Line %s: Expected a symbol-number-etc but got %s"
+                (line-number-at-pos)
+                sexp))))
+          ((and (not *-nomis/ec-top-level-of-host-call-or-data-structure?*)
+                (member sym *-nomis/ec-bound-vars*))
+           (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                 :tag (list 'symbol-bound)
+                                 :site :neutral
+                                 :print-env? t)
+             ;; Nothing more.
+             )))))
 
 (defun -nomis/ec-operator-call-regexp (operator-regexp)
   (concat "(\\([[:space:]]\\|\n\\)*"
@@ -848,6 +851,7 @@ Otherwise throw an exception."
                                              operator))
                                           apply-to
                                           site
+                                          top-level-host-call?
                                           shape))
   "Add a spec for parsing Elecric Clojure code.
 
@@ -871,10 +875,11 @@ Otherwise throw an exception."
   NOMIS/EC-RESET-TO-BUILT-IN-PARSER-SPECS will be useful."
   (let* ((operator-regexp (if regexp? operator (regexp-quote operator)))
          (regexp (-nomis/ec-operator-call-regexp operator-regexp))
-         (spec (list :operator-id operator-id
-                     :apply-to    apply-to
-                     :site        site
-                     :shape       shape))
+         (spec (list :operator-id          operator-id
+                     :apply-to             apply-to
+                     :site                 site
+                     :top-level-host-call? top-level-host-call?
+                     :shape                shape))
          (new-entry (cons regexp spec)))
     (let* ((existing-operator-id? nil))
       (setq -nomis/ec-regexp->parser-spec
@@ -902,13 +907,15 @@ Otherwise throw an exception."
 
 (defun -nomis/ec-walk-and-overlay-v3 ()
   (let* ((case-fold-search nil))
-    (or (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
-                 when (looking-at regexp)
-                 return (progn (apply #'-nomis/ec-overlay-using-spec spec)
-                               t))
+    (or (let* ((*-nomis/ec-top-level-of-host-call-or-data-structure?* nil))
+          (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
+                   when (looking-at regexp)
+                   return (progn (apply #'-nomis/ec-overlay-using-spec spec)
+                                 t)))
         (cond
          ((-nomis/ec-looking-at-bracketed-sexp-start)
-          (-nomis/ec-overlay-other-bracketed-form))
+          (let* ((*-nomis/ec-top-level-of-host-call-or-data-structure?* t))
+            (-nomis/ec-overlay-other-bracketed-form)))
          (t
           (-nomis/ec-overlay-symbol-number-etc))))))
 
@@ -1140,21 +1147,23 @@ This is very DIY. Is there a better way?")
 
 (defun -nomis/ec-add-built-in-parser-specs ()
   (nomis/ec-add-parser-spec '(
-                              :operator "e/client"
-                              :site     :client
-                              :apply-to whole
-                              :shape    (operator
-                                         body)))
+                              :operator             "e/client"
+                              :site                 :client
+                              :top-level-host-call? t
+                              :apply-to             whole
+                              :shape                (operator
+                                                     body)))
   (nomis/ec-add-parser-spec '(
-                              :operator "e/server"
-                              :site     :server
-                              :apply-to whole
-                              :shape    (operator
-                                         body)))
+                              :operator             "e/server"
+                              :site                 :server
+                              :top-level-host-call? t
+                              :apply-to             whole
+                              :shape                (operator
+                                                     body)))
   (nomis/ec-add-parser-spec `(
                               :operator-id "dom/xxxx"
                               :operator    ,(concat "dom/"
-                                                       -nomis/ec-symbol-no-slash-regexp)
+                                                    -nomis/ec-symbol-no-slash-regexp)
                               :regexp?     t
                               :site        :client
                               :apply-to    operator
