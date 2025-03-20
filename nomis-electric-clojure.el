@@ -445,10 +445,10 @@ Otherwise throw an exception."
 
 (defun -nomis/ec-with-site* (tag site end description print-env? f)
   (cl-assert tag)
-  (cl-assert site)
   (-nomis/ec-debug site tag nil print-env?)
   (let* ((*-nomis/ec-level* (1+ *-nomis/ec-level*)))
-    (if (eq site *-nomis/ec-site*)
+    (if (or (null site)
+            (eq site *-nomis/ec-site*))
         ;; No need for a new overlay.
         (funcall f)
       (let* ((*-nomis/ec-site* site)
@@ -594,18 +594,18 @@ Otherwise throw an exception."
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay ----
 
-(defun -nomis/ec-overlay-operator (tag apply-to site)
+(cl-defun -nomis/ec-overlay-operator (tag
+                                      inherited-site
+                                      (&key site))
+  (cl-assert (member site '(nil ec/client ec/server ec/neutral inherit)))
   (-nomis/ec-check-movement-possible tag
                                      #'forward-sexp
                                      #'backward-up-list)
-  (when (eq apply-to 'operator)
-    (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag (cons 'operator tag)
-                          :site site)
-      ;; Nothing more.
-      ))
-  ;; Operators don't have to be symbols; they can be lambdas. So:
-  (unless (thing-at-point 'symbol)
+  (-nomis/ec-with-site (;; avoid-stupid-indentation
+                        :tag (cons 'operator tag)
+                        :site (if (eq site 'inherit)
+                                  inherited-site
+                                site))
     (-nomis/ec-walk-and-overlay-v3)))
 
 (defun -nomis/ec-overlay-name (tag)
@@ -637,12 +637,17 @@ Otherwise throw an exception."
                       *-nomis/ec-bound-vars*))
         (forward-sexp)))))
 
-(defun -nomis-/ec-overlay-let-bindings (inherited-site tag)
+(cl-defun -nomis-/ec-overlay-let-bindings (tag
+                                           inherited-site
+                                           (&key site))
+  (cl-assert (member site '(nil ec/client ec/server ec/neutral inherit)))
   (save-excursion
     (let* ((tag (cons 'let-bindings tag)))
       (-nomis/ec-with-site (;; avoid-stupid-indentation
                             :tag tag
-                            :site 'ec/neutral)
+                            :site (if (eq site 'inherit)
+                                      inherited-site
+                                    site))
         (nomis/ec-down-list tag)
         (while (-nomis/ec-can-forward-sexp?)
           ;; Note the LHS of the binding:
@@ -690,83 +695,84 @@ Otherwise throw an exception."
     (forward-sexp)))
 
 (cl-defun -nomis/ec-overlay-using-spec (&key operator-id
-                                             apply-to
                                              site
                                              top-level-host-call?
                                              shape)
-  (cl-assert (or (null apply-to) (member apply-to '(whole operator))))
-  (cl-assert (or (not apply-to) site))
   (cl-assert (listp shape))
   (save-excursion
     (let* ((inherited-site *-nomis/ec-site*))
       (cl-labels
           ((next (remaining-shape)
-             (cl-ecase (first remaining-shape)
+             (let* ((term-and-opts (first remaining-shape))
+                    (term (if (atom term-and-opts) term-and-opts (first term-and-opts)))
+                    (opts (if (atom term-and-opts) '() (rest term-and-opts))))
+               (cl-ecase term
 
-               (operator
-                (-nomis/ec-overlay-operator (list operator-id)
-                                            apply-to
-                                            site)
-                (forward-sexp)
-                (continue (rest remaining-shape)))
-
-               (name
-                (-nomis/ec-overlay-name (list operator-id))
-                (forward-sexp)
-                (continue (rest remaining-shape)))
-
-               (name?
-                (when (thing-at-point 'symbol)
-                  (forward-sexp))
-                (continue (rest remaining-shape)))
-
-               (doc-string?
-                (when (thing-at-point 'string)
-                  (forward-sexp))
-                (continue (rest remaining-shape)))
-
-               (attr-map?
-                (when (looking-at "{")
-                  (forward-sexp))
-                (continue (rest remaining-shape)))
-
-               (key-function
-                (-nomis/ec-overlay-key-function *-nomis/ec-site*
-                                                (list operator-id))
-                (forward-sexp)
-                (continue (rest remaining-shape)))
-
-               (fn-bindings
-                (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
-                  (-nomis/ec-overlay-e-fn-bindings (list operator-id))
+                 (operator
+                  (-nomis/ec-overlay-operator (list operator-id)
+                                              inherited-site
+                                              opts)
                   (forward-sexp)
-                  (continue (rest remaining-shape))))
+                  (continue (rest remaining-shape)))
 
-               (let-bindings
-                (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
-                  (-nomis-/ec-overlay-let-bindings inherited-site
-                                                   (list operator-id))
+                 (name
+                  (-nomis/ec-overlay-name (list operator-id))
                   (forward-sexp)
-                  (continue (rest remaining-shape))))
+                  (continue (rest remaining-shape)))
 
-               (body
-                (cl-assert (null (rest remaining-shape)))
-                (-nomis/ec-overlay-body *-nomis/ec-site*
-                                        (list operator-id)))
+                 (name?
+                  (when (thing-at-point 'symbol)
+                    (forward-sexp))
+                  (continue (rest remaining-shape)))
 
-               (body-inherit-site ; currently unused
-                (cl-assert (null (rest remaining-shape)))
-                (-nomis/ec-overlay-body inherited-site
-                                        (list operator-id)))
+                 (doc-string?
+                  (when (thing-at-point 'string)
+                    (forward-sexp))
+                  (continue (rest remaining-shape)))
 
-               (body-neutral ; currently unused
-                (cl-assert (null (rest remaining-shape)))
-                (-nomis/ec-overlay-body 'ec/neutral
-                                        (list operator-id)))
+                 (attr-map?
+                  (when (looking-at "{")
+                    (forward-sexp))
+                  (continue (rest remaining-shape)))
 
-               (electric-call-args
-                (cl-assert (null (rest remaining-shape)))
-                (-nomis/ec-overlay-electric-call-args inherited-site))))
+                 (key-function
+                  (-nomis/ec-overlay-key-function *-nomis/ec-site*
+                                                  (list operator-id))
+                  (forward-sexp)
+                  (continue (rest remaining-shape)))
+
+                 (fn-bindings
+                  (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
+                    (-nomis/ec-overlay-e-fn-bindings (list operator-id))
+                    (forward-sexp)
+                    (continue (rest remaining-shape))))
+
+                 (let-bindings
+                  (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
+                    (-nomis-/ec-overlay-let-bindings (list operator-id)
+                                                     inherited-site
+                                                     opts)
+                    (forward-sexp)
+                    (continue (rest remaining-shape))))
+
+                 (body
+                  (cl-assert (null (rest remaining-shape)))
+                  (-nomis/ec-overlay-body *-nomis/ec-site*
+                                          (list operator-id)))
+
+                 (body-inherit-site ; currently unused
+                  (cl-assert (null (rest remaining-shape)))
+                  (-nomis/ec-overlay-body inherited-site
+                                          (list operator-id)))
+
+                 (body-neutral ; currently unused
+                  (cl-assert (null (rest remaining-shape)))
+                  (-nomis/ec-overlay-body 'ec/neutral
+                                          (list operator-id)))
+
+                 (electric-call-args
+                  (cl-assert (null (rest remaining-shape)))
+                  (-nomis/ec-overlay-electric-call-args inherited-site)))))
 
            (continue (remaining-shape)
              (when remaining-shape
@@ -794,7 +800,7 @@ Otherwise throw an exception."
         (let* ((*-nomis/ec-top-level-of-host-call-or-data-structure?*
                 (or top-level-host-call?
                     *-nomis/ec-top-level-of-host-call-or-data-structure?*)))
-          (if (eq apply-to 'whole)
+          (if site ; TODO: Why do this checking here and not elsewhere?
               (-nomis/ec-with-site (;; avoid-stupid-indentation
                                     :tag (list operator-id)
                                     :site site)
@@ -869,7 +875,6 @@ Otherwise throw an exception."
                                            (if regexp?
                                                (error "operator-id must be supplied when regexp? is true")
                                              operator))
-                                          apply-to
                                           site
                                           top-level-host-call?
                                           shape))
@@ -896,7 +901,6 @@ Otherwise throw an exception."
   (let* ((operator-regexp (if regexp? operator (regexp-quote operator)))
          (regexp (-nomis/ec-operator-call-regexp operator-regexp))
          (spec (list :operator-id          operator-id
-                     :apply-to             apply-to
                      :site                 site
                      :top-level-host-call? top-level-host-call?
                      :shape                shape))
@@ -1161,14 +1165,12 @@ This is very DIY. Is there a better way?")
                               :operator             "e/client"
                               :site                 ec/client
                               :top-level-host-call? t
-                              :apply-to             whole
                               :shape                (operator
                                                      body)))
   (nomis/ec-add-parser-spec '(
                               :operator             "e/server"
                               :site                 ec/server
                               :top-level-host-call? t
-                              :apply-to             whole
                               :shape                (operator
                                                      body)))
   (nomis/ec-add-parser-spec `(
@@ -1176,14 +1178,11 @@ This is very DIY. Is there a better way?")
                               :operator    ,(concat "dom/"
                                                     -nomis/ec-symbol-no-slash-regexp)
                               :regexp?     t
-                              :site        ec/client
-                              :apply-to    operator
-                              :shape       (operator
+                              :shape       ((operator :site ec/client)
                                             body)))
   (nomis/ec-add-parser-spec '(
                               :operator "e/defn"
                               :site     ec/neutral
-                              :apply-to whole
                               :shape    (operator
                                          name
                                          doc-string?
@@ -1193,7 +1192,6 @@ This is very DIY. Is there a better way?")
   (nomis/ec-add-parser-spec '(
                               :operator "e/fn"
                               :site     ec/neutral
-                              :apply-to whole
                               :shape    (operator
                                          name?
                                          fn-bindings
@@ -1201,37 +1199,35 @@ This is very DIY. Is there a better way?")
   (nomis/ec-add-parser-spec '(
                               :operator "let"
                               :shape    (operator
-                                         let-bindings
+                                         (let-bindings :site ec/neutral)
                                          body)))
   (nomis/ec-add-parser-spec '(
                               :operator "binding"
                               :shape    (operator
-                                         let-bindings
+                                         (let-bindings :site ec/neutral)
                                          body)))
   (nomis/ec-add-parser-spec '(
                               :operator "e/for"
                               :shape    (operator
-                                         let-bindings
+                                         (let-bindings :site ec/neutral)
                                          body)))
   (nomis/ec-add-parser-spec '(
                               :operator "e/for-by"
                               :shape    (operator
                                          key-function
-                                         let-bindings
+                                         (let-bindings :site ec/neutral)
                                          body)))
   (nomis/ec-add-parser-spec `(
                               :operator-id electric-call
                               :operator    ,-nomis/ec-electric-function-name-regexp
                               :regexp?     t
                               :site        ec/neutral
-                              :apply-to    whole
                               :shape       (operator
                                             electric-call-args)))
   (nomis/ec-add-parser-spec '(
                               :operator-id electric-lambda-in-fun-position
                               :operator    "(e/fn" ; Note the open parenthesis here, for lambda in function position.
                               :site        ec/neutral
-                              :apply-to    whole
                               :shape       (operator
                                             electric-call-args))))
 
