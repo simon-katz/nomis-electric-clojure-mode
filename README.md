@@ -34,12 +34,23 @@ Copy the file `nomis-electric-clojure.el` to a place where it will be found by y
 
 ### Option 2
 
-For Emacs 30+:
+For Emacs 30+...
+
+For the latest version:
 
 ```
 (use-package nomis-electric-clojure
   :vc (:url "https://github.com/simon-katz/nomis-electric-clojure-mode"
        :rev "newest")
+  :ensure t)
+```
+
+You can specify a particular version using a Git tag like this:
+
+```
+(use-package nomis-electric-clojure
+  :vc (:url "https://github.com/simon-katz/nomis-electric-clojure-mode"
+       :rev "v0.4")
   :ensure t)
 ```
 
