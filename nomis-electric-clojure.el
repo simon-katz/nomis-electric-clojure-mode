@@ -491,7 +491,7 @@ Otherwise throw an exception."
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
       (-nomis/ec-debug *-nomis/ec-site* (list 'args-of-form 'arg))
-      (-nomis/ec-walk-and-overlay)
+      (-nomis/ec-walk-and-overlay-v2)
       (forward-sexp))))
 
 (defun -nomis/ec-overlay-site-v2 (site)
@@ -588,7 +588,7 @@ Otherwise throw an exception."
       ))
   ;; Operators don't have to be symbols; they can be lambdas. So:
   (unless (thing-at-point 'symbol)
-    (-nomis/ec-walk-and-overlay)))
+    (-nomis/ec-walk-and-overlay-v3)))
 
 (defun -nomis/ec-overlay-using-spec/name (tag)
   (-nomis/ec-check-movement-possible (cons 'name tag)
@@ -602,7 +602,7 @@ Otherwise throw an exception."
   (-nomis/ec-with-site (;; avoid-stupid-indentation
                         :tag (cons 'key-function tag)
                         :site site)
-    (-nomis/ec-walk-and-overlay)))
+    (-nomis/ec-walk-and-overlay-v3)))
 
 (defun -nomis/ec-overlay-using-spec/e-fn-bindings (tag)
   (save-excursion
@@ -641,7 +641,7 @@ Otherwise throw an exception."
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (cons 'binding-rhs tag)
                                  :site inherited-site)
-             (-nomis/ec-walk-and-overlay))
+             (-nomis/ec-walk-and-overlay-v3))
            (forward-sexp)))))))
 
 (defun -nomis/ec-overlay-using-spec/body (site tag)
@@ -659,7 +659,7 @@ Otherwise throw an exception."
         ;; Each body form:
         (while (-nomis/ec-can-forward-sexp?)
           (-nomis/ec-bof)
-          (-nomis/ec-walk-and-overlay)
+          (-nomis/ec-walk-and-overlay-v3)
           (forward-sexp))))))
 
 (defun -nomis/ec-overlay-using-spec/electric-call-args (inherited-site)
@@ -668,7 +668,7 @@ Otherwise throw an exception."
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (list 'electric-call-arg)
                           :site inherited-site)
-      (-nomis/ec-walk-and-overlay))
+      (-nomis/ec-walk-and-overlay-v3))
     (forward-sexp)))
 
 (cl-defun -nomis/ec-overlay-using-spec (&key operator-id
@@ -783,13 +783,22 @@ Otherwise throw an exception."
                 (do-it))
             (do-it)))))))
 
-(defun -nomis/ec-overlay-other-bracketed-form ()
+(defun -nomis/ec-overlay-other-bracketed-form-v2 ()
   (-nomis/ec-debug *-nomis/ec-site* 'other-bracketed-form)
   (save-excursion
     (nomis/ec-down-list 'other-bracketed-form)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
-      (-nomis/ec-walk-and-overlay)
+      (-nomis/ec-walk-and-overlay-v2)
+      (forward-sexp))))
+
+(defun -nomis/ec-overlay-other-bracketed-form-v3 ()
+  (-nomis/ec-debug *-nomis/ec-site* 'other-bracketed-form)
+  (save-excursion
+    (nomis/ec-down-list 'other-bracketed-form)
+    (while (-nomis/ec-can-forward-sexp?)
+      (-nomis/ec-bof)
+      (-nomis/ec-walk-and-overlay-v3)
       (forward-sexp))))
 
 (defun -nomis/ec-overlay-symbol-number-etc ()
@@ -905,7 +914,7 @@ Otherwise throw an exception."
      ((looking-at (-nomis/ec-operator-call-regexp "e/server"))
       (-nomis/ec-overlay-site-v2 :server))
      ((-nomis/ec-looking-at-bracketed-sexp-start)
-      (-nomis/ec-overlay-other-bracketed-form)))))
+      (-nomis/ec-overlay-other-bracketed-form-v2)))))
 
 (defun -nomis/ec-walk-and-overlay-v3 ()
   (let* ((case-fold-search nil))
@@ -917,11 +926,11 @@ Otherwise throw an exception."
         (cond
          ((-nomis/ec-looking-at-bracketed-sexp-start)
           (let* ((*-nomis/ec-top-level-of-host-call-or-data-structure?* t))
-            (-nomis/ec-overlay-other-bracketed-form)))
+            (-nomis/ec-overlay-other-bracketed-form-v3)))
          (t
           (-nomis/ec-overlay-symbol-number-etc))))))
 
-(defun -nomis/ec-walk-and-overlay ()
+(defun -nomis/ec-walk-and-overlay-any-version ()
   (cond ; See avoid-case-bug-with-keywords at top of file.
    ((eq -nomis/ec-electric-version :v2)
     (-nomis/ec-walk-and-overlay-v2))
@@ -973,7 +982,7 @@ Otherwise throw an exception."
                   (-nomis/ec-can-forward-sexp?))
         (-nomis/ec-bof)
         (condition-case err
-            (-nomis/ec-walk-and-overlay)
+            (-nomis/ec-walk-and-overlay-any-version)
           (error (-nomis/ec-message-no-disp "nomis-electric-clojure: %s"
                                             err)))
         (forward-sexp))
