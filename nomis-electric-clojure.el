@@ -473,15 +473,8 @@ Otherwise throw an exception."
   `(-nomis/ec-with-site* ,tag ,site ,end ,description ,print-env?
                          (lambda () ,@body)))
 
-(defun -nomis/ec-overlay-unparsable (pos tag description)
-  (save-excursion
-    (goto-char pos)
-    (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag (cons 'unparsable tag)
-                          :site :unparsable
-                          :description description)
-      ;; Nothing more.
-      )))
+;;;; ___________________________________________________________________________
+;;;; ---- Electric v2 ----
 
 (defun -nomis/ec-overlay-args-of-form-v2 ()
   (-nomis/ec-debug *-nomis/ec-site* 'args-of-form)
@@ -500,6 +493,38 @@ Otherwise throw an exception."
                           :tag '(site)
                           :site site)
       (-nomis/ec-overlay-args-of-form-v2))))
+
+(defun -nomis/ec-overlay-other-bracketed-form-v2 ()
+  (-nomis/ec-debug *-nomis/ec-site* 'other-bracketed-form)
+  (save-excursion
+    (nomis/ec-down-list 'other-bracketed-form)
+    (while (-nomis/ec-can-forward-sexp?)
+      (-nomis/ec-bof)
+      (-nomis/ec-walk-and-overlay-v2)
+      (forward-sexp))))
+
+(defun -nomis/ec-walk-and-overlay-v2 ()
+  (save-excursion
+    (cond
+     ((looking-at (-nomis/ec-operator-call-regexp "e/client"))
+      (-nomis/ec-overlay-site-v2 :client))
+     ((looking-at (-nomis/ec-operator-call-regexp "e/server"))
+      (-nomis/ec-overlay-site-v2 :server))
+     ((-nomis/ec-looking-at-bracketed-sexp-start)
+      (-nomis/ec-overlay-other-bracketed-form-v2)))))
+
+;;;; ___________________________________________________________________________
+;;;; ---- More parse and overlay helpers ----
+
+(defun -nomis/ec-overlay-unparsable (pos tag description)
+  (save-excursion
+    (goto-char pos)
+    (-nomis/ec-with-site (;; avoid-stupid-indentation
+                          :tag (cons 'unparsable tag)
+                          :site :unparsable
+                          :description description)
+      ;; Nothing more.
+      )))
 
 (defun -nomis/ec-binding-structure->vars ()
   (cl-labels
@@ -783,15 +808,6 @@ Otherwise throw an exception."
                 (do-it))
             (do-it)))))))
 
-(defun -nomis/ec-overlay-other-bracketed-form-v2 ()
-  (-nomis/ec-debug *-nomis/ec-site* 'other-bracketed-form)
-  (save-excursion
-    (nomis/ec-down-list 'other-bracketed-form)
-    (while (-nomis/ec-can-forward-sexp?)
-      (-nomis/ec-bof)
-      (-nomis/ec-walk-and-overlay-v2)
-      (forward-sexp))))
-
 (defun -nomis/ec-overlay-other-bracketed-form-v3 ()
   (-nomis/ec-debug *-nomis/ec-site* 'other-bracketed-form)
   (save-excursion
@@ -905,16 +921,6 @@ Otherwise throw an exception."
         (setq -nomis/ec-regexp->parser-spec
               (append -nomis/ec-regexp->parser-spec
                       (list new-entry)))))))
-
-(defun -nomis/ec-walk-and-overlay-v2 ()
-  (save-excursion
-    (cond
-     ((looking-at (-nomis/ec-operator-call-regexp "e/client"))
-      (-nomis/ec-overlay-site-v2 :client))
-     ((looking-at (-nomis/ec-operator-call-regexp "e/server"))
-      (-nomis/ec-overlay-site-v2 :server))
-     ((-nomis/ec-looking-at-bracketed-sexp-start)
-      (-nomis/ec-overlay-other-bracketed-form-v2)))))
 
 (defun -nomis/ec-walk-and-overlay-v3 ()
   (let* ((case-fold-search nil))
