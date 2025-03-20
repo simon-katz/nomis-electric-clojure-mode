@@ -46,6 +46,7 @@
 
 ;;;; ___________________________________________________________________________
 
+(require 'dash) ; TODO: Add to prerequisites.
 (require 'parseclj)
 
 ;;;; ___________________________________________________________________________
@@ -165,8 +166,12 @@ This includes both bad syntax and parts of Clojure that we don't know about.")
                       :inherit
                       (-nomis/ec-compute-unparsable-face)))
 
+(defconst -nomis/ec-neutral-face-color "unspecified-bg") ; TODO Is there a better way to get the default background color? This gives messages in the echo area.
+
+(defconst -nomis/ec-neutral-face-color/debug "Blue3")
+
 (defface -nomis/ec-neutral-face
-  `((t ,(list :background "unspecified-bg"
+  `((t ,(list :background -nomis/ec-neutral-face-color
               :underline nil)))
   "Face for Electric code that is neither specifically client code nor
 specifically server code.
@@ -340,6 +345,8 @@ This can be:
 ;;;; ___________________________________________________________________________
 ;;;; Overlay basics
 
+(defvar -nomis/ec-debug-overlays? nil)
+
 (defun -nomis/ec-make-overlay (tag nesting-level face start end description)
   ;; (-nomis/ec-debug *-nomis/ec-site* :make-overlay)
   (let* ((ov (make-overlay start end nil t nil)))
@@ -347,7 +354,13 @@ This can be:
     (overlay-put ov 'category 'nomis/ec-overlay)
     (overlay-put ov 'face face)
     (overlay-put ov 'evaporate t)
-    (when description (overlay-put ov 'help-echo description))
+    (when (or description -nomis/ec-debug-overlays?)
+      (let* ((messages (list description
+                             (when -nomis/ec-debug-overlays?
+                               (format "DEBUG: Overlay for: %s"
+                                       tag)))))
+        (overlay-put ov 'help-echo (-> (-remove #'null messages)
+                                       (string-join " / ")))))
     (unless nomis/ec-color-initial-whitespace?
       ;; We have multiple overlays in the same place, so we need to
       ;; specify their priority.
@@ -1106,6 +1119,21 @@ This is very DIY. Is there a better way?")
                                      "")
                                    (overlay-get ov 'nomis/tag))))
     (message "No. of overlays = %s" (length ovs))))
+
+(defun nomis/ec-toggle-debug-overlays ()
+  (interactive)
+  (if -nomis/ec-debug-overlays?
+      (progn (setq -nomis/ec-debug-overlays? nil)
+             (set-face-attribute '-nomis/ec-neutral-face
+                                 nil
+                                 :background
+                                 -nomis/ec-neutral-face-color))
+    (progn (setq -nomis/ec-debug-overlays? t)
+           (set-face-attribute '-nomis/ec-neutral-face
+                               nil
+                               :background
+                               -nomis/ec-neutral-face-color/debug)))
+  (-nomis/ec-redraw-all-buffers))
 
 ;;;; ___________________________________________________________________________
 ;;;; Built-in parser specs

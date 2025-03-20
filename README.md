@@ -13,7 +13,10 @@ See the [Screenshot Gallery](docs/screenshot-gallery.md) for more examples.
 
 ## Prerequisites
 
-nomis-electric-clojure depends on the parseclj Emacs library. I've been using version 20231203.1905 successfully.
+nomis-electric-clojure depends on the Emacs libraries listed below. I've been using the versions in parentheses.
+
+- dash (20240510.1327)
+- parseclj (20231203.1905).
 
 I don't know how to package up Emacs libraries — how to specify dependencies etc — so for now you will have to separately make sure that parseclj is available.  (TODO: Improve this.)
 
