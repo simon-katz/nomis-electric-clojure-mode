@@ -65,13 +65,6 @@ at the beginning of all .cljc buffers."
   "How far to search in Electric Clojure source code buffers when
 trying to detect the version of Electric Clojure.
 
-This detection is done when `nomis-electric-clojure-mode` is turned on,
-by looking for
-  `[hyperfiddle.electric3` (for v3)
-or, failing that, for
-  `[hyperfiddle.electric` (for v2)
-near the beginning of the buffer.
-
 You can re-run the auto-detection in any of the following ways:
 - by running `M-x nomis/ec-redetect-electric-version`
 - by turning `nomis-electric-clojure-mode` off and then back on
