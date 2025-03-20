@@ -55,9 +55,9 @@
 (defcustom nomis/ec-auto-enable? t
   "Whether to turn on `nomis-electric-clojure-mode` automatically by
 looking for
-  `[hyperfiddle.electric :as e]`
-or
-  `[hyperfiddle.electric3 :as e]`
+  `[hyperfiddle.electric3` (for v3)
+or, failing that, for
+  `[hyperfiddle.electric` (for v2)
 at the beginning of all .cljc buffers."
   :type 'boolean)
 
@@ -67,9 +67,9 @@ trying to detect the version of Electric Clojure.
 
 This detection is done when `nomis-electric-clojure-mode` is turned on,
 by looking for
-  `[hyperfiddle.electric :as e]`
-or
-  `[hyperfiddle.electric3 :as e]`
+  `[hyperfiddle.electric3` (for v3)
+or, failing that, for
+  `[hyperfiddle.electric` (for v2)
 near the beginning of the buffer.
 
 You can re-run the auto-detection in any of the following ways:
@@ -951,9 +951,9 @@ Otherwise throw an exception."
                                   t)))
 
 (defun -nomis/ec-explicit-electric-version ()
-  (cond ((-nomis/ec-buffer-has-text? "[hyperfiddle.electric3 :as e]")
+  (cond ((-nomis/ec-buffer-has-text? "[hyperfiddle.electric3")
          :v3)
-        ((-nomis/ec-buffer-has-text? "[hyperfiddle.electric :as e]")
+        ((-nomis/ec-buffer-has-text? "[hyperfiddle.electric")
          :v2)))
 
 (defvar -nomis/ec-noted-explicit-electric-version nil
