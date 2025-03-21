@@ -372,7 +372,7 @@ This can be:
                   ((eq site 'ec/server)     '-nomis/ec-server-face)
                   ((eq site 'ec/neutral)    '-nomis/ec-neutral-face)
                   ((eq site 'ec/unparsable) '-nomis/ec-unparsable-face)
-                  (t (error "Bad case")))))
+                  (t (error "Bad case: site: %s" site)))))
       (cl-flet ((overlay (s e)
                   (-nomis/ec-make-overlay tag nesting-level face s e description)))
         (if nomis/ec-color-initial-whitespace?
@@ -935,7 +935,8 @@ Otherwise throw an exception."
     (-nomis/ec-walk-and-overlay-v2))
    ((eq -nomis/ec-electric-version :v3)
     (-nomis/ec-walk-and-overlay-v3))
-   (t (error "Bad case"))))
+   (t (error "Bad case: -nomis/ec-electric-version: %s"
+             -nomis/ec-electric-version))))
 
 (defun -nomis/ec-buffer-has-text? (s)
   (save-excursion (goto-char 0)
