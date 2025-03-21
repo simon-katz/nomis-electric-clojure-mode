@@ -345,7 +345,7 @@ This can be:
 (defun -nomis/ec-make-overlay (tag nesting-level face start end description)
   ;; (-nomis/ec-debug *-nomis/ec-site* 'make-overlay)
   (let* ((ov (make-overlay start end nil t nil)))
-    (overlay-put ov 'nomis/tag tag)
+    (overlay-put ov 'nomis/tag (reverse tag))
     (overlay-put ov 'category 'nomis/ec-overlay)
     (overlay-put ov 'face face)
     (overlay-put ov 'evaporate t)
