@@ -343,7 +343,7 @@ This can be:
 (defvar -nomis/ec-debug-overlays? nil)
 
 (defun -nomis/ec-make-overlay (tag nesting-level face start end description)
-  ;; (-nomis/ec-debug *-nomis/ec-site* :make-overlay)
+  ;; (-nomis/ec-debug *-nomis/ec-site* 'make-overlay)
   (let* ((ov (make-overlay start end nil t nil)))
     (overlay-put ov 'nomis/tag tag)
     (overlay-put ov 'category 'nomis/ec-overlay)
@@ -363,9 +363,9 @@ This can be:
     ov))
 
 (defun -nomis/ec-overlay-lump (tag site nesting-level start end description)
-  (-nomis/ec-debug site :overlay-lump)
+  (-nomis/ec-debug site 'overlay-lump)
   (if (= start end)
-      (-nomis/ec-debug site :empty-lump)
+      (-nomis/ec-debug site 'empty-lump)
     (cl-incf *-nomis/ec-n-lumps-in-current-update*)
     (let* ((face (cond ; See avoid-case-bug-with-keywords at top of file.
                   ((eq site 'ec/client)     '-nomis/ec-client-face)
