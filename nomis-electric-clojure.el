@@ -344,8 +344,7 @@ This can be:
 
 (defvar -nomis/ec-debug-overlays? nil)
 
-(defun -nomis/ec-make-overlay (tag nesting-level face start end description)
-  ;; (-nomis/ec-debug *-nomis/ec-site* 'make-overlay)
+(defun -nomis/ec-make-overlay (start end nesting-level tag face description)
   (let* ((ov (make-overlay start end nil t nil)))
     (overlay-put ov 'nomis/tag (reverse tag))
     (overlay-put ov 'category 'nomis/ec-overlay)
@@ -364,13 +363,28 @@ This can be:
       (overlay-put ov 'priority (cons nil nesting-level)))
     ov))
 
-(defun -nomis/ec-note-overlay (tag nesting-level face start end description)
-  (push (list tag nesting-level face start end description)
+(defun -nomis/ec-note-overlay (start end nesting-level tag face description)
+  (push (list start end nesting-level tag face description)
         *-nomis/ec-overlays-to-create*))
 
 (defun -nomis/ec-create-overlays ()
-  (--each *-nomis/ec-overlays-to-create*
-    (apply #'-nomis/ec-make-overlay it)))
+  (let* ((xs (->> *-nomis/ec-overlays-to-create*
+                  (-sort (lambda (x y)
+                           (cl-destructuring-bind (x-s x-e x-nesting-level &rest) x
+                             (cl-destructuring-bind (y-s y-e y-nesting-level &rest) y
+                               (or (< x-s y-s)
+                                   (and (= x-s y-s)
+                                        (< x-nesting-level
+                                           y-nesting-level))
+                                   (and (= x-s y-s)
+                                        (= x-nesting-level
+                                           y-nesting-level)))))))))
+         ;; When items have same start and end, keep only the highest
+         ;; priority one.
+         (xs (cl-remove-duplicates xs
+                                   :key (lambda (x) (-take 2 x))
+                                   :test #'equal)))
+    (--each xs (apply #'-nomis/ec-make-overlay it))))
 
 (defun -nomis/ec-overlay-lump (tag site nesting-level start end description)
   (-nomis/ec-debug site 'overlay-lump)
@@ -384,7 +398,7 @@ This can be:
                   ((eq site 'ec/unparsable) '-nomis/ec-unparsable-face)
                   (t (error "Bad case: site: %s" site)))))
       (cl-flet ((overlay (s e)
-                  (-nomis/ec-note-overlay tag nesting-level face s e description)))
+                  (-nomis/ec-note-overlay s e nesting-level tag face description)))
         (if nomis/ec-color-initial-whitespace?
             (let* ((start
                     ;; When a form has only whitespace between its start and the
