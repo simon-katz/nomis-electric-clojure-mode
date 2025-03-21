@@ -594,7 +594,7 @@ Otherwise throw an exception."
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay ----
 
-(defun -nomis/ec-overlay-using-spec/operator (tag apply-to site)
+(defun -nomis/ec-overlay-operator (tag apply-to site)
   (-nomis/ec-check-movement-possible tag
                                      #'forward-sexp
                                      #'backward-up-list)
@@ -608,12 +608,12 @@ Otherwise throw an exception."
   (unless (thing-at-point 'symbol)
     (-nomis/ec-walk-and-overlay-v3)))
 
-(defun -nomis/ec-overlay-using-spec/name (tag)
+(defun -nomis/ec-overlay-name (tag)
   (-nomis/ec-check-movement-possible (cons 'name tag)
                                      #'forward-sexp
                                      #'backward-up-list))
 
-(defun -nomis/ec-overlay-using-spec/key-function (site tag)
+(defun -nomis/ec-overlay-key-function (site tag)
   (-nomis/ec-check-movement-possible (cons 'key-function tag)
                                      #'forward-sexp
                                      #'backward-up-list)
@@ -622,7 +622,7 @@ Otherwise throw an exception."
                         :site site)
     (-nomis/ec-walk-and-overlay-v3)))
 
-(defun -nomis/ec-overlay-using-spec/e-fn-bindings (tag)
+(defun -nomis/ec-overlay-e-fn-bindings (tag)
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (cons 'e/fn-bindings tag)
@@ -637,32 +637,32 @@ Otherwise throw an exception."
                       *-nomis/ec-bound-vars*))
         (forward-sexp)))))
 
-(defun -nomis-/ec-overlay-using-spec/let-bindings (inherited-site tag)
+(defun -nomis-/ec-overlay-let-bindings (inherited-site tag)
   (save-excursion
     (let* ((tag (cons 'let-bindings tag)))
-     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                           :tag tag
-                           :site :neutral)
-       (nomis/ec-down-list tag)
-       (while (-nomis/ec-can-forward-sexp?)
-         ;; Note the LHS of the binding:
-         (-nomis/ec-bof)
-         ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
-         ;; to use recursion instead of iteration.
-         (setq *-nomis/ec-bound-vars*
-               (append (-nomis/ec-binding-structure->vars)
-                       *-nomis/ec-bound-vars*))
-         (forward-sexp)
-         ;; Walk the RHS of the binding, if there is one:
-         (when (-nomis/ec-can-forward-sexp?)
-           (-nomis/ec-bof)
-           (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                 :tag (cons 'binding-rhs tag)
-                                 :site inherited-site)
-             (-nomis/ec-walk-and-overlay-v3))
-           (forward-sexp)))))))
+      (-nomis/ec-with-site (;; avoid-stupid-indentation
+                            :tag tag
+                            :site :neutral)
+        (nomis/ec-down-list tag)
+        (while (-nomis/ec-can-forward-sexp?)
+          ;; Note the LHS of the binding:
+          (-nomis/ec-bof)
+          ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
+          ;; to use recursion instead of iteration.
+          (setq *-nomis/ec-bound-vars*
+                (append (-nomis/ec-binding-structure->vars)
+                        *-nomis/ec-bound-vars*))
+          (forward-sexp)
+          ;; Walk the RHS of the binding, if there is one:
+          (when (-nomis/ec-can-forward-sexp?)
+            (-nomis/ec-bof)
+            (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                  :tag (cons 'binding-rhs tag)
+                                  :site inherited-site)
+              (-nomis/ec-walk-and-overlay-v3))
+            (forward-sexp)))))))
 
-(defun -nomis/ec-overlay-using-spec/body (site tag)
+(defun -nomis/ec-overlay-body (site tag)
   (save-excursion
     (when (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
@@ -680,7 +680,7 @@ Otherwise throw an exception."
           (-nomis/ec-walk-and-overlay-v3)
           (forward-sexp))))))
 
-(defun -nomis/ec-overlay-using-spec/electric-call-args (inherited-site)
+(defun -nomis/ec-overlay-electric-call-args (inherited-site)
   (while (-nomis/ec-can-forward-sexp?)
     (-nomis/ec-bof)
     (-nomis/ec-with-site (;; avoid-stupid-indentation
@@ -704,14 +704,14 @@ Otherwise throw an exception."
              (cl-ecase (first remaining-shape)
 
                (operator
-                (-nomis/ec-overlay-using-spec/operator (list operator-id)
-                                                       apply-to
-                                                       site)
+                (-nomis/ec-overlay-operator (list operator-id)
+                                            apply-to
+                                            site)
                 (forward-sexp)
                 (continue (rest remaining-shape)))
 
                (name
-                (-nomis/ec-overlay-using-spec/name (list operator-id))
+                (-nomis/ec-overlay-name (list operator-id))
                 (forward-sexp)
                 (continue (rest remaining-shape)))
 
@@ -731,42 +731,42 @@ Otherwise throw an exception."
                 (continue (rest remaining-shape)))
 
                (key-function
-                (-nomis/ec-overlay-using-spec/key-function *-nomis/ec-site*
-                                                           (list operator-id))
+                (-nomis/ec-overlay-key-function *-nomis/ec-site*
+                                                (list operator-id))
                 (forward-sexp)
                 (continue (rest remaining-shape)))
 
                (fn-bindings
                 (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
-                  (-nomis/ec-overlay-using-spec/e-fn-bindings (list operator-id))
+                  (-nomis/ec-overlay-e-fn-bindings (list operator-id))
                   (forward-sexp)
                   (continue (rest remaining-shape))))
 
                (let-bindings
                 (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
-                  (-nomis-/ec-overlay-using-spec/let-bindings inherited-site
-                                                              (list operator-id))
+                  (-nomis-/ec-overlay-let-bindings inherited-site
+                                                   (list operator-id))
                   (forward-sexp)
                   (continue (rest remaining-shape))))
 
                (body
                 (cl-assert (null (rest remaining-shape)))
-                (-nomis/ec-overlay-using-spec/body *-nomis/ec-site*
-                                                   (list operator-id)))
+                (-nomis/ec-overlay-body *-nomis/ec-site*
+                                        (list operator-id)))
 
                (body-inherit-site ; currently unused
                 (cl-assert (null (rest remaining-shape)))
-                (-nomis/ec-overlay-using-spec/body inherited-site
-                                                   (list operator-id)))
+                (-nomis/ec-overlay-body inherited-site
+                                        (list operator-id)))
 
                (body-neutral ; currently unused
                 (cl-assert (null (rest remaining-shape)))
-                (-nomis/ec-overlay-using-spec/body :neutral
-                                                   (list operator-id)))
+                (-nomis/ec-overlay-body :neutral
+                                        (list operator-id)))
 
                (electric-call-args
                 (cl-assert (null (rest remaining-shape)))
-                (-nomis/ec-overlay-using-spec/electric-call-args inherited-site))))
+                (-nomis/ec-overlay-electric-call-args inherited-site))))
 
            (continue (remaining-shape)
              (when remaining-shape
