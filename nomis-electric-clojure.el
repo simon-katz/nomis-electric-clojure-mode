@@ -327,9 +327,9 @@ This can be:
 
 (defvar *-nomis/ec-n-lumps-in-current-update* 0)
 
-(defvar *-nomis/ec-site* :neutral
-  "The site of the code currently being analysed. One of `:neutral`,
-`:client` or `:server`.")
+(defvar *-nomis/ec-site* 'ec/neutral
+  "The site of the code currently being analysed. One of `ec/neutral`,
+`ec/client` or `ec/server`.")
 
 (defvar *-nomis/ec-top-level-of-host-call-or-data-structure?* nil)
 
@@ -368,10 +368,10 @@ This can be:
       (-nomis/ec-debug site :empty-lump)
     (cl-incf *-nomis/ec-n-lumps-in-current-update*)
     (let* ((face (cond ; See avoid-case-bug-with-keywords at top of file.
-                  ((eq site :client)     '-nomis/ec-client-face)
-                  ((eq site :server)     '-nomis/ec-server-face)
-                  ((eq site :neutral)    '-nomis/ec-neutral-face)
-                  ((eq site :unparsable) '-nomis/ec-unparsable-face)
+                  ((eq site 'ec/client)     '-nomis/ec-client-face)
+                  ((eq site 'ec/server)     '-nomis/ec-server-face)
+                  ((eq site 'ec/neutral)    '-nomis/ec-neutral-face)
+                  ((eq site 'ec/unparsable) '-nomis/ec-unparsable-face)
                   (t (error "Bad case")))))
       (cl-flet ((overlay (s e)
                   (-nomis/ec-make-overlay tag nesting-level face s e description)))
@@ -500,9 +500,9 @@ Otherwise throw an exception."
   (save-excursion
     (cond
      ((looking-at (-nomis/ec-operator-call-regexp "e/client"))
-      (-nomis/ec-overlay-site-v2 :client))
+      (-nomis/ec-overlay-site-v2 'ec/client))
      ((looking-at (-nomis/ec-operator-call-regexp "e/server"))
-      (-nomis/ec-overlay-site-v2 :server))
+      (-nomis/ec-overlay-site-v2 'ec/server))
      ((-nomis/ec-looking-at-bracketed-sexp-start)
       (-nomis/ec-overlay-other-bracketed-form-v2)))))
 
@@ -514,7 +514,7 @@ Otherwise throw an exception."
     (goto-char pos)
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (cons 'unparsable tag)
-                          :site :unparsable
+                          :site 'ec/unparsable
                           :description description)
       ;; Nothing more.
       )))
@@ -626,7 +626,7 @@ Otherwise throw an exception."
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (cons 'e/fn-bindings tag)
-                          :site :neutral)
+                          :site 'ec/neutral)
       (nomis/ec-down-list (cons 'e/fn-bindings tag))
       (while (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
@@ -642,7 +642,7 @@ Otherwise throw an exception."
     (let* ((tag (cons 'let-bindings tag)))
       (-nomis/ec-with-site (;; avoid-stupid-indentation
                             :tag tag
-                            :site :neutral)
+                            :site 'ec/neutral)
         (nomis/ec-down-list tag)
         (while (-nomis/ec-can-forward-sexp?)
           ;; Note the LHS of the binding:
@@ -761,7 +761,7 @@ Otherwise throw an exception."
 
                (body-neutral ; currently unused
                 (cl-assert (null (rest remaining-shape)))
-                (-nomis/ec-overlay-body :neutral
+                (-nomis/ec-overlay-body 'ec/neutral
                                         (list operator-id)))
 
                (electric-call-args
@@ -824,7 +824,7 @@ Otherwise throw an exception."
                 (member sym *-nomis/ec-bound-vars*))
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'symbol-bound)
-                                 :site :neutral
+                                 :site 'ec/neutral
                                  :print-env? t)
              ;; Nothing more.
              )))))
@@ -1158,14 +1158,14 @@ This is very DIY. Is there a better way?")
 (defun -nomis/ec-add-built-in-parser-specs ()
   (nomis/ec-add-parser-spec '(
                               :operator             "e/client"
-                              :site                 :client
+                              :site                 ec/client
                               :top-level-host-call? t
                               :apply-to             whole
                               :shape                (operator
                                                      body)))
   (nomis/ec-add-parser-spec '(
                               :operator             "e/server"
-                              :site                 :server
+                              :site                 ec/server
                               :top-level-host-call? t
                               :apply-to             whole
                               :shape                (operator
@@ -1175,13 +1175,13 @@ This is very DIY. Is there a better way?")
                               :operator    ,(concat "dom/"
                                                     -nomis/ec-symbol-no-slash-regexp)
                               :regexp?     t
-                              :site        :client
+                              :site        ec/client
                               :apply-to    operator
                               :shape       (operator
                                             body)))
   (nomis/ec-add-parser-spec '(
                               :operator "e/defn"
-                              :site     :neutral
+                              :site     ec/neutral
                               :apply-to whole
                               :shape    (operator
                                          name
@@ -1191,7 +1191,7 @@ This is very DIY. Is there a better way?")
                                          body)))
   (nomis/ec-add-parser-spec '(
                               :operator "e/fn"
-                              :site     :neutral
+                              :site     ec/neutral
                               :apply-to whole
                               :shape    (operator
                                          name?
@@ -1222,14 +1222,14 @@ This is very DIY. Is there a better way?")
                               :operator-id electric-call
                               :operator    ,-nomis/ec-electric-function-name-regexp
                               :regexp?     t
-                              :site        :neutral
+                              :site        ec/neutral
                               :apply-to    whole
                               :shape       (operator
                                             electric-call-args)))
   (nomis/ec-add-parser-spec '(
                               :operator-id electric-lambda-in-fun-position
                               :operator    "(e/fn" ; Note the open parenthesis here, for lambda in function position.
-                              :site        :neutral
+                              :site        ec/neutral
                               :apply-to    whole
                               :shape       (operator
                                             electric-call-args))))
