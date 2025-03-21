@@ -9,15 +9,25 @@
 (def global-1 42)
 
 (e/defn Foo [local-1]
-  local-1
-  global-1
-  (hosted-call local-1 global-1)
-  (ElectricCall local-1 global-1)
-  (e/client local-1
-            global-1
-            (hosted-call local-1 global-1)
-            (ElectricCall local-1 global-1))
-  (e/server local-1
-            global-1
-            (hosted-call local-1 global-1)
-            (ElectricCall local-1 global-1)))
+
+  global-1 global-1 global-1 local-1 local-1 local-1 global-1 local-1
+  (hosted-call global-1 global-1 global-1 local-1 local-1 local-1 global-1 local-1)
+  (ElectricCall global-1 global-1 global-1 local-1 local-1 local-1 global-1 local-1)
+  (let [local-2 local-1]
+    global-1 local-1 local-2 local-1 local-2 local-1 local-2)
+
+  (e/client
+    global-1 global-1 global-1 local-1 local-1 local-1 global-1 local-1
+    (hosted-call global-1 global-1 global-1 local-1 local-1 local-1 global-1 local-1)
+    (ElectricCall global-1 global-1 global-1 local-1 local-1 local-1 global-1 local-1)
+    (let [local-2 local-1]
+      global-1 local-1 local-2 local-1 local-2 local-1 local-2))
+
+  (e/server
+    global-1 global-1 global-1 local-1 local-1 local-1 global-1 local-1
+    (hosted-call global-1 global-1 global-1 local-1 local-1 local-1 global-1 local-1)
+    (ElectricCall global-1 global-1 global-1 local-1 local-1 local-1 global-1 local-1)
+    (let [local-2 local-1]
+      global-1 local-1 local-2 local-1 local-2 local-1 local-2)))
+
+;;;; TODO: Look at the colored spaces here.
