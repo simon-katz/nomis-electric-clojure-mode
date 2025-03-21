@@ -4,6 +4,8 @@
 
 - Skip metadata.
 
+- Breaking change: Change the extension mechanism: Change `:client`, `:server` and `:neutral` to `ec/client`, `ec/server` and `ec/neutral`.
+
 
 ## Version 0.4 — 2025-03-18
 

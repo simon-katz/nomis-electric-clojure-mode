@@ -145,17 +145,19 @@ Time will tell how useful this is. Perhaps the mechanism will need to be extende
 For a taste, here are some examples of built-in parser definitions:
 
 ```
-(nomis/ec-add-parser-spec '(:operator "e/client"
-                            :site     :client
-                            :apply-to whole
-                            :shape    (operator
-                                       body)))
+(nomis/ec-add-parser-spec '(:operator             "e/client"
+                            :site                 ec/client
+                            :top-level-host-call? t
+                            :apply-to             whole
+                            :shape                (operator
+                                                   body)))
 
-(nomis/ec-add-parser-spec '(:operator "e/server"
-                            :site     :server
-                            :apply-to whole
-                            :shape    (operator
-                                       body)))
+(nomis/ec-add-parser-spec '(:operator             "e/server"
+                            :site                 ec/server
+                            :top-level-host-call? t
+                            :apply-to             whole
+                            :shape                (operator
+                                                   body)))
 
 (nomis/ec-add-parser-spec '(:operator "let"
                             :shape    (operator
@@ -175,9 +177,9 @@ For a taste, here are some examples of built-in parser definitions:
 
 (nomis/ec-add-parser-spec `(:operator-id "dom/xxxx"
                             :operator    ,(concat "dom/"
-                                                     -nomis/ec-symbol-no-slash-regexp)
+                                                  -nomis/ec-symbol-no-slash-regexp)
                             :regexp?     t
-                            :site        :client
+                            :site        ec/client
                             :apply-to    operator
                             :shape       (operator
                                           body)))
