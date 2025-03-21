@@ -408,7 +408,7 @@ This can be:
 into that expression -- /ie/ move down one level of parentheses.
 Otherwise throw an exception."
   (cond ((not (-nomis/ec-can-forward-sexp?))
-         (let* ((msg (format "Missing %s" desc)))
+         (let* ((msg (format "Missing %s" (reverse desc))))
            (error (-nomis/ec-message-no-disp "%s" msg)
                   (signal '-nomis/ec-parse-error
                           (list desc msg (save-excursion
