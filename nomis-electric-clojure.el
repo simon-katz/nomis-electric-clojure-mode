@@ -331,7 +331,7 @@ This can be:
   "The site of the code currently being analysed. One of `ec/neutral`,
 `ec/client` or `ec/server`.")
 
-(defvar *-nomis/ec-top-level-of-host-call-or-data-structure?* nil)
+(defvar *-nomis/ec-top-level-of-host-call-or-data-structure?* nil) ; TODO: Misnomer.
 
 (defvar *-nomis/ec-bound-vars* '())
 
@@ -465,6 +465,11 @@ Otherwise throw an exception."
   (declare (indent 1))
   `(-nomis/ec-with-site* ,tag ,site ,end ,description ,print-env?
                          (lambda () ,@body)))
+
+(defun -nomis/ec-transmogrify-site (site inherited-site)
+  (if (eq site 'inherit)
+      inherited-site
+    site))
 
 ;;;; ___________________________________________________________________________
 ;;;; ---- Electric v2 ----
@@ -607,12 +612,7 @@ Otherwise throw an exception."
   (-nomis/ec-check-movement-possible tag
                                      #'forward-sexp
                                      #'backward-up-list)
-  (-nomis/ec-with-site (;; avoid-stupid-indentation
-                        :tag (cons 'operator tag)
-                        :site (if (eq site 'inherit)
-                                  inherited-site
-                                site))
-    (-nomis/ec-walk-and-overlay-v3))
+  (-nomis/ec-walk-and-overlay-v3)
   (forward-sexp))
 
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'name))
@@ -657,12 +657,7 @@ Otherwise throw an exception."
   (-nomis/ec-check-movement-possible (cons 'key-function tag)
                                      #'forward-sexp
                                      #'backward-up-list)
-  (-nomis/ec-with-site (;; avoid-stupid-indentation
-                        :tag (cons 'key-function tag)
-                        :site (if (eq site 'inherit)
-                                  inherited-site
-                                site))
-    (-nomis/ec-walk-and-overlay-v3))
+  (-nomis/ec-walk-and-overlay-v3)
   (forward-sexp))
 
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'fn-bindings))
@@ -671,20 +666,15 @@ Otherwise throw an exception."
                                       &rest
                                       (&key site))
   (save-excursion
-    (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag (cons 'e/fn-bindings tag)
-                          :site (if (eq site 'inherit)
-                                    inherited-site
-                                  site))
-      (nomis/ec-down-list (cons 'e/fn-bindings tag))
-      (while (-nomis/ec-can-forward-sexp?)
-        (-nomis/ec-bof)
-        ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
-        ;; to use recursion instead of iteration.
-        (setq *-nomis/ec-bound-vars*
-              (append (-nomis/ec-binding-structure->vars)
-                      *-nomis/ec-bound-vars*))
-        (forward-sexp))))
+    (nomis/ec-down-list (cons 'e/fn-bindings tag))
+    (while (-nomis/ec-can-forward-sexp?)
+      (-nomis/ec-bof)
+      ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
+      ;; to use recursion instead of iteration.
+      (setq *-nomis/ec-bound-vars*
+            (append (-nomis/ec-binding-structure->vars)
+                    *-nomis/ec-bound-vars*))
+      (forward-sexp)))
   (forward-sexp))
 
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'let-bindings))
@@ -694,29 +684,24 @@ Otherwise throw an exception."
                                       (&key site))
   (save-excursion
     (let* ((tag (cons 'let-bindings tag)))
-      (-nomis/ec-with-site (;; avoid-stupid-indentation   ; TODO: Do this stuff once.
-                            :tag tag
-                            :site (if (eq site 'inherit)
-                                      inherited-site
-                                    site))
-        (nomis/ec-down-list tag)
-        (while (-nomis/ec-can-forward-sexp?)
-          ;; Note the LHS of the binding:
+      (nomis/ec-down-list tag)
+      (while (-nomis/ec-can-forward-sexp?)
+        ;; Note the LHS of the binding:
+        (-nomis/ec-bof)
+        ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
+        ;; to use recursion instead of iteration.
+        (setq *-nomis/ec-bound-vars*
+              (append (-nomis/ec-binding-structure->vars)
+                      *-nomis/ec-bound-vars*))
+        (forward-sexp)
+        ;; Walk the RHS of the binding, if there is one:
+        (when (-nomis/ec-can-forward-sexp?)
           (-nomis/ec-bof)
-          ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
-          ;; to use recursion instead of iteration.
-          (setq *-nomis/ec-bound-vars*
-                (append (-nomis/ec-binding-structure->vars)
-                        *-nomis/ec-bound-vars*))
-          (forward-sexp)
-          ;; Walk the RHS of the binding, if there is one:
-          (when (-nomis/ec-can-forward-sexp?)
-            (-nomis/ec-bof)
-            (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                  :tag (cons 'binding-rhs tag)
-                                  :site inherited-site)
-              (-nomis/ec-walk-and-overlay-v3))
-            (forward-sexp))))))
+          (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                :tag (cons 'binding-rhs tag)
+                                :site inherited-site)
+            (-nomis/ec-walk-and-overlay-v3))
+          (forward-sexp)))))
   (forward-sexp))
 
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'body))
@@ -725,38 +710,31 @@ Otherwise throw an exception."
                                       &rest
                                       (&key site))
   (save-excursion
-    (when (-nomis/ec-can-forward-sexp?)
+    ;; Each body form separately:
+    (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
-      ;; Whole body:
       (-nomis/ec-with-site (;; avoid-stupid-indentation
-                            :tag (cons 'body tag)
-                            :site (if (eq site 'inherit)
-                                      inherited-site
-                                    site)
-                            :end (save-excursion (backward-up-list)
-                                                 (forward-sexp)
-                                                 (backward-char)
-                                                 (point)))
-        ;; Each body form:
-        (while (-nomis/ec-can-forward-sexp?)
-          (-nomis/ec-bof)
-          (-nomis/ec-walk-and-overlay-v3)
-          (forward-sexp))))))
+                            :tag (cons 'body-form tag)
+                            :site (-nomis/ec-transmogrify-site site
+                                                               inherited-site))
+        (-nomis/ec-walk-and-overlay-v3))
+      (forward-sexp))))
 
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'electric-call-args))
                                       tag
                                       inherited-site
                                       &rest
                                       (&key site))
-  (while (-nomis/ec-can-forward-sexp?)
-    (-nomis/ec-bof)
-    (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag (list 'electric-call-arg)
-                          :site (if (eq site 'inherit)
-                                    inherited-site
-                                  site))
-      (-nomis/ec-walk-and-overlay-v3))
-    (forward-sexp)))
+  (save-excursion
+    ;; Each arg separately:
+    (while (-nomis/ec-can-forward-sexp?)
+      (-nomis/ec-bof)
+      (-nomis/ec-with-site (;; avoid-stupid-indentation
+                            :tag (cons 'arg tag)
+                            :site (-nomis/ec-transmogrify-site site
+                                                               inherited-site))
+        (-nomis/ec-walk-and-overlay-v3))
+      (forward-sexp))))
 
 (cl-defun -nomis/ec-overlay-form (&key operator-id
                                        site
@@ -769,13 +747,31 @@ Otherwise throw an exception."
           ((next (remaining-shape)
              (let* ((term-and-opts (first remaining-shape))
                     (term (if (atom term-and-opts) term-and-opts (first term-and-opts)))
-                    (opts (if (atom term-and-opts) '() (rest term-and-opts))))
-               (cl-flet ((next* ()
-                           (apply #'-nomis/ec-overlay-term
-                                  term
-                                  (list operator-id)
-                                  inherited-site
-                                  opts)))
+                    (opts (if (atom term-and-opts) '() (rest term-and-opts)))
+                    (site (cl-getf opts :site))
+                    (tag (list term operator-id)))
+               (cl-flet* ((next** ()
+                            (-nomis/ec-with-site
+                                (;; avoid-stupid-indentation
+                                 :tag tag
+                                 :site (if (member term
+                                                   '(body electric-call-args))
+                                           ;; These are handled per-item in
+                                           ;; `-nomis/ec-overlay-term` methods
+                                           ;; rather than as a whole.
+                                           nil
+                                         (-nomis/ec-transmogrify-site site
+                                                                      inherited-site)))
+                              (apply #'-nomis/ec-overlay-term
+                                     term
+                                     tag
+                                     inherited-site
+                                     opts)))
+                          (next* ()
+                            (if (eq term 'body)
+                                (let* ((*-nomis/ec-top-level-of-host-call-or-data-structure?* t))
+                                  (next**))
+                              (next**))))
                  (cl-ecase term
                    ((operator name name? doc-string? attr-map? key-function)
                     (next*)
@@ -816,11 +812,9 @@ Otherwise throw an exception."
         (let* ((*-nomis/ec-top-level-of-host-call-or-data-structure?*
                 (or top-level-host-call?
                     *-nomis/ec-top-level-of-host-call-or-data-structure?*)))
-          (if site ; TODO: Why do this checking here and not elsewhere?
-              (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                    :tag (list operator-id)
-                                    :site site)
-                (do-it))
+          (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                :tag (list operator-id)
+                                :site site)
             (do-it)))))))
 
 (defun -nomis/ec-overlay-other-bracketed-form-v3 ()
