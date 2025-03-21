@@ -699,7 +699,8 @@ Otherwise throw an exception."
           (-nomis/ec-bof)
           (-nomis/ec-with-site (;; avoid-stupid-indentation
                                 :tag (cons 'binding-rhs tag)
-                                :site inherited-site)
+                                :site inherited-site ; TODO: Hardcoded site. OK?
+                                )
             (-nomis/ec-walk-and-overlay-v3))
           (forward-sexp)))))
   (forward-sexp))
