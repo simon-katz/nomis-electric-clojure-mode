@@ -753,7 +753,7 @@ Otherwise throw an exception."
         (-nomis/ec-walk-and-overlay-v3))
       (forward-sexp))))
 
-(cl-defmethod -nomis/ec-overlay-term ((term (eql 'electric-call-args)) ; TODO: Rename -> `args`.
+(cl-defmethod -nomis/ec-overlay-term ((term (eql '&electric-call-args))
                                       tag
                                       inherited-site
                                       &rest
@@ -812,7 +812,7 @@ Otherwise throw an exception."
                       (next*)
                       (continue (rest remaining-shape))))
 
-                   ((body electric-call-args)
+                   ((body &electric-call-args)
                     (cl-assert (null (rest remaining-shape)) t)
                     (next*))))))
 
@@ -1301,13 +1301,13 @@ This is very DIY. Is there a better way?")
                               :regexp?     t
                               :site        ec/neutral
                               :shape       (operator
-                                            electric-call-args)))
+                                            &electric-call-args)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :electric-lambda-in-fun-position
                               :operator    "(e/fn" ; Note the open parenthesis here, for lambda in function position.
                               :site        ec/neutral
                               :shape       (operator
-                                            electric-call-args))))
+                                            &electric-call-args))))
 
 (-nomis/ec-add-built-in-parser-specs)
 
