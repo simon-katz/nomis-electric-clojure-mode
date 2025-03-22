@@ -785,8 +785,7 @@ Otherwise throw an exception."
                  (-nomis/ec-bof))
                ;; Skip any metadata:
                (while (looking-at (regexp-quote "^"))
-                 (progn (-nomis/ec-message-no-disp "Skipping metadata")
-                        (forward-char)
+                 (progn (forward-char)
                         (forward-sexp))
                  (when (-nomis/ec-can-forward-sexp?)
                    (-nomis/ec-bof)))
