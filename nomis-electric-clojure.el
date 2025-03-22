@@ -626,7 +626,9 @@ Otherwise throw an exception."
 ;; TODO: Are all these args used? (Check after upcomimg changes.)
 (cl-defgeneric -nomis/ec-overlay-term (term tag inherited-site &rest opts))
 
-(cl-defmethod -nomis/ec-overlay-term :before (term tag inherited-site &rest (&key site))
+(cl-defmethod -nomis/ec-overlay-term :before (term tag inherited-site &rest (&key site rhs-site))
+  ;; TODO: Maybe get rid of this `:before` method and copy this to some of the
+  ;; primary methods. Who will ever remember this is here?
   (cl-assert (member site '(nil ec/client ec/server ec/neutral inherit))))
 
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'operator))
@@ -708,7 +710,8 @@ Otherwise throw an exception."
                                       tag
                                       inherited-site
                                       &rest
-                                      (&key site))
+                                      (&key site rhs-site))
+  (cl-assert (member rhs-site '(nil ec/client ec/server ec/neutral inherit)))
   (save-excursion
     (let* ((tag (cons 'let-bindings tag)))
       (nomis/ec-down-list tag)
@@ -724,11 +727,13 @@ Otherwise throw an exception."
         ;; Walk the RHS of the binding, if there is one:
         (when (-nomis/ec-can-forward-sexp?)
           (-nomis/ec-bof)
-          (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                :tag (cons 'binding-rhs tag)
-                                ;; TODO: Add `rhs-site`.
-                                :site inherited-site)
-            (-nomis/ec-walk-and-overlay-v3))
+          (let* ((new-site (-nomis/ec-transmogrify-site rhs-site
+                                                        inherited-site))
+                 (*-nomis/ec-default-site* new-site))
+            (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                  :tag (cons 'binding-rhs tag)
+                                  :site new-site)
+              (-nomis/ec-walk-and-overlay-v3)))
           (forward-sexp)))))
   (forward-sexp))
 
@@ -1045,10 +1050,7 @@ Otherwise throw an exception."
       (while (and (< (point) end-2)
                   (-nomis/ec-can-forward-sexp?))
         (-nomis/ec-bof)
-        (condition-case err
-            (-nomis/ec-walk-and-overlay-any-version)
-          (error (-nomis/ec-message-no-disp "nomis-electric-clojure: %s"
-                                            err)))
+        (-nomis/ec-walk-and-overlay-any-version)
         (forward-sexp))
       (-nomis/ec-feedback-flash start end start-2 end-2)
       ;; (-nomis/ec-message-no-disp "*-nomis/ec-n-lumps-in-current-update* = %s"
@@ -1268,26 +1270,30 @@ This is very DIY. Is there a better way?")
                               :operator-id :let
                               :operator    "let"
                               :shape       (operator
-                                            (let-bindings :site ec/neutral)
+                                            (let-bindings :site ec/neutral
+                                                          :rhs-site inherit)
                                             body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :binding
                               :operator    "binding"
                               :shape       (operator
-                                            (let-bindings :site ec/neutral)
+                                            (let-bindings :site ec/neutral
+                                                          :rhs-site inherit)
                                             body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :e/for
                               :operator    "e/for"
                               :shape       (operator
-                                            (let-bindings :site ec/neutral)
+                                            (let-bindings :site ec/neutral
+                                                          :rhs-site inherit)
                                             body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :e/for-by
                               :operator    "e/for-by"
                               :shape       (operator
                                             key-function
-                                            (let-bindings :site ec/neutral)
+                                            (let-bindings :site ec/neutral
+                                                          :rhs-site inherit)
                                             body)))
   (nomis/ec-add-parser-spec `(
                               :operator-id :electric-call
