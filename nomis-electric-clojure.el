@@ -339,8 +339,6 @@ This can be:
 
 (defvar *-nomis/ec-level* 0)
 
-(defvar *-nomis/ec-overlays-to-create*)
-
 ;;;; ___________________________________________________________________________
 ;;;; Overlay basics
 
@@ -366,14 +364,6 @@ This can be:
       (overlay-put ov 'priority (cons nil nesting-level)))
     ov))
 
-(defun -nomis/ec-note-overlay (tag nesting-level face start end description)
-  (push (list tag nesting-level face start end description)
-        *-nomis/ec-overlays-to-create*))
-
-(defun -nomis/ec-create-overlays ()
-  (--each *-nomis/ec-overlays-to-create*
-    (apply #'-nomis/ec-make-overlay it)))
-
 (defun -nomis/ec-overlay-lump (tag site nesting-level start end description)
   (-nomis/ec-debug site 'overlay-lump)
   (if (= start end)
@@ -386,7 +376,7 @@ This can be:
                   ((eq site 'ec/unparsable) '-nomis/ec-unparsable-face)
                   (t (error "Bad case: site: %s" site)))))
       (cl-flet ((overlay (s e)
-                  (-nomis/ec-note-overlay tag nesting-level face s e description)))
+                  (-nomis/ec-make-overlay tag nesting-level face s e description)))
         (if nomis/ec-color-initial-whitespace?
             (let* ((start
                     ;; When a form has only whitespace between its start and the
@@ -999,8 +989,7 @@ Otherwise throw an exception."
   (save-excursion
     (goto-char start)
     (unless (-nomis/ec-at-top-level?) (beginning-of-defun))
-    (let* ((*-nomis/ec-overlays-to-create* '())
-           (start-2 (point))
+    (let* ((start-2 (point))
            (end-2 (save-excursion (goto-char end)
                                   (unless (-nomis/ec-at-top-level?)
                                     (end-of-defun))
@@ -1014,7 +1003,6 @@ Otherwise throw an exception."
           (error (-nomis/ec-message-no-disp "nomis-electric-clojure: %s"
                                             err)))
         (forward-sexp))
-      (-nomis/ec-create-overlays)
       (-nomis/ec-feedback-flash start end start-2 end-2)
       ;; (-nomis/ec-message-no-disp "*-nomis/ec-n-lumps-in-current-update* = %s"
       ;;                            *-nomis/ec-n-lumps-in-current-update*)
