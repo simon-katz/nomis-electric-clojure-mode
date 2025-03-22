@@ -357,10 +357,10 @@ This can be:
     (when (or description -nomis/ec-debug-overlays?)
       (let* ((messages (list description
                              (when -nomis/ec-debug-overlays?
-                               (format "DEBUG: Overlay for: %s"
+                               (format "DEBUG: Tag = %s"
                                        (reverse tag))))))
         (overlay-put ov 'help-echo (-> (-remove #'null messages)
-                                       (string-join " / ")))))
+                                       (string-join "\n")))))
     (unless nomis/ec-color-initial-whitespace?
       ;; We have multiple overlays in the same place, so we need to
       ;; specify their priority.
