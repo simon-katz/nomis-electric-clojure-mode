@@ -965,7 +965,6 @@ Otherwise throw an exception."
                    (-nomis/ec-plist-remove :operator)
                    (-nomis/ec-plist-remove :regexp?)))
          (new-entry (cons regexp spec)))
-    ;; (-nomis/ec-message-no-disp "==== new-default-site = %s" new-default-site)
     (let* ((existing-operator-id? nil))
       (setq -nomis/ec-regexp->parser-spec
             (cl-loop
