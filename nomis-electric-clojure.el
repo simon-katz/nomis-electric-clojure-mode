@@ -623,19 +623,13 @@ Otherwise throw an exception."
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay ----
 
-;; TODO: Are all these args used? (Check after upcomimg changes.)
-(cl-defgeneric -nomis/ec-overlay-term (term tag inherited-site &rest opts))
-
-(cl-defmethod -nomis/ec-overlay-term :before (term tag inherited-site &rest (&key site rhs-site))
-  ;; TODO: Maybe get rid of this `:before` method and copy this to some of the
-  ;; primary methods. Who will ever remember this is here?
-  (cl-assert (member site '(nil ec/client ec/server ec/neutral inherit))))
+(cl-defgeneric -nomis/ec-overlay-term (term tag inherited-site
+                                            (&key site rhs-site)))
 
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'operator))
                                       tag
                                       inherited-site
-                                      &rest
-                                      (&key site))
+                                      &rest)
   (-nomis/ec-check-movement-possible tag
                                      #'forward-sexp
                                      #'backward-up-list)
@@ -647,8 +641,7 @@ Otherwise throw an exception."
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'name))
                                       tag
                                       inherited-site
-                                      &rest
-                                      (&key site))
+                                      &rest)
   (-nomis/ec-check-movement-possible (cons 'name tag)
                                      #'forward-sexp
                                      #'backward-up-list)
@@ -657,32 +650,28 @@ Otherwise throw an exception."
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'name?))
                                       tag
                                       inherited-site
-                                      &rest
-                                      (&key site))
+                                      &rest)
   (when (thing-at-point 'symbol)
     (forward-sexp)))
 
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'doc-string?))
                                       tag
                                       inherited-site
-                                      &rest
-                                      (&key site))
+                                      &rest)
   (when (thing-at-point 'string)
     (forward-sexp)))
 
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'attr-map?))
                                       tag
                                       inherited-site
-                                      &rest
-                                      (&key site))
+                                      &rest)
   (when (looking-at "{")
     (forward-sexp)))
 
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'key-function))
                                       tag
                                       inherited-site
-                                      &rest
-                                      (&key site))
+                                      &rest)
   (-nomis/ec-check-movement-possible (cons 'key-function tag)
                                      #'forward-sexp
                                      #'backward-up-list)
@@ -692,8 +681,7 @@ Otherwise throw an exception."
 (cl-defmethod -nomis/ec-overlay-term ((term (eql 'fn-bindings))
                                       tag
                                       inherited-site
-                                      &rest
-                                      (&key site))
+                                      &rest)
   (save-excursion
     (nomis/ec-down-list (cons 'e/fn-bindings tag))
     (while (-nomis/ec-can-forward-sexp?)
@@ -710,7 +698,7 @@ Otherwise throw an exception."
                                       tag
                                       inherited-site
                                       &rest
-                                      (&key site rhs-site))
+                                      (&key rhs-site &allow-other-keys))
   (cl-assert (member rhs-site '(nil ec/client ec/server ec/neutral inherit)))
   (save-excursion
     (let* ((tag (cons 'let-bindings tag)))
@@ -741,7 +729,8 @@ Otherwise throw an exception."
                                       tag
                                       inherited-site
                                       &rest
-                                      (&key site))
+                                      (&key site &allow-other-keys))
+  (cl-assert (member site '(nil ec/client ec/server ec/neutral inherit)))
   (save-excursion
     ;; Each body form separately:
     (while (-nomis/ec-can-forward-sexp?)
@@ -757,7 +746,8 @@ Otherwise throw an exception."
                                       tag
                                       inherited-site
                                       &rest
-                                      (&key site))
+                                      (&key site &allow-other-keys))
+  (cl-assert (member site '(nil ec/client ec/server ec/neutral inherit)))
   (save-excursion
     ;; Each arg separately:
     (while (-nomis/ec-can-forward-sexp?)
