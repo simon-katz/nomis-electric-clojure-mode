@@ -542,7 +542,7 @@ Otherwise throw an exception."
   (save-excursion
     (goto-char pos)
     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag (cons 'unparsable tag)
+                          :tag (list 'unparsable tag)
                           :site 'ec/unparsable
                           :description description)
       ;; Nothing more.
