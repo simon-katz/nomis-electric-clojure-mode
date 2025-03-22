@@ -331,7 +331,7 @@ This can be:
   "The site of the code currently being analysed. One of `ec/neutral`,
 `ec/client` or `ec/server`.")
 
-(defvar *-nomis/ec-top-level-of-host-call-or-data-structure?* nil) ; TODO: Misnomer.
+(defvar *-nomis/ec-site-electric-locals?* nil)
 
 (defvar *-nomis/ec-bound-vars* '())
 
@@ -763,7 +763,7 @@ Otherwise throw an exception."
 
 (cl-defun -nomis/ec-overlay-form (&key operator-id
                                        site
-                                       top-level-host-call?
+                                       site-electric-locals?
                                        shape)
   (cl-assert (listp shape))
   (save-excursion
@@ -794,7 +794,7 @@ Otherwise throw an exception."
                                      opts)))
                           (next* ()
                             (if (eq term 'body)
-                                (let* ((*-nomis/ec-top-level-of-host-call-or-data-structure?* t))
+                                (let* ((*-nomis/ec-site-electric-locals?* t))
                                   (next**))
                               (next**))))
                  (cl-ecase term
@@ -834,9 +834,9 @@ Otherwise throw an exception."
            (do-it ()
              (nomis/ec-down-list operator-id)
              (continue shape)))
-        (let* ((*-nomis/ec-top-level-of-host-call-or-data-structure?*
-                (or top-level-host-call?
-                    *-nomis/ec-top-level-of-host-call-or-data-structure?*)))
+        (let* ((*-nomis/ec-site-electric-locals?*
+                (or site-electric-locals?
+                    *-nomis/ec-site-electric-locals?*)))
           (-nomis/ec-with-site (;; avoid-stupid-indentation
                                 :tag (list operator-id)
                                 :site site)
@@ -861,7 +861,7 @@ Otherwise throw an exception."
                 "nomis-electric-clojure-mode: Line %s: Expected a symbol-number-etc but got %s"
                 (line-number-at-pos)
                 sexp))))
-          ((and (not *-nomis/ec-top-level-of-host-call-or-data-structure?*)
+          ((and (not *-nomis/ec-site-electric-locals?*)
                 (member sym *-nomis/ec-bound-vars*))
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'symbol-bound)
@@ -911,7 +911,7 @@ Otherwise throw an exception."
                                                (error "operator-id must be supplied when regexp? is true")
                                              operator))
                                           site
-                                          top-level-host-call?
+                                          site-electric-locals?
                                           shape))
   "Add a spec for parsing Elecric Clojure code.
 
@@ -935,10 +935,10 @@ Otherwise throw an exception."
   NOMIS/EC-RESET-TO-BUILT-IN-PARSER-SPECS will be useful."
   (let* ((operator-regexp (if regexp? operator (regexp-quote operator)))
          (regexp (-nomis/ec-operator-call-regexp operator-regexp))
-         (spec (list :operator-id          operator-id
-                     :site                 site
-                     :top-level-host-call? top-level-host-call?
-                     :shape                shape))
+         (spec (list :operator-id           operator-id
+                     :site                  site
+                     :site-electric-locals? site-electric-locals?
+                     :shape                 shape))
          (new-entry (cons regexp spec)))
     (let* ((existing-operator-id? nil))
       (setq -nomis/ec-regexp->parser-spec
@@ -956,14 +956,14 @@ Otherwise throw an exception."
 
 (defun -nomis/ec-walk-and-overlay-v3 ()
   (let* ((case-fold-search nil))
-    (or (let* ((*-nomis/ec-top-level-of-host-call-or-data-structure?* nil))
+    (or (let* ((*-nomis/ec-site-electric-locals?* nil))
           (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
                    when (looking-at regexp)
                    return (progn (apply #'-nomis/ec-overlay-form spec)
                                  t)))
         (cond
          ((-nomis/ec-looking-at-bracketed-sexp-start)
-          (let* ((*-nomis/ec-top-level-of-host-call-or-data-structure?* t))
+          (let* ((*-nomis/ec-site-electric-locals?* t))
             (-nomis/ec-overlay-other-bracketed-form-v3)))
          (t
           (-nomis/ec-overlay-symbol-number-etc))))))
@@ -1199,17 +1199,17 @@ This is very DIY. Is there a better way?")
 
 (defun -nomis/ec-add-built-in-parser-specs ()
   (nomis/ec-add-parser-spec '(
-                              :operator             "e/client"
-                              :site                 ec/client
-                              :top-level-host-call? t
-                              :shape                (operator
-                                                     body)))
+                              :operator              "e/client"
+                              :site                  ec/client
+                              :site-electric-locals? t
+                              :shape                 (operator
+                                                      body)))
   (nomis/ec-add-parser-spec '(
-                              :operator             "e/server"
-                              :site                 ec/server
-                              :top-level-host-call? t
-                              :shape                (operator
-                                                     body)))
+                              :operator              "e/server"
+                              :site                  ec/server
+                              :site-electric-locals? t
+                              :shape                 (operator
+                                                      body)))
   (nomis/ec-add-parser-spec `(
                               :operator-id "dom/xxxx"
                               :operator    ,(concat "dom/"
