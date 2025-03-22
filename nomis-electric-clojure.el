@@ -1301,7 +1301,7 @@ This is very DIY. Is there a better way?")
                               :operator    "(e/fn" ; Note the open parenthesis here, for lambda in function position.
                               :site        ec/neutral
                               :shape       (operator
-                                            (electric-call-args :site inherit)))))
+                                            electric-call-args))))
 
 (-nomis/ec-add-built-in-parser-specs)
 
