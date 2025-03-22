@@ -813,7 +813,7 @@ Otherwise throw an exception."
                       (continue (rest remaining-shape))))
 
                    ((body electric-call-args)
-                    (cl-assert (null (rest remaining-shape)))
+                    (cl-assert (null (rest remaining-shape)) t)
                     (next*))))))
 
            (continue (remaining-shape)
