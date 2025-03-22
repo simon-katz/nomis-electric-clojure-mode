@@ -440,7 +440,7 @@ Otherwise throw an exception."
                                            (point)))))))
         ((not (nomis/ec-at-or-before-sexp-start?))
          (let* ((msg (format "A bracketed s-expression is needed for %s"
-                             desc)))
+                             (first desc))))
            (error (-nomis/ec-message-no-disp "%s" msg)
                   (signal '-nomis/ec-parse-error
                           (list desc msg (point))))))
@@ -456,7 +456,7 @@ Otherwise throw an exception."
           (funcall move-fn)
         (error
          (let* ((msg (format "%s is missing or has an incorrect form"
-                             (reverse desc))))
+                             (first desc))))
            (-nomis/ec-message-no-disp "%s" msg)
            (signal '-nomis/ec-parse-error
                    (list desc msg (progn (goto-char start)
