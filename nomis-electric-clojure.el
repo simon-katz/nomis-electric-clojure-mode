@@ -161,7 +161,7 @@ This includes both bad syntax and parts of Clojure that we don't know about.")
                       :inherit
                       (-nomis/ec-compute-unparsable-face)))
 
-(defconst -nomis/ec-neutral-face-color "unspecified-bg") ; TODO Is there a better way to get the default background color? This gives messages in the echo area.
+(defconst -nomis/ec-neutral-face-color "nomis/ec-unspecified-bg") ; TODO Is there a better way to get the default background color? This gives messages in the echo area.
 
 (defconst -nomis/ec-neutral-face-color/debug "Blue3")
 
