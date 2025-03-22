@@ -799,7 +799,7 @@ Otherwise throw an exception."
                                      opts)))
                           (next* ()
                             (if (eq term 'body)
-                                (let* ((*-nomis/ec-site-electric-locals?* t)) ; TODO: Why this specialness?
+                                (let* ((*-nomis/ec-site-electric-locals?* t))
                                   (next**))
                               (next**))))
                  (cl-ecase term
