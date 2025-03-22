@@ -737,7 +737,7 @@ Otherwise throw an exception."
           (forward-sexp)))))
   (forward-sexp))
 
-(cl-defmethod -nomis/ec-overlay-term ((term (eql 'body))
+(cl-defmethod -nomis/ec-overlay-term ((term (eql '&body))
                                       tag
                                       inherited-site
                                       &rest
@@ -798,7 +798,7 @@ Otherwise throw an exception."
                                      inherited-site
                                      opts)))
                           (next* ()
-                            (if (eq term 'body)
+                            (if (eq term '&body)
                                 (let* ((*-nomis/ec-site-electric-locals?* t))
                                   (next**))
                               (next**))))
@@ -812,7 +812,7 @@ Otherwise throw an exception."
                       (next*)
                       (continue (rest remaining-shape))))
 
-                   ((body &electric-call-args)
+                   ((&body &electric-call-args)
                     (cl-assert (null (rest remaining-shape)) t)
                     (next*))))))
 
@@ -1230,7 +1230,7 @@ This is very DIY. Is there a better way?")
                               :new-default-site      ec/client
                               :site-electric-locals? t
                               :shape                 (operator
-                                                      body)))
+                                                      &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id           :e/server
                               :operator              "e/server"
@@ -1238,14 +1238,14 @@ This is very DIY. Is there a better way?")
                               :new-default-site      ec/server
                               :site-electric-locals? t
                               :shape                 (operator
-                                                      body)))
+                                                      &body)))
   (nomis/ec-add-parser-spec `(
                               :operator-id :dom/xxxx
                               :operator    ,(concat "dom/"
                                                     -nomis/ec-symbol-no-slash-regexp)
                               :regexp?     t
                               :shape       ((operator :site ec/client)
-                                            body)))
+                                            &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id      :e/defn
                               :operator         "e/defn"
@@ -1256,7 +1256,7 @@ This is very DIY. Is there a better way?")
                                                  doc-string?
                                                  attr-map?
                                                  fn-bindings
-                                                 body)))
+                                                 &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id      :e/fn
                               :operator         "e/fn"
@@ -1265,28 +1265,28 @@ This is very DIY. Is there a better way?")
                               :shape            (operator
                                                  name?
                                                  fn-bindings
-                                                 body)))
+                                                 &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :let
                               :operator    "let"
                               :shape       (operator
                                             (let-bindings :site ec/neutral
                                                           :rhs-site inherit)
-                                            body)))
+                                            &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :binding
                               :operator    "binding"
                               :shape       (operator
                                             (let-bindings :site ec/neutral
                                                           :rhs-site inherit)
-                                            body)))
+                                            &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :e/for
                               :operator    "e/for"
                               :shape       (operator
                                             (let-bindings :site ec/neutral
                                                           :rhs-site inherit)
-                                            body)))
+                                            &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :e/for-by
                               :operator    "e/for-by"
@@ -1294,7 +1294,7 @@ This is very DIY. Is there a better way?")
                                             key-function
                                             (let-bindings :site ec/neutral
                                                           :rhs-site inherit)
-                                            body)))
+                                            &body)))
   (nomis/ec-add-parser-spec `(
                               :operator-id :electric-call
                               :operator    ,-nomis/ec-electric-function-name-regexp
