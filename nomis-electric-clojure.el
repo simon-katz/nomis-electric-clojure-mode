@@ -208,6 +208,12 @@ This can be:
                                           ?\s)))
           (t (substring s 0 n)))))
 
+(defun -nomis/ec-line-number-string (&optional position absolute)
+  (-nomis/ec-pad-string (number-to-string (line-number-at-pos position
+                                                              absolute))
+                        5
+                        t))
+
 (defun -nomis/ec-a-few-current-chars ()
   (let* ((start (point))
          (end-of-form (save-excursion
@@ -224,10 +230,7 @@ This can be:
   (when (or force? -nomis/ec-debug?)
     (let* ((inhibit-message t))
       (-nomis/ec-message-no-disp "%s %s ---- %s %s => %s%s"
-                                 (-nomis/ec-pad-string
-                                  (number-to-string (line-number-at-pos))
-                                  5
-                                  t)
+                                 (-nomis/ec-line-number-string)
                                  (make-string (* 2 *-nomis/ec-level*) ?\s)
                                  site
                                  (let* ((s (with-output-to-string (princ what))))
@@ -838,13 +841,15 @@ Otherwise throw an exception."
                (*-nomis/ec-default-site* (if new-default-site-supplied?
                                              new-default-site
                                            *-nomis/ec-default-site*)))
-          (when new-default-site-supplied?
-            (-nomis/ec-message-no-disp "%s ==== %s -> %s / %s [%s]"
-                                       (line-number-at-pos)
-                                       old-default-site
-                                       new-default-site
-                                       *-nomis/ec-default-site*
-                                       operator-id))
+          (when -nomis/ec-debug?
+            (when new-default-site-supplied?
+              (-nomis/ec-message-no-disp
+               "%s %s ---- Change of default site: %s -> %s [operator-id = %s]"
+               (-nomis/ec-line-number-string)
+               (make-string (* 2 *-nomis/ec-level*) ?\s)
+               old-default-site
+               new-default-site
+               operator-id)))
           (-nomis/ec-with-site (;; avoid-stupid-indentation
                                 :tag (list operator-id)
                                 :site site)
@@ -870,7 +875,7 @@ Otherwise throw an exception."
              (let* ((sexp (thing-at-point 'sexp t)))
                (-nomis/ec-message-no-disp
                 "nomis-electric-clojure-mode: Line %s: Expected a symbol-number-etc but got %s"
-                (line-number-at-pos)
+                (-nomis/ec-line-number-string)
                 sexp))))
           ((and (not *-nomis/ec-site-electric-locals?*)
                 (member sym *-nomis/ec-bound-vars*))
