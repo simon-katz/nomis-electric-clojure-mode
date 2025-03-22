@@ -251,7 +251,7 @@ PROPERTY is already in PLIST."
   (let ((p '()))
     (while plist
       (unless (eq property (car plist))
-	(setq p (plist-put p (cl-first plist) (cl-second plist))))
+        (setq p (plist-put p (cl-first plist) (cl-second plist))))
       (setq plist (cddr plist)))
     p))
 
