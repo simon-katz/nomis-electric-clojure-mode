@@ -2,9 +2,17 @@
 
 ## Unreleased
 
+- Breaking change: Change the extension mechanism.
+
+  - Change `:client`, `:server` and `:neutral` to `ec/client`, `ec/server` and `ec/neutral`.
+  - Allow each term in a parser spec to specify a site, and remove the `apply-to` option.
+  - Other changes that move knowledge away from the generic code and into the parser specs.
+
 - Skip metadata.
 
-- Breaking change: Change the extension mechanism: Change `:client`, `:server` and `:neutral` to `ec/client`, `ec/server` and `ec/neutral`.
+- Add dependency on the `dash` package.
+
+- Improve detection of Electric version — make it more lenient.
 
 
 ## Version 0.4 — 2025-03-18
