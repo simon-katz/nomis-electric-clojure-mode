@@ -989,10 +989,7 @@ Otherwise throw an exception."
       (while (and (< (point) end-2)
                   (-nomis/ec-can-forward-sexp?))
         (-nomis/ec-bof)
-        (condition-case err
-            (-nomis/ec-walk-and-overlay-any-version)
-          (error (-nomis/ec-message-no-disp "nomis-electric-clojure: %s"
-                                            err)))
+        (-nomis/ec-walk-and-overlay-any-version)
         (forward-sexp))
       (-nomis/ec-feedback-flash start end start-2 end-2)
       ;; (-nomis/ec-message-no-disp "*-nomis/ec-n-lumps-in-current-update* = %s"
