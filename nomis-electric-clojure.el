@@ -833,7 +833,7 @@ Otherwise throw an exception."
           ((and (not *-nomis/ec-top-level-of-host-call-or-data-structure?*)
                 (member sym *-nomis/ec-bound-vars*))
            (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                 :tag (list 'symbol-bound)
+                                 :tag (list 'unsited-symbol)
                                  :site 'ec/neutral
                                  :print-env? t)
              ;; Nothing more.
