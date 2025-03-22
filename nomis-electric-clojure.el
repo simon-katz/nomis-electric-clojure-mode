@@ -921,12 +921,10 @@ Otherwise throw an exception."
 ;; (nth 3 -nomis/ec-regexp->parser-spec)
 
 (cl-defun nomis/ec-add-parser-spec ((&whole spec-and-other-bits
-                                            &key operator
+                                            &key
+                                            operator-id
+                                            operator
                                             regexp?
-                                            (operator-id
-                                             (if regexp?
-                                                 (error "operator-id must be supplied when regexp? is true")
-                                               operator))
                                             site
                                             site-electric-locals?
                                             new-default-site
@@ -951,20 +949,12 @@ Otherwise throw an exception."
 - If you are developing new parsers you can end up with a different
   order to when you reload from scratch. The function
   NOMIS/EC-RESET-TO-BUILT-IN-PARSER-SPECS will be useful."
-  (cl-assert (member new-default-site '(nil ec/client ec/server))
-             t)
+  (cl-assert (symbolp operator-id) t)
+  (cl-assert (stringp operator) t)
+  (cl-assert (member new-default-site '(nil ec/client ec/server)) t)
   (let* ((operator-regexp (if regexp? operator (regexp-quote operator)))
          (regexp (-nomis/ec-operator-call-regexp operator-regexp))
-
-         ;; TODO: Big mess with the args. Don't want to convert optional args to
-         ;;       nil. Not all args are in `spec-and-other-bits` -- `operator-id
-         ;;       might not be.
-         ;; (spec (list :operator-id           operator-id
-         ;;             :site                  site
-         ;;             :site-electric-locals? site-electric-locals?
-         ;;             :shape                 shape))
          (spec (-> spec-and-other-bits
-                   (-nomis/ec-plist-add :operator-id operator-id)
                    (-nomis/ec-plist-remove :operator)
                    (-nomis/ec-plist-remove :regexp?)))
          (new-entry (cons regexp spec)))
@@ -1226,6 +1216,7 @@ This is very DIY. Is there a better way?")
 
 (defun -nomis/ec-add-built-in-parser-specs ()
   (nomis/ec-add-parser-spec '(
+                              :operator-id           :e/client
                               :operator              "e/client"
                               :site                  ec/client
                               :new-default-site      ec/client
@@ -1233,6 +1224,7 @@ This is very DIY. Is there a better way?")
                               :shape                 (operator
                                                       body)))
   (nomis/ec-add-parser-spec '(
+                              :operator-id           :e/server
                               :operator              "e/server"
                               :site                  ec/server
                               :new-default-site      ec/server
@@ -1240,13 +1232,14 @@ This is very DIY. Is there a better way?")
                               :shape                 (operator
                                                       body)))
   (nomis/ec-add-parser-spec `(
-                              :operator-id "dom/xxxx"
+                              :operator-id :dom/xxxx
                               :operator    ,(concat "dom/"
                                                     -nomis/ec-symbol-no-slash-regexp)
                               :regexp?     t
                               :shape       ((operator :site ec/client)
                                             body)))
   (nomis/ec-add-parser-spec '(
+                              :operator-id      :e/defn
                               :operator         "e/defn"
                               :site             ec/neutral
                               :new-default-site nil
@@ -1257,6 +1250,7 @@ This is very DIY. Is there a better way?")
                                                  fn-bindings
                                                  body)))
   (nomis/ec-add-parser-spec '(
+                              :operator-id      :e/fn
                               :operator         "e/fn"
                               :site             ec/neutral
                               :new-default-site nil
@@ -1265,35 +1259,39 @@ This is very DIY. Is there a better way?")
                                                  fn-bindings
                                                  body)))
   (nomis/ec-add-parser-spec '(
-                              :operator "let"
-                              :shape    (operator
-                                         (let-bindings :site ec/neutral)
-                                         body)))
+                              :operator-id :let
+                              :operator    "let"
+                              :shape       (operator
+                                            (let-bindings :site ec/neutral)
+                                            body)))
   (nomis/ec-add-parser-spec '(
-                              :operator "binding"
-                              :shape    (operator
-                                         (let-bindings :site ec/neutral)
-                                         body)))
+                              :operator-id :binding
+                              :operator    "binding"
+                              :shape       (operator
+                                            (let-bindings :site ec/neutral)
+                                            body)))
   (nomis/ec-add-parser-spec '(
-                              :operator "e/for"
-                              :shape    (operator
-                                         (let-bindings :site ec/neutral)
-                                         body)))
+                              :operator-id :e/for
+                              :operator    "e/for"
+                              :shape       (operator
+                                            (let-bindings :site ec/neutral)
+                                            body)))
   (nomis/ec-add-parser-spec '(
-                              :operator "e/for-by"
-                              :shape    (operator
-                                         key-function
-                                         (let-bindings :site ec/neutral)
-                                         body)))
+                              :operator-id :e/for-by
+                              :operator    "e/for-by"
+                              :shape       (operator
+                                            key-function
+                                            (let-bindings :site ec/neutral)
+                                            body)))
   (nomis/ec-add-parser-spec `(
-                              :operator-id electric-call
+                              :operator-id :electric-call
                               :operator    ,-nomis/ec-electric-function-name-regexp
                               :regexp?     t
                               :site        ec/neutral
                               :shape       (operator
                                             electric-call-args)))
   (nomis/ec-add-parser-spec '(
-                              :operator-id electric-lambda-in-fun-position
+                              :operator-id :electric-lambda-in-fun-position
                               :operator    "(e/fn" ; Note the open parenthesis here, for lambda in function position.
                               :site        ec/neutral
                               :shape       (operator
