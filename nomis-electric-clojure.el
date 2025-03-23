@@ -1151,14 +1151,18 @@ This is very DIY. Is there a better way?")
       (nomis-electric-clojure-mode)
     (setq nomis/ec-color-initial-whitespace?
           (not nomis/ec-color-initial-whitespace?))
-    (-nomis/ec-redraw-all-buffers)))
+    (-nomis/ec-redraw-all-buffers))
+  (message "%s initial whitespace"
+           (if nomis/ec-color-initial-whitespace? "Showing" "Not showing")))
 
 (defun nomis/ec-toggle-use-underline ()
   (interactive)
   (if (not nomis-electric-clojure-mode)
       (nomis-electric-clojure-mode)
     (setq nomis/ec-use-underline? (not nomis/ec-use-underline?))
-    (-nomis/ec-update-faces)))
+    (-nomis/ec-update-faces))
+  (message "Using %s to show coloring"
+           (if nomis/ec-use-underline? "underline" "background")))
 
 (defun nomis/ec-cycle-options ()
   "Cycle between combinations of `nomis/ec-color-initial-whitespace?` and
@@ -1225,7 +1229,11 @@ This is very DIY. Is there a better way?")
                                nil
                                :background
                                -nomis/ec-neutral-face-color/debug)))
-  (-nomis/ec-redraw-all-buffers))
+  (-nomis/ec-redraw-all-buffers)
+  (message "%s"
+           (if -nomis/ec-debug-overlays?
+               "Debugging overlays"
+             "Not debugging overlays")))
 
 ;;;; ___________________________________________________________________________
 ;;;; Built-in parser specs
