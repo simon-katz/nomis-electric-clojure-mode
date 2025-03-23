@@ -641,10 +641,10 @@ Otherwise throw an exception."
 ;;;; ___________________________________________________________________________
 ;;;; ---- -nomis/ec-overlay-term ----
 
-(cl-defgeneric -nomis/ec-overlay-term (term tag inherited-site
-                                            &key site rhs-site))
+(cl-defgeneric -nomis/ec-overlay-term (term-name tag inherited-site
+                                                 &key site rhs-site))
 
-(cl-defmethod -nomis/ec-overlay-term ((term (eql 'operator))
+(cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'operator))
                                       tag
                                       inherited-site
                                       &key
@@ -659,7 +659,7 @@ Otherwise throw an exception."
     (-nomis/ec-walk-and-overlay-v3))
   (forward-sexp))
 
-(cl-defmethod -nomis/ec-overlay-term ((term (eql 'name))
+(cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'name))
                                       tag
                                       inherited-site
                                       &key
@@ -669,7 +669,7 @@ Otherwise throw an exception."
                                      #'backward-up-list)
   (forward-sexp))
 
-(cl-defmethod -nomis/ec-overlay-term ((term (eql 'name?))
+(cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'name?))
                                       tag
                                       inherited-site
                                       &key
@@ -677,7 +677,7 @@ Otherwise throw an exception."
   (when (thing-at-point 'symbol)
     (forward-sexp)))
 
-(cl-defmethod -nomis/ec-overlay-term ((term (eql 'doc-string?))
+(cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'doc-string?))
                                       tag
                                       inherited-site
                                       &key
@@ -685,7 +685,7 @@ Otherwise throw an exception."
   (when (thing-at-point 'string)
     (forward-sexp)))
 
-(cl-defmethod -nomis/ec-overlay-term ((term (eql 'attr-map?))
+(cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'attr-map?))
                                       tag
                                       inherited-site
                                       &key
@@ -693,7 +693,7 @@ Otherwise throw an exception."
   (when (looking-at "{")
     (forward-sexp)))
 
-(cl-defmethod -nomis/ec-overlay-term ((term (eql 'key-function))
+(cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'key-function))
                                       tag
                                       inherited-site
                                       &key
@@ -704,7 +704,7 @@ Otherwise throw an exception."
   (-nomis/ec-walk-and-overlay-v3)
   (forward-sexp))
 
-(cl-defmethod -nomis/ec-overlay-term ((term (eql 'fn-bindings))
+(cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'fn-bindings))
                                       tag
                                       inherited-site
                                       &key
@@ -721,7 +721,7 @@ Otherwise throw an exception."
       (forward-sexp)))
   (forward-sexp))
 
-(cl-defmethod -nomis/ec-overlay-term ((term (eql 'let-bindings))
+(cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'let-bindings))
                                       tag
                                       inherited-site
                                       &key rhs-site
@@ -754,7 +754,7 @@ Otherwise throw an exception."
           (forward-sexp)))))
   (forward-sexp))
 
-(cl-defmethod -nomis/ec-overlay-term ((term (eql '&body))
+(cl-defmethod -nomis/ec-overlay-term ((term-name (eql '&body))
                                       tag
                                       inherited-site
                                       &key site
@@ -773,7 +773,7 @@ Otherwise throw an exception."
         (-nomis/ec-walk-and-overlay-v3))
       (forward-sexp))))
 
-(cl-defmethod -nomis/ec-overlay-term ((term (eql '&args))
+(cl-defmethod -nomis/ec-overlay-term ((term-name (eql '&args))
                                       tag
                                       inherited-site
                                       &key site
