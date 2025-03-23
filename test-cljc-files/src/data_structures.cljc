@@ -19,4 +19,8 @@
                      #{local-1
                        (e/server
                         {:i (hosted-call global-1 local-1)
-                         :j (ElectricCall global-1 local-1)})}])}})
+                         :j (ElectricCall global-1 local-1)})}])}
+   :k (e/server 'foo)
+   :j (e/client '(a
+                  (e/server (hosted-call b))
+                  c))})
