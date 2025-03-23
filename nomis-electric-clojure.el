@@ -795,6 +795,81 @@ Otherwise throw an exception."
 ;;;; ___________________________________________________________________________
 ;;;; ---- -nomis/ec-overlay-using-parser-spec ----
 
+(defun -nomis/ec-log-change-of-site (operator-id
+                                     old-default-site
+                                     new-default-site-supplied?
+                                     new-default-site)
+  (when -nomis/ec-print-debug-messages?
+    (when new-default-site-supplied?
+      (-nomis/ec-message-no-disp
+       "%s %s ---- Change of default site: %s -> %s [operator-id = %s]"
+       (-nomis/ec-line-number-string)
+       (make-string (* 2 *-nomis/ec-level*) ?\s)
+       old-default-site
+       new-default-site
+       operator-id))))
+
+(defun -nomis/ec-skip-metadata ()
+  (while (looking-at (regexp-quote "^"))
+    (progn (forward-char)
+           (forward-sexp))
+    (when (-nomis/ec-can-forward-sexp?)
+      (-nomis/ec-bof))))
+
+(defun -nomis/ec-process-term (term-name term-opts
+                                         tag site inherited-site)
+  (cl-flet ((do-it ()
+              (-nomis/ec-with-site
+                  (;; avoid-stupid-indentation
+                   :tag tag
+                   :site (-nomis/ec-transmogrify-site site
+                                                      inherited-site)
+                   :description (-> (first tag)
+                                    -nomis/ec->grammar-description))
+                (apply #'-nomis/ec-overlay-term
+                       term-name
+                       tag
+                       inherited-site
+                       term-opts))))
+    (if (eq term-name '&body)
+        (let* ((*-nomis/ec-site-electric-locals?* t))
+          (do-it))
+      (do-it))))
+
+(defun -nomis/ec-process-terms (operator-id terms inherited-site)
+  (when terms
+    (cl-destructuring-bind (term &rest rest-terms) terms
+      (when (-nomis/ec-can-forward-sexp?)
+        (-nomis/ec-bof))
+      (-nomis/ec-skip-metadata)
+      (let* ((term-name (if (atom term) term (first term)))
+             (term-opts (if (atom term) '() (rest term)))
+             (site (plist-get term-opts :site))
+             (tag (list term-name operator-id)))
+        (condition-case err
+            (progn
+              (-nomis/ec-debug *-nomis/ec-site* term-name)
+              (cl-flet* ((process-terms* ()
+                           (-nomis/ec-process-term term-name term-opts
+                                                   tag site inherited-site)
+                           (-nomis/ec-process-terms operator-id
+                                                    rest-terms
+                                                    inherited-site)))
+                (cl-ecase term-name
+                  ((operator name name? doc-string? attr-map? key-function)
+                   (process-terms*))
+                  ((fn-bindings let-bindings)
+                   (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
+                     (process-terms*)))
+                  ((&body &args)
+                   (cl-assert (null rest-terms) t)
+                   (process-terms*)))))
+          (-nomis/ec-parse-error
+           (goto-char (third (cdr err)))
+           (-nomis/ec-overlay-unparsable (point)
+                                         term-name
+                                         (second (cdr err)))))))))
+
 (cl-defun -nomis/ec-overlay-using-parser-spec
     (&key
      operator-id
@@ -805,90 +880,27 @@ Otherwise throw an exception."
      terms)
   (cl-assert (listp terms))
   (save-excursion
-    (let* ((inherited-site *-nomis/ec-site*))
-      (cl-labels
-          ((next (remaining-terms)
-             (let* ((term-and-opts (first remaining-terms))
-                    (term (if (atom term-and-opts) term-and-opts (first term-and-opts)))
-                    (opts (if (atom term-and-opts) '() (rest term-and-opts)))
-                    (site (plist-get opts :site))
-                    (tag (list term operator-id)))
-               (cl-flet* ((next** ()
-                            (-nomis/ec-with-site
-                                (;; avoid-stupid-indentation
-                                 :tag tag
-                                 :site (-nomis/ec-transmogrify-site site
-                                                                    inherited-site)
-                                 :description (-> (first tag)
-                                                  -nomis/ec->grammar-description))
-                              (apply #'-nomis/ec-overlay-term
-                                     term
-                                     tag
-                                     inherited-site
-                                     opts)))
-                          (next* ()
-                            (if (eq term '&body)
-                                (let* ((*-nomis/ec-site-electric-locals?* t))
-                                  (next**))
-                              (next**))))
-                 (cl-ecase term
-                   ((operator name name? doc-string? attr-map? key-function)
-                    (next*)
-                    (continue (rest remaining-terms)))
+    (let* ((inherited-site *-nomis/ec-site*)
+           (old-default-site *-nomis/ec-default-site*)
+           (*-nomis/ec-default-site* (if new-default-site-supplied?
+                                         new-default-site
+                                       *-nomis/ec-default-site*))
+           (*-nomis/ec-site-electric-locals?*
+            (or site-electric-locals?
+                *-nomis/ec-site-electric-locals?*)))
+      (-nomis/ec-log-change-of-site operator-id
+                                    old-default-site
+                                    new-default-site-supplied?
+                                    new-default-site)
+      (-nomis/ec-with-site (;; avoid-stupid-indentation
+                            :tag (list operator-id)
+                            :site site
+                            :description (-> operator-id
+                                             -nomis/ec->grammar-description))
+        (nomis/ec-down-list operator-id)
+        (-nomis/ec-process-terms operator-id terms inherited-site)))))
 
-                   ((fn-bindings let-bindings)
-                    (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
-                      (next*)
-                      (continue (rest remaining-terms))))
-
-                   ((&body &args)
-                    (cl-assert (null (rest remaining-terms)) t)
-                    (next*))))))
-
-           (continue (remaining-terms)
-             (when remaining-terms
-               (when (-nomis/ec-can-forward-sexp?)
-                 (-nomis/ec-bof))
-               ;; Skip any metadata:
-               (while (looking-at (regexp-quote "^"))
-                 (progn (forward-char)
-                        (forward-sexp))
-                 (when (-nomis/ec-can-forward-sexp?)
-                   (-nomis/ec-bof)))
-               ;; No more metadata. Carry on:
-               (-nomis/ec-debug *-nomis/ec-site* (first remaining-terms))
-               (condition-case err
-                   (next remaining-terms)
-                 (-nomis/ec-parse-error
-                  (goto-char (third (cdr err)))
-                  (-nomis/ec-overlay-unparsable (point)
-                                                (first remaining-terms)
-                                                (second (cdr err)))))))
-           (do-it ()
-             (nomis/ec-down-list operator-id)
-             (continue terms)))
-        (let* ((old-default-site *-nomis/ec-default-site*)
-               (*-nomis/ec-site-electric-locals?*
-                (or site-electric-locals?
-                    *-nomis/ec-site-electric-locals?*))
-               (*-nomis/ec-default-site* (if new-default-site-supplied?
-                                             new-default-site
-                                           *-nomis/ec-default-site*)))
-          (when -nomis/ec-print-debug-messages?
-            (when new-default-site-supplied?
-              (-nomis/ec-message-no-disp
-               "%s %s ---- Change of default site: %s -> %s [operator-id = %s]"
-               (-nomis/ec-line-number-string)
-               (make-string (* 2 *-nomis/ec-level*) ?\s)
-               old-default-site
-               new-default-site
-               operator-id)))
-          (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                :tag (list operator-id)
-                                :site site
-                                :description (-> operator-id
-                                                 -nomis/ec->grammar-description))
-            (do-it)))))))
+;;;; ___________________________________________________________________________
 
 (defun -nomis/ec-overlay-other-bracketed-form-v3 ()
   (-nomis/ec-debug *-nomis/ec-site* 'data-structure-or-hosted-call)
