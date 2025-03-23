@@ -1192,30 +1192,24 @@ This is very DIY. Is there a better way?")
 
 (defun nomis/ec-toggle-show-grammar-in-tooltips ()
   (interactive)
-  (if (not nomis-electric-clojure-mode)
-      (nomis-electric-clojure-mode)
-    (setq nomis/ec-show-grammar-in-tooltips?
-          (not nomis/ec-show-grammar-in-tooltips?))
-    (-nomis/ec-redraw-all-buffers))
+  (setq nomis/ec-show-grammar-in-tooltips?
+        (not nomis/ec-show-grammar-in-tooltips?))
+  (-nomis/ec-redraw-all-buffers)
   (message "%s grammar in tooltips"
            (if nomis/ec-show-grammar-in-tooltips? "Showing" "Not showing")))
 
 (defun nomis/ec-toggle-color-initial-whitespace ()
   (interactive)
-  (if (not nomis-electric-clojure-mode)
-      (nomis-electric-clojure-mode)
-    (setq nomis/ec-color-initial-whitespace?
-          (not nomis/ec-color-initial-whitespace?))
-    (-nomis/ec-redraw-all-buffers))
+  (setq nomis/ec-color-initial-whitespace?
+        (not nomis/ec-color-initial-whitespace?))
+  (-nomis/ec-redraw-all-buffers)
   (message "%s initial whitespace"
            (if nomis/ec-color-initial-whitespace? "Showing" "Not showing")))
 
 (defun nomis/ec-toggle-use-underline ()
   (interactive)
-  (if (not nomis-electric-clojure-mode)
-      (nomis-electric-clojure-mode)
-    (setq nomis/ec-use-underline? (not nomis/ec-use-underline?))
-    (-nomis/ec-update-faces))
+  (setq nomis/ec-use-underline? (not nomis/ec-use-underline?))
+  (-nomis/ec-update-faces)
   (message "Using %s to show coloring"
            (if nomis/ec-use-underline? "underline" "background")))
 
@@ -1238,10 +1232,8 @@ This is very DIY. Is there a better way?")
 
 (defun nomis/ec-toggle-debug-feedback-flash ()
   (interactive)
-  (if (not nomis-electric-clojure-mode)
-      (nomis-electric-clojure-mode)
-    (setq -nomis/ec-give-debug-feedback-flash?
-          (not -nomis/ec-give-debug-feedback-flash?)))
+  (setq -nomis/ec-give-debug-feedback-flash?
+        (not -nomis/ec-give-debug-feedback-flash?))
   (message "Debug feedback flash turned %s"
            (if -nomis/ec-give-debug-feedback-flash? "on" "off")))
 
