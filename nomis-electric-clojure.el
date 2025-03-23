@@ -792,13 +792,14 @@ Otherwise throw an exception."
         (-nomis/ec-walk-and-overlay-v3))
       (forward-sexp))))
 
-(cl-defun -nomis/ec-overlay-form (&key
-                                  operator-id
-                                  site
-                                  site-electric-locals?
-                                  (new-default-site nil
-                                                    new-default-site-supplied?)
-                                  shape)
+(cl-defun -nomis/ec-overlay-using-parser-spec
+    (&key
+     operator-id
+     site
+     site-electric-locals?
+     (new-default-site nil
+                       new-default-site-supplied?)
+     shape)
   (cl-assert (listp shape))
   (save-excursion
     (let* ((inherited-site *-nomis/ec-site*))
@@ -1030,8 +1031,9 @@ Otherwise throw an exception."
     (or (let* ((*-nomis/ec-site-electric-locals?* nil))
           (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
                    when (looking-at regexp)
-                   return (progn (apply #'-nomis/ec-overlay-form spec)
-                                 t)))
+                   return (progn
+                            (apply #'-nomis/ec-overlay-using-parser-spec spec)
+                            t)))
         (cond
          ((-nomis/ec-looking-at-bracketed-sexp-start)
           (let* ((*-nomis/ec-site-electric-locals?* t))
