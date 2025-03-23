@@ -1070,8 +1070,12 @@ Otherwise throw an exception."
                 :v3)))
     (setq -nomis/ec-noted-explicit-electric-version nil)
     (setq -nomis/ec-electric-version v)
-    (message "Electric version = %s"
-             (string-replace ":" "" (symbol-name v)))))
+    ;; This blats messages when using the `nomis/ec-toggle-xxxx` commands.
+    ;; What's the downside of not doing this? (For example, we do get the
+    ;; version reported when enabling the mode and when reverting a buffer.)
+    ;; (message "Electric version = %s"
+    ;;          (string-replace ":" "" (symbol-name v)))
+    ))
 
 (defun -nomis/ec-overlay-region (start end)
   (when -nomis/ec-debug?
