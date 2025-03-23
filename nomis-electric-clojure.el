@@ -893,14 +893,14 @@ Otherwise throw an exception."
           ((and (not *-nomis/ec-site-electric-locals?*)
                 (member sym *-nomis/ec-bound-vars*))
            (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                 :tag (list 'unsited-symbol)
+                                 :tag (list 'unsited-single-item)
                                  :site 'ec/neutral
                                  :print-env? t)
              ;; Nothing more.
              ))
           (t
            (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                 :tag (list 'sited-symbol)
+                                 :tag (list 'sited-single-item)
                                  :site *-nomis/ec-default-site*
                                  :print-env? t)
              ;; Nothing more.
