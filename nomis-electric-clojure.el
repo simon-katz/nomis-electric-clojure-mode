@@ -1103,7 +1103,12 @@ This is very DIY. Is there a better way?")
         (-nomis/ec-update-faces)
         (-nomis/ec-enable)
         (add-hook 'before-revert-hook '-nomis/ec-before-revert nil t)
-        (add-hook 'after-revert-hook '-nomis/ec-after-revert nil t))
+        (add-hook 'after-revert-hook '-nomis/ec-after-revert nil t)
+        (-nomis/ec-detect-electric-version)
+        (message "Nomis-Electric-Clojure mode enabled in current buffer; Electric version = %s"
+                 (string-replace ":"
+                                 ""
+                                 (symbol-name -nomis/ec-electric-version))))
     (progn
       (-nomis/ec-disable)
       (remove-hook 'before-revert-hook '-nomis/ec-before-revert t)
