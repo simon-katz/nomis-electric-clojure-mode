@@ -472,7 +472,8 @@ Otherwise throw an exception."
   (-nomis/ec-debug site tag nil print-env?)
   (let* ((*-nomis/ec-level* (1+ *-nomis/ec-level*)))
     (if (or (null site)
-            (eq site *-nomis/ec-site*))
+            (and (eq site *-nomis/ec-site*)
+                 (not nomis/ec-show-grammar-in-tooltips?)))
         ;; No need for a new overlay.
         (funcall f)
       (let* ((*-nomis/ec-site* site)
