@@ -1079,6 +1079,9 @@ This is very DIY. Is there a better way?")
   (cl-pushnew (current-buffer) -nomis/ec-buffers)
   ;; Note: To get a debugger up when there are errors, use
   ;; `jit-lock-debug-mode`.
+  ;; Hmmmm, that doesn't seem to work reliably.
+  ;; Instead try this in an Electric Clojure buffer:
+  ;; (-nomis/ec-overlay-region (point-min) (point-max))
   (jit-lock-register '-nomis/ec-overlay-region t))
 
 (defun -nomis/ec-disable (&optional reverting?)
