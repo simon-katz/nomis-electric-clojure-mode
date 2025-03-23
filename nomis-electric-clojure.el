@@ -1265,6 +1265,14 @@ This is very DIY. Is there a better way?")
                                    (overlay-get ov 'nomis/tag))))
     (message "No. of overlays = %s" (length ovs))))
 
+(defun nomis/ec-toggle-debug-messages ()
+  (interactive)
+  (setq -nomis/ec-print-debug-messages? (not -nomis/ec-print-debug-messages?))
+  (message "%s"
+           (if -nomis/ec-print-debug-messages?
+               "Printing debug messages"
+             "Not printing debug messages")))
+
 (defun nomis/ec-toggle-debug-overlays ()
   (interactive)
   (if -nomis/ec-debug-overlays?
