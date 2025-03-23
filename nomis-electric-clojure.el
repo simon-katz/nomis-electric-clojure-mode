@@ -639,7 +639,7 @@ Otherwise throw an exception."
       (ast->vars ast))))
 
 ;;;; ___________________________________________________________________________
-;;;; ---- Parse and overlay ----
+;;;; ---- -nomis/ec-overlay-term ----
 
 (cl-defgeneric -nomis/ec-overlay-term (term tag inherited-site
                                             &key site rhs-site))
@@ -791,6 +791,9 @@ Otherwise throw an exception."
                                              -nomis/ec->grammar-description))
         (-nomis/ec-walk-and-overlay-v3))
       (forward-sexp))))
+
+;;;; ___________________________________________________________________________
+;;;; ---- -nomis/ec-overlay-using-parser-spec ----
 
 (cl-defun -nomis/ec-overlay-using-parser-spec
     (&key
