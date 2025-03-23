@@ -880,6 +880,15 @@ Otherwise throw an exception."
                 "nomis-electric-clojure-mode: Line %s: Expected a symbol-number-etc but got %s"
                 (-nomis/ec-line-number-string)
                 sexp))))
+          ((equal sym "'")
+           (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                 :tag (list 'quoted-form)
+                                 :site *-nomis/ec-default-site*
+                                 :description (when nomis/ec-show-grammar-in-tooltips?
+                                                'quoted-form)
+                                 :print-env? t)
+             ;; Nothing more.
+             ))
           ((and (not *-nomis/ec-site-electric-locals?*)
                 (member sym *-nomis/ec-bound-vars*))
            (-nomis/ec-with-site (;; avoid-stupid-indentation
