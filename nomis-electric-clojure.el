@@ -229,10 +229,10 @@ This can be:
     (concat (buffer-substring start end-of-line)
             (when (< end-of-line end-of-form) "▶▶▶"))))
 
-(defvar -nomis/ec-debug? nil)
+(defvar -nomis/ec-print-debug-messages? nil)
 
 (defun -nomis/ec-debug (site what &optional force? print-env?)
-  (when (or force? -nomis/ec-debug?)
+  (when (or force? -nomis/ec-print-debug-messages?)
     (let* ((inhibit-message t))
       (-nomis/ec-message-no-disp "%s %s ---- %s %s => %s%s"
                                  (-nomis/ec-line-number-string)
@@ -871,7 +871,7 @@ Otherwise throw an exception."
                (*-nomis/ec-default-site* (if new-default-site-supplied?
                                              new-default-site
                                            *-nomis/ec-default-site*)))
-          (when -nomis/ec-debug?
+          (when -nomis/ec-print-debug-messages?
             (when new-default-site-supplied?
               (-nomis/ec-message-no-disp
                "%s %s ---- Change of default site: %s -> %s [operator-id = %s]"
@@ -1080,7 +1080,7 @@ Otherwise throw an exception."
     ))
 
 (defun -nomis/ec-overlay-region (start end)
-  (when -nomis/ec-debug?
+  (when -nomis/ec-print-debug-messages?
     (-nomis/ec-message-no-disp "________________________________")
     (-nomis/ec-message-no-disp "==== -nomis/ec-overlay-region %s %s" start end))
   (unless -nomis/ec-electric-version
