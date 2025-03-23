@@ -71,6 +71,11 @@ You can re-run the auto-detection in any of the following ways:
 - by reverting the buffer."
   :type 'integer)
 
+(defcustom nomis/ec-show-grammar-in-tooltips? nil
+  "Whether to show grammar-related information in tooltips. This might blat
+tooltips provided by other modes."
+  :type 'boolean)
+
 (defcustom nomis/ec-color-initial-whitespace? nil
   "Whether to color whitespace at the beginning of lines in
 sited code."
@@ -424,6 +429,16 @@ PROPERTY is already in PLIST."
                 (when (bolp)
                   (back-to-indentation))))))))))
 
+(defun -nomis/ec->grammar-description (x)
+  (when nomis/ec-show-grammar-in-tooltips?
+    (format "[Level=%s] %s"
+            *-nomis/ec-level*
+            (if (keywordp x)
+                (-> x
+                    symbol-name
+                    (substring 1))
+              x))))
+
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay helpers ----
 
@@ -514,7 +529,9 @@ Otherwise throw an exception."
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag '(site)
-                          :site site)
+                          :site site
+                          :description (-> site
+                                           -nomis/ec->grammar-description))
       (-nomis/ec-overlay-args-of-form-v2))))
 
 (defun -nomis/ec-overlay-other-bracketed-form-v2 ()
@@ -730,7 +747,9 @@ Otherwise throw an exception."
                  (*-nomis/ec-default-site* new-site))
             (-nomis/ec-with-site (;; avoid-stupid-indentation
                                   :tag (cons 'binding-rhs tag)
-                                  :site new-site)
+                                  :site new-site
+                                  :description (-> 'binding-rhs
+                                                   -nomis/ec->grammar-description))
               (-nomis/ec-walk-and-overlay-v3)))
           (forward-sexp)))))
   (forward-sexp))
@@ -748,7 +767,9 @@ Otherwise throw an exception."
       (-nomis/ec-with-site (;; avoid-stupid-indentation
                             :tag (cons 'body-form tag)
                             :site (-nomis/ec-transmogrify-site site
-                                                               inherited-site))
+                                                               inherited-site)
+                            :description (-> 'body-form
+                                             -nomis/ec->grammar-description))
         (-nomis/ec-walk-and-overlay-v3))
       (forward-sexp))))
 
@@ -765,7 +786,9 @@ Otherwise throw an exception."
       (-nomis/ec-with-site (;; avoid-stupid-indentation
                             :tag (cons 'arg tag)
                             :site (-nomis/ec-transmogrify-site site
-                                                               inherited-site))
+                                                               inherited-site)
+                            :description (-> 'arg
+                                             -nomis/ec->grammar-description))
         (-nomis/ec-walk-and-overlay-v3))
       (forward-sexp))))
 
@@ -791,7 +814,9 @@ Otherwise throw an exception."
                                 (;; avoid-stupid-indentation
                                  :tag tag
                                  :site (-nomis/ec-transmogrify-site site
-                                                                    inherited-site))
+                                                                    inherited-site)
+                                 :description (-> (first tag)
+                                                  -nomis/ec->grammar-description))
                               (apply #'-nomis/ec-overlay-term
                                      term
                                      tag
@@ -856,7 +881,9 @@ Otherwise throw an exception."
                operator-id)))
           (-nomis/ec-with-site (;; avoid-stupid-indentation
                                 :tag (list operator-id)
-                                :site site)
+                                :site site
+                                :description (-> operator-id
+                                                 -nomis/ec->grammar-description))
             (do-it)))))))
 
 (defun -nomis/ec-overlay-other-bracketed-form-v3 ()
@@ -864,7 +891,9 @@ Otherwise throw an exception."
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (list 'data-structure-or-hosted-call)
-                          :site *-nomis/ec-default-site*)
+                          :site *-nomis/ec-default-site*
+                          :description (-> 'data-structure-or-hosted-call
+                                           -nomis/ec->grammar-description))
       (nomis/ec-down-list 'data-structure-or-hosted-call)
       (while (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
@@ -885,8 +914,8 @@ Otherwise throw an exception."
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'quoted-form)
                                  :site *-nomis/ec-default-site*
-                                 :description (when nomis/ec-show-grammar-in-tooltips?
-                                                'quoted-form)
+                                 :description (-> 'quoted-form
+                                                  -nomis/ec->grammar-description)
                                  :print-env? t)
              ;; Nothing more.
              ))
@@ -895,6 +924,8 @@ Otherwise throw an exception."
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'unsited-single-item)
                                  :site 'ec/neutral
+                                 :description (-> 'unsited-single-item
+                                                  -nomis/ec->grammar-description)
                                  :print-env? t)
              ;; Nothing more.
              ))
@@ -902,6 +933,8 @@ Otherwise throw an exception."
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'sited-single-item)
                                  :site *-nomis/ec-default-site*
+                                 :description (-> 'sited-single-item
+                                                  -nomis/ec->grammar-description)
                                  :print-env? t)
              ;; Nothing more.
              )))))
@@ -1152,6 +1185,16 @@ This is very DIY. Is there a better way?")
   (if (not nomis-electric-clojure-mode)
       (nomis-electric-clojure-mode)
     (-nomis/ec-redraw)))
+
+(defun nomis/ec-toggle-show-grammar-in-tooltips ()
+  (interactive)
+  (if (not nomis-electric-clojure-mode)
+      (nomis-electric-clojure-mode)
+    (setq nomis/ec-show-grammar-in-tooltips?
+          (not nomis/ec-show-grammar-in-tooltips?))
+    (-nomis/ec-redraw-all-buffers))
+  (message "%s grammar in tooltips"
+           (if nomis/ec-show-grammar-in-tooltips? "Showing" "Not showing")))
 
 (defun nomis/ec-toggle-color-initial-whitespace ()
   (interactive)
