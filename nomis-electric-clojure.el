@@ -799,13 +799,13 @@ Otherwise throw an exception."
      site-electric-locals?
      (new-default-site nil
                        new-default-site-supplied?)
-     shape)
-  (cl-assert (listp shape))
+     terms)
+  (cl-assert (listp terms))
   (save-excursion
     (let* ((inherited-site *-nomis/ec-site*))
       (cl-labels
-          ((next (remaining-shape)
-             (let* ((term-and-opts (first remaining-shape))
+          ((next (remaining-terms)
+             (let* ((term-and-opts (first remaining-terms))
                     (term (if (atom term-and-opts) term-and-opts (first term-and-opts)))
                     (opts (if (atom term-and-opts) '() (rest term-and-opts)))
                     (site (plist-get opts :site))
@@ -831,19 +831,19 @@ Otherwise throw an exception."
                  (cl-ecase term
                    ((operator name name? doc-string? attr-map? key-function)
                     (next*)
-                    (continue (rest remaining-shape)))
+                    (continue (rest remaining-terms)))
 
                    ((fn-bindings let-bindings)
                     (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
                       (next*)
-                      (continue (rest remaining-shape))))
+                      (continue (rest remaining-terms))))
 
                    ((&body &args)
-                    (cl-assert (null (rest remaining-shape)) t)
+                    (cl-assert (null (rest remaining-terms)) t)
                     (next*))))))
 
-           (continue (remaining-shape)
-             (when remaining-shape
+           (continue (remaining-terms)
+             (when remaining-terms
                (when (-nomis/ec-can-forward-sexp?)
                  (-nomis/ec-bof))
                ;; Skip any metadata:
@@ -853,17 +853,17 @@ Otherwise throw an exception."
                  (when (-nomis/ec-can-forward-sexp?)
                    (-nomis/ec-bof)))
                ;; No more metadata. Carry on:
-               (-nomis/ec-debug *-nomis/ec-site* (first remaining-shape))
+               (-nomis/ec-debug *-nomis/ec-site* (first remaining-terms))
                (condition-case err
-                   (next remaining-shape)
+                   (next remaining-terms)
                  (-nomis/ec-parse-error
                   (goto-char (third (cdr err)))
                   (-nomis/ec-overlay-unparsable (point)
-                                                (first remaining-shape)
+                                                (first remaining-terms)
                                                 (second (cdr err)))))))
            (do-it ()
              (nomis/ec-down-list operator-id)
-             (continue shape)))
+             (continue terms)))
         (let* ((old-default-site *-nomis/ec-default-site*)
                (*-nomis/ec-site-electric-locals?*
                 (or site-electric-locals?
@@ -982,7 +982,7 @@ Otherwise throw an exception."
                                             site
                                             site-electric-locals?
                                             new-default-site
-                                            shape))
+                                            terms))
   "Add a spec for parsing Elecric Clojure code.
 
 - See uses at the end of this file for the built-in parsers.
@@ -1302,7 +1302,7 @@ This is very DIY. Is there a better way?")
                               :site                  ec/client
                               :new-default-site      ec/client
                               :site-electric-locals? t
-                              :shape                 (operator
+                              :terms                 (operator
                                                       &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id           :e/server
@@ -1310,21 +1310,21 @@ This is very DIY. Is there a better way?")
                               :site                  ec/server
                               :new-default-site      ec/server
                               :site-electric-locals? t
-                              :shape                 (operator
+                              :terms                 (operator
                                                       &body)))
   (nomis/ec-add-parser-spec `(
                               :operator-id :dom/xxxx
                               :operator    ,(concat "dom/"
                                                     -nomis/ec-symbol-no-slash-regexp)
                               :regexp?     t
-                              :shape       ((operator :site ec/client)
+                              :terms       ((operator :site ec/client)
                                             &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id      :e/defn
                               :operator         "e/defn"
                               :site             ec/neutral
                               :new-default-site nil
-                              :shape            (operator
+                              :terms            (operator
                                                  name
                                                  doc-string?
                                                  attr-map?
@@ -1335,35 +1335,35 @@ This is very DIY. Is there a better way?")
                               :operator         "e/fn"
                               :site             ec/neutral
                               :new-default-site nil
-                              :shape            (operator
+                              :terms            (operator
                                                  name?
                                                  fn-bindings
                                                  &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :let
                               :operator    "let"
-                              :shape       (operator
+                              :terms       (operator
                                             (let-bindings :site ec/neutral
                                                           :rhs-site inherit)
                                             &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :binding
                               :operator    "binding"
-                              :shape       (operator
+                              :terms       (operator
                                             (let-bindings :site ec/neutral
                                                           :rhs-site inherit)
                                             &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :e/for
                               :operator    "e/for"
-                              :shape       (operator
+                              :terms       (operator
                                             (let-bindings :site ec/neutral
                                                           :rhs-site inherit)
                                             &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :e/for-by
                               :operator    "e/for-by"
-                              :shape       (operator
+                              :terms       (operator
                                             key-function
                                             (let-bindings :site ec/neutral
                                                           :rhs-site inherit)
@@ -1373,13 +1373,13 @@ This is very DIY. Is there a better way?")
                               :operator    ,-nomis/ec-electric-function-name-regexp
                               :regexp?     t
                               :site        ec/neutral
-                              :shape       (operator
+                              :terms       (operator
                                             &args)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :electric-lambda-in-fun-position
                               :operator    "(e/fn" ; Note the open parenthesis here, for lambda in function position.
                               :site        ec/neutral
-                              :shape       (operator
+                              :terms       (operator
                                             &args))))
 
 (-nomis/ec-add-built-in-parser-specs)
