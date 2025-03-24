@@ -6,7 +6,7 @@
 
   - (Note that the extension mechanism is alpha and subject to change.)
 
-  - Change `:client`, `:server` and `:neutral` to `ec/client`, `ec/server` and `ec/neutral`.
+  - Change `:client`, `:server` and `:neutral` to `nec/client`, `nec/server` and `nec/neutral`.
 
   - Allow each term in a parser spec to specify a site, and remove the `apply-to` option.
 

@@ -147,16 +147,16 @@ For a taste, here are some examples of built-in parser definitions:
 ```
 (nomis/ec-add-parser-spec '(:operator-id           :e/client
                             :operator              "e/client"
-                            :site                  ec/client
-                            :new-default-site      ec/client
+                            :site                  nec/client
+                            :new-default-site      nec/client
                             :site-electric-locals? t
                             :terms                 (operator
                                                     &body)))
 
 (nomis/ec-add-parser-spec '(:operator-id           :e/server
                             :operator              "e/server"
-                            :site                  ec/server
-                            :new-default-site      ec/server
+                            :site                  nec/server
+                            :new-default-site      nec/server
                             :site-electric-locals? t
                             :terms                 (operator
                                                     &body)))
@@ -164,14 +164,14 @@ For a taste, here are some examples of built-in parser definitions:
 (nomis/ec-add-parser-spec '(:operator-id :let
                             :operator    "let"
                             :terms       (operator
-                                          (let-bindings :site ec/neutral
+                                          (let-bindings :site nec/neutral
                                                         :rhs-site inherit)
                                           &body)))
 
 (nomis/ec-add-parser-spec '(:operator-id :e/for
                             :operator    "e/for"
                             :terms       (operator
-                                          (let-bindings :site ec/neutral
+                                          (let-bindings :site nec/neutral
                                                         :rhs-site inherit)
                                           &body)))
 
@@ -179,7 +179,7 @@ For a taste, here are some examples of built-in parser definitions:
                             :operator    "e/for-by"
                             :terms       (operator
                                           key-function
-                                          (let-bindings :site ec/neutral
+                                          (let-bindings :site nec/neutral
                                                         :rhs-site inherit)
                                           &body)))
 
@@ -187,7 +187,7 @@ For a taste, here are some examples of built-in parser definitions:
                             :operator    ,(concat "dom/"
                                                   -nomis/ec-symbol-no-slash-regexp)
                             :regexp?     t
-                            :terms       ((operator :site ec/client)
+                            :terms       ((operator :site nec/client)
                                           &body)))
 ```
 

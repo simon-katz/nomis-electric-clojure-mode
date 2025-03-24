@@ -351,9 +351,9 @@ PROPERTY is already in PLIST."
 
 (defvar *-nomis/ec-n-lumps-in-current-update* 0)
 
-(defvar *-nomis/ec-site* 'ec/neutral
-  "The site of the code currently being analysed. One of `ec/neutral`,
-`ec/client` or `ec/server`.")
+(defvar *-nomis/ec-site* 'nec/neutral
+  "The site of the code currently being analysed. One of `nec/neutral`,
+`nec/client` or `nec/server`.")
 
 (defvar *-nomis/ec-site-electric-locals?* nil)
 
@@ -397,10 +397,10 @@ PROPERTY is already in PLIST."
       (-nomis/ec-debug site 'empty-lump)
     (cl-incf *-nomis/ec-n-lumps-in-current-update*)
     (let* ((face (cond ; See avoid-case-bug-with-keywords at top of file.
-                  ((eq site 'ec/client)     '-nomis/ec-client-face)
-                  ((eq site 'ec/server)     '-nomis/ec-server-face)
-                  ((eq site 'ec/neutral)    '-nomis/ec-neutral-face)
-                  ((eq site 'ec/unparsable) '-nomis/ec-unparsable-face)
+                  ((eq site 'nec/client)     '-nomis/ec-client-face)
+                  ((eq site 'nec/server)     '-nomis/ec-server-face)
+                  ((eq site 'nec/neutral)    '-nomis/ec-neutral-face)
+                  ((eq site 'nec/unparsable) '-nomis/ec-unparsable-face)
                   (t (error "Bad case: site: %s" site)))))
       (cl-flet ((overlay (s e)
                   (-nomis/ec-make-overlay tag nesting-level face s e description)))
@@ -545,9 +545,9 @@ Otherwise throw an exception."
   (save-excursion
     (cond
      ((looking-at (-nomis/ec-operator-call-regexp "e/client"))
-      (-nomis/ec-overlay-site-v2 'ec/client))
+      (-nomis/ec-overlay-site-v2 'nec/client))
      ((looking-at (-nomis/ec-operator-call-regexp "e/server"))
-      (-nomis/ec-overlay-site-v2 'ec/server))
+      (-nomis/ec-overlay-site-v2 'nec/server))
      ((-nomis/ec-looking-at-bracketed-sexp-start)
       (-nomis/ec-overlay-other-bracketed-form-v2)))))
 
@@ -559,7 +559,7 @@ Otherwise throw an exception."
     (goto-char pos)
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (list 'unparsable tag)
-                          :site 'ec/unparsable
+                          :site 'nec/unparsable
                           :description description)
       ;; Nothing more.
       )))
@@ -724,7 +724,7 @@ Otherwise throw an exception."
                                       inherited-site
                                       &key rhs-site
                                       &allow-other-keys)
-  (cl-assert (member rhs-site '(nil ec/client ec/server ec/neutral inherit)))
+  (cl-assert (member rhs-site '(nil nec/client nec/server nec/neutral inherit)))
   (save-excursion
     (let* ((tag (cons 'let-bindings tag)))
       (nomis/ec-down-list tag)
@@ -757,7 +757,7 @@ Otherwise throw an exception."
                                       inherited-site
                                       &key site
                                       &allow-other-keys)
-  (cl-assert (member site '(nil ec/client ec/server ec/neutral inherit)))
+  (cl-assert (member site '(nil nec/client nec/server nec/neutral inherit)))
   (save-excursion
     ;; Each body form separately:
     (while (-nomis/ec-can-forward-sexp?)
@@ -776,7 +776,7 @@ Otherwise throw an exception."
                                       inherited-site
                                       &key site
                                       &allow-other-keys)
-  (cl-assert (member site '(nil ec/client ec/server ec/neutral inherit)))
+  (cl-assert (member site '(nil nec/client nec/server nec/neutral inherit)))
   (save-excursion
     ;; Each arg separately:
     (while (-nomis/ec-can-forward-sexp?)
@@ -1015,7 +1015,7 @@ Otherwise throw an exception."
                 (member sym *-nomis/ec-bound-vars*))
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'unsited-single-item)
-                                 :site 'ec/neutral
+                                 :site 'nec/neutral
                                  :description (-> 'unsited-single-item
                                                   -nomis/ec->grammar-description)
                                  :print-env? t)
@@ -1096,7 +1096,7 @@ Otherwise throw an exception."
   NOMIS/EC-RESET-TO-BUILT-IN-PARSER-SPECS will be useful."
   (cl-assert (symbolp operator-id) t)
   (cl-assert (stringp operator) t)
-  (cl-assert (member new-default-site '(nil ec/client ec/server)) t)
+  (cl-assert (member new-default-site '(nil nec/client nec/server)) t)
   (let* ((operator-regexp (if regexp? operator (regexp-quote operator)))
          (regexp (-nomis/ec-operator-call-regexp operator-regexp))
          (spec (-> spec-and-other-bits
@@ -1390,16 +1390,16 @@ This is very DIY. Is there a better way?")
   (nomis/ec-add-parser-spec '(
                               :operator-id           :e/client
                               :operator              "e/client"
-                              :site                  ec/client
-                              :new-default-site      ec/client
+                              :site                  nec/client
+                              :new-default-site      nec/client
                               :site-electric-locals? t
                               :terms                 (operator
                                                       &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id           :e/server
                               :operator              "e/server"
-                              :site                  ec/server
-                              :new-default-site      ec/server
+                              :site                  nec/server
+                              :new-default-site      nec/server
                               :site-electric-locals? t
                               :terms                 (operator
                                                       &body)))
@@ -1408,12 +1408,12 @@ This is very DIY. Is there a better way?")
                               :operator    ,(concat "dom/"
                                                     -nomis/ec-symbol-no-slash-regexp)
                               :regexp?     t
-                              :terms       ((operator :site ec/client)
+                              :terms       ((operator :site nec/client)
                                             &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id      :e/defn
                               :operator         "e/defn"
-                              :site             ec/neutral
+                              :site             nec/neutral
                               :new-default-site nil
                               :terms            (operator
                                                  name
@@ -1435,7 +1435,7 @@ This is very DIY. Is there a better way?")
   (nomis/ec-add-parser-spec '(
                               :operator-id      :e/fn
                               :operator         "e/fn"
-                              :site             ec/neutral
+                              :site             nec/neutral
                               :new-default-site nil
                               :terms            (operator
                                                  name?
@@ -1450,21 +1450,21 @@ This is very DIY. Is there a better way?")
                               :operator-id :let
                               :operator    "let"
                               :terms       (operator
-                                            (let-bindings :site ec/neutral
+                                            (let-bindings :site nec/neutral
                                                           :rhs-site inherit)
                                             &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :binding
                               :operator    "binding"
                               :terms       (operator
-                                            (let-bindings :site ec/neutral
+                                            (let-bindings :site nec/neutral
                                                           :rhs-site inherit)
                                             &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :e/for
                               :operator    "e/for"
                               :terms       (operator
-                                            (let-bindings :site ec/neutral
+                                            (let-bindings :site nec/neutral
                                                           :rhs-site inherit)
                                             &body)))
   (nomis/ec-add-parser-spec '(
@@ -1472,20 +1472,20 @@ This is very DIY. Is there a better way?")
                               :operator    "e/for-by"
                               :terms       (operator
                                             key-function
-                                            (let-bindings :site ec/neutral
+                                            (let-bindings :site nec/neutral
                                                           :rhs-site inherit)
                                             &body)))
   (nomis/ec-add-parser-spec `(
                               :operator-id :electric-call
                               :operator    ,-nomis/ec-electric-function-name-regexp
                               :regexp?     t
-                              :site        ec/neutral
+                              :site        nec/neutral
                               :terms       (operator
                                             &args)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :electric-lambda-in-fun-position
                               :operator    "(e/fn" ; Note the open parenthesis here, for lambda in function position.
-                              :site        ec/neutral
+                              :site        nec/neutral
                               :terms       (operator
                                             &args))))
 
