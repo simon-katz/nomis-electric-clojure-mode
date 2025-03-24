@@ -666,7 +666,7 @@ Otherwise throw an exception."
 ;;;; ---- -nomis/ec-overlay-term ----
 
 (cl-defgeneric -nomis/ec-overlay-term (term-name tag inherited-site
-                                                 &key site rhs-site))
+                                                 &key))
 
 (cl-defmethod -nomis/ec-overlay-term :before ((term-name t)
                                               tag
