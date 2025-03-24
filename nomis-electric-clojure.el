@@ -668,6 +668,13 @@ Otherwise throw an exception."
 (cl-defgeneric -nomis/ec-overlay-term (term-name tag inherited-site
                                                  &key site rhs-site))
 
+(cl-defmethod -nomis/ec-overlay-term :before ((term-name t)
+                                              tag
+                                              inherited-site
+                                              &key
+                                              &allow-other-keys)
+  (-nomis/ec-skip-metadata))
+
 (cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'operator))
                                       tag
                                       inherited-site
@@ -737,6 +744,7 @@ Otherwise throw an exception."
     (nomis/ec-down-list (cons 'e/fn-bindings tag))
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
+      (-nomis/ec-skip-metadata)
       ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
       ;; to use recursion instead of iteration.
       (setq *-nomis/ec-bound-vars*
@@ -757,6 +765,7 @@ Otherwise throw an exception."
       (while (-nomis/ec-can-forward-sexp?)
         ;; Note the LHS of the binding:
         (-nomis/ec-bof)
+        (-nomis/ec-skip-metadata)
         ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
         ;; to use recursion instead of iteration.
         (setq *-nomis/ec-bound-vars*
@@ -766,6 +775,7 @@ Otherwise throw an exception."
         ;; Walk the RHS of the binding, if there is one:
         (when (-nomis/ec-can-forward-sexp?)
           (-nomis/ec-bof)
+          (-nomis/ec-skip-metadata)
           (let* ((new-site (-nomis/ec-transmogrify-site rhs-site
                                                         inherited-site))
                  (*-nomis/ec-default-site* new-site))
@@ -932,7 +942,6 @@ Otherwise throw an exception."
     (cl-destructuring-bind (term &rest rest-terms) terms
       (when (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof))
-      (-nomis/ec-skip-metadata)
       (or (-nomis/ec-process-+-list-ecase-etc operator-id term inherited-site)
           (let* ((term-name (if (atom term) term (first term)))
                  (term-opts (if (atom term) '() (rest term)))
@@ -1133,6 +1142,7 @@ Otherwise throw an exception."
                       (list new-entry)))))))
 
 (defun -nomis/ec-walk-and-overlay-v3 ()
+  (-nomis/ec-skip-metadata)
   (let* ((case-fold-search nil))
     (or (let* ((*-nomis/ec-site-electric-locals?* nil))
           (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
