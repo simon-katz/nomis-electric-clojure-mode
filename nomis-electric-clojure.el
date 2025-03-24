@@ -1308,7 +1308,7 @@ This is very DIY. Is there a better way?")
       (nomis-electric-clojure-mode)
     (-nomis/ec-redraw)))
 
-(defun nomis/ec-toggle-show-grammar-tooltips ()
+(defun nomis/ec-toggle-debug-show-grammar-tooltips ()
   (interactive)
   (setq nomis/ec-show-grammar-tooltips?
         (not nomis/ec-show-grammar-tooltips?))
@@ -1381,7 +1381,7 @@ This is very DIY. Is there a better way?")
                                    (overlay-get ov 'nomis/tag))))
     (message "No. of overlays = %s" (length ovs))))
 
-(defun nomis/ec-toggle-print-debug-info-to-messages-buffer ()
+(defun nomis/ec-toggle-debug-print-debug-info-to-messages-buffer ()
   (interactive)
   (setq -nomis/ec-print-debug-info-to-messages-buffer?
         (not -nomis/ec-print-debug-info-to-messages-buffer?))
@@ -1390,7 +1390,7 @@ This is very DIY. Is there a better way?")
                "Printing"
              "Not printing")))
 
-(defun nomis/ec-toggle-show-debug-overlays ()
+(defun nomis/ec-toggle-debug-show-debug-overlays ()
   (interactive)
   (if -nomis/ec-show-debug-overlays?
       (progn (setq -nomis/ec-show-debug-overlays? nil)
