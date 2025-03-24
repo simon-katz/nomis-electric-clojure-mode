@@ -554,6 +554,13 @@ Otherwise throw an exception."
 ;;;; ___________________________________________________________________________
 ;;;; ---- More parse and overlay helpers ----
 
+(defun -nomis/ec-skip-metadata ()
+  (while (looking-at (regexp-quote "^"))
+    (progn (forward-char)
+           (forward-sexp))
+    (when (-nomis/ec-can-forward-sexp?)
+      (-nomis/ec-bof))))
+
 (defun -nomis/ec-overlay-unparsable (pos tag description)
   (save-excursion
     (goto-char pos)
@@ -807,13 +814,6 @@ Otherwise throw an exception."
        old-default-site
        new-default-site
        operator-id))))
-
-(defun -nomis/ec-skip-metadata ()
-  (while (looking-at (regexp-quote "^"))
-    (progn (forward-char)
-           (forward-sexp))
-    (when (-nomis/ec-can-forward-sexp?)
-      (-nomis/ec-bof))))
 
 (defun -nomis/ec-process-term (term-name term-opts
                                          tag site inherited-site)
