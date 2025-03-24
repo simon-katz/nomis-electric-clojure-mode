@@ -155,6 +155,11 @@ This includes both bad syntax and parts of Clojure that we don't know about.")
   `((t ,(list :inherit (-nomis/ec-compute-unparsable-face)))) ; set by `-nomis/ec-update-faces`
   "Face for unparsable Electric Clojure code.")
 
+(defface -nomis/ec-place-for-metadata-face
+  `((t ,(list :foreground "Yellow"
+              :background "Red")))
+  "Face for places that can have metadata.")
+
 (defun -nomis/ec-update-faces ()
   (set-face-attribute '-nomis/ec-client-face nil
                       :inherit
@@ -401,6 +406,7 @@ PROPERTY is already in PLIST."
                   ((eq site 'nec/server)     '-nomis/ec-server-face)
                   ((eq site 'nec/neutral)    '-nomis/ec-neutral-face)
                   ((eq site 'nec/unparsable) '-nomis/ec-unparsable-face)
+                  ((eq site 'nec/place-for-metadata) '-nomis/ec-place-for-metadata-face)
                   (t (error "Bad case: site: %s" site)))))
       (cl-flet ((overlay (s e)
                   (-nomis/ec-make-overlay tag nesting-level face s e description)))
@@ -554,12 +560,25 @@ Otherwise throw an exception."
 ;;;; ___________________________________________________________________________
 ;;;; ---- More parse and overlay helpers ----
 
+(defvar -nomis/ec-debug-show-places-for-metadata? nil)
+
+(defun -nomis/ec-show-place-for-metadata ()
+  (when -nomis/ec-debug-show-places-for-metadata?
+    (-nomis/ec-with-site (;; avoid-stupid-indentation
+                          :tag (list 'metadata-plop)
+                          :site 'nec/place-for-metadata
+                          :description "Place for metadata"
+                          :end (1+ (point)))
+      ;; Nothing more.
+      )))
+
 (defun -nomis/ec-skip-metadata ()
   (while (looking-at (regexp-quote "^"))
     (progn (forward-char)
            (forward-sexp))
     (when (-nomis/ec-can-forward-sexp?)
-      (-nomis/ec-bof))))
+      (-nomis/ec-bof)))
+  (-nomis/ec-show-place-for-metadata))
 
 (defun -nomis/ec-overlay-unparsable (pos tag description)
   (save-excursion
@@ -1378,6 +1397,14 @@ This is very DIY. Is there a better way?")
            (if -nomis/ec-debug-overlays?
                "Debugging overlays"
              "Not debugging overlays")))
+
+(defun nomis/ec-toggle-debug-show-places-for-metadata ()
+  (interactive)
+  (setq -nomis/ec-debug-show-places-for-metadata?
+        (not -nomis/ec-debug-show-places-for-metadata?))
+  (-nomis/ec-redraw-all-buffers)
+  (message "%s places for metadata"
+           (if -nomis/ec-debug-show-places-for-metadata? "Showing" "Not showing")))
 
 ;;;; ___________________________________________________________________________
 ;;;; Built-in parser specs
