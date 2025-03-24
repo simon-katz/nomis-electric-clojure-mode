@@ -449,14 +449,14 @@ Otherwise throw an exception."
   (cond ((not (-nomis/ec-can-forward-sexp?))
          (let* ((msg (format "Missing %s" (first desc))))
            (signal '-nomis/ec-parse-error
-                   (list desc msg (save-excursion
-                                    (backward-up-list)
-                                    (point))))))
+                   (list msg (save-excursion
+                               (backward-up-list)
+                               (point))))))
         ((not (nomis/ec-at-or-before-sexp-start?))
          (let* ((msg (format "A bracketed s-expression is needed for %s"
                              (first desc))))
            (signal '-nomis/ec-parse-error
-                   (list desc msg (point)))))
+                   (list msg (point)))))
         (t
          (down-list))))
 
@@ -472,9 +472,9 @@ Otherwise throw an exception."
                              (first desc))))
            (-nomis/ec-message-no-disp "%s" msg)
            (signal '-nomis/ec-parse-error
-                   (list desc msg (progn (goto-char start)
-                                         (funcall error-position-fn)
-                                         (point))))))))))
+                   (list msg (progn (goto-char start)
+                                    (funcall error-position-fn)
+                                    (point))))))))))
 
 (defun -nomis/ec-bof ()
   (forward-sexp)
@@ -861,7 +861,7 @@ Otherwise throw an exception."
                                        (backward-up-list)
                                        (point)))))
                          (signal '-nomis/ec-parse-error
-                                 (list :unused msg pos))))
+                                 (list msg pos))))
       ;; :LIMITATIONS-OF-THE-GRAMMAR Are we at the right buffer location
       ;; for continuing?
       )))
@@ -873,7 +873,7 @@ Otherwise throw an exception."
         t
       (if (not (looking-at "("))
           (signal '-nomis/ec-parse-error
-                  (list :unused ":list parsing failed" (point)))
+                  (list ":list parsing failed" (point)))
         (progn
           (nomis/ec-down-list '(list-parsing))
           (when (-nomis/ec-can-forward-sexp?)
@@ -941,11 +941,10 @@ Otherwise throw an exception."
                       ((&body &args)
                        (cl-assert (null rest-terms) t)
                        (process-terms*)))))
-              (-nomis/ec-parse-error ; TODO: Seems that `(first (cdr err))` is unused.
-               (goto-char (third (cdr err)))
-               (-nomis/ec-overlay-unparsable (point)
+              (-nomis/ec-parse-error
+               (-nomis/ec-overlay-unparsable (second (cdr err))
                                              term-name
-                                             (second (cdr err))))))))))
+                                             (first (cdr err))))))))))
 
 (cl-defun -nomis/ec-overlay-using-parser-spec
     (&key
