@@ -29,5 +29,18 @@
 
 (e/defn Foo3)
 
+(e/defn Foo4 [local-1]
+  (e/server
+    (let [F (e/fn
+              ([]
+               (e/client
+                 (ElectricCall global-1 local-1)))
+              ([local-2]
+               (e/client
+                 (ElectricCall global-1 local-1 local-2))))]
+      (F)
+      (F local-1))))
+
 (e/defn Main []
-  (Foo1 100))
+  (Foo1 100)
+  (Foo4 200))

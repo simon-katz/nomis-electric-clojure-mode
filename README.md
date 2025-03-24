@@ -220,8 +220,6 @@ For Electric v3:
 
 - Currently `binding` is handled the same as `let`. Is that correct?
 
-- Need to handle multiple arities in `e/fn`.
-
 - I still need to finish going through the Electric v3 tutorial. I think I may want to add understanding of the contents of the `hyperfiddle.electric-forms3` namespace, or at least some of it.
 
 - Quite possibly other things that I haven't realised yet.

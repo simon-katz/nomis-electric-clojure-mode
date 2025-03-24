@@ -1443,8 +1443,13 @@ This is very DIY. Is there a better way?")
                               :new-default-site nil
                               :terms            (operator
                                                  name?
-                                                 fn-bindings
-                                                 &body)))
+                                                 (:ecase ("\\["
+                                                          fn-bindings
+                                                          &body)
+                                                         ("("
+                                                          (:+
+                                                           (:list fn-bindings
+                                                                  &body)))))))
   (nomis/ec-add-parser-spec '(
                               :operator-id :let
                               :operator    "let"

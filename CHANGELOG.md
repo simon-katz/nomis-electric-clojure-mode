@@ -16,7 +16,7 @@
 
   - Add `:ecase`, `:list` and `:+`.
 
-  - Add support for multiple arities in `e/defn`.
+  - Add support for multiple arities in `e/defn` and `e/fn`.
 
 - Skip metadata.
 
