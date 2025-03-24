@@ -447,7 +447,7 @@ PROPERTY is already in PLIST."
 into that expression -- /ie/ move down one level of parentheses.
 Otherwise throw an exception."
   (cond ((not (-nomis/ec-can-forward-sexp?))
-         (let* ((msg (format "Missing %s" (reverse desc))))
+         (let* ((msg (format "Missing %s" (first desc))))
            ;; TODO: Unnecessary call of `error` -- see the `signal`.
            (error (-nomis/ec-message-no-disp "%s" msg)
                   (signal '-nomis/ec-parse-error
