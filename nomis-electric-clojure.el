@@ -371,7 +371,7 @@ PROPERTY is already in PLIST."
 ;;;; ___________________________________________________________________________
 ;;;; Overlay basics
 
-(defvar -nomis/ec-debug-overlays? nil)
+(defvar -nomis/ec-show-debug-overlays? nil)
 
 (defun -nomis/ec-make-overlay (tag nesting-level face start end description)
   ;; (-nomis/ec-debug *-nomis/ec-site* 'make-overlay)
@@ -380,12 +380,12 @@ PROPERTY is already in PLIST."
     (overlay-put ov 'category 'nomis/ec-overlay)
     (overlay-put ov 'face face)
     (overlay-put ov 'evaporate t)
-    (when (or description -nomis/ec-debug-overlays?)
+    (when (or description -nomis/ec-show-debug-overlays?)
       (let* ((messages (list description
-                             (when -nomis/ec-debug-overlays?
+                             (when -nomis/ec-show-debug-overlays?
                                (format "DEBUG: Tag = %s"
                                        (reverse tag)))
-                             (when -nomis/ec-debug-overlays?
+                             (when -nomis/ec-show-debug-overlays?
                                (format "DEBUG: Default site = %s"
                                        *-nomis/ec-default-site*)))))
         (overlay-put ov 'help-echo (-> (-remove #'null messages)
@@ -1389,24 +1389,22 @@ This is very DIY. Is there a better way?")
                "Printing debug messages"
              "Not printing debug messages")))
 
-(defun nomis/ec-toggle-debug-overlays ()
+(defun nomis/ec-toggle-show-debug-overlays ()
   (interactive)
-  (if -nomis/ec-debug-overlays?
-      (progn (setq -nomis/ec-debug-overlays? nil)
+  (if -nomis/ec-show-debug-overlays?
+      (progn (setq -nomis/ec-show-debug-overlays? nil)
              (set-face-attribute '-nomis/ec-neutral-face
                                  nil
                                  :background
                                  -nomis/ec-neutral-face-color))
-    (progn (setq -nomis/ec-debug-overlays? t)
+    (progn (setq -nomis/ec-show-debug-overlays? t)
            (set-face-attribute '-nomis/ec-neutral-face
                                nil
                                :background
                                -nomis/ec-neutral-face-color/debug)))
   (-nomis/ec-redraw-all-buffers)
-  (message "%s"
-           (if -nomis/ec-debug-overlays?
-               "Debugging overlays"
-             "Not debugging overlays")))
+  (message "%s debug overlays"
+           (if -nomis/ec-show-debug-overlays? "Showing" "Not showing")))
 
 (defun nomis/ec-toggle-debug-show-places-for-metadata ()
   (interactive)
