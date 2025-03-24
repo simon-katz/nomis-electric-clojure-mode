@@ -1387,6 +1387,7 @@ This is very DIY. Is there a better way?")
 ;;;; Built-in parser specs
 
 (defun -nomis/ec-add-built-in-parser-specs ()
+
   (nomis/ec-add-parser-spec '(
                               :operator-id           :e/client
                               :operator              "e/client"
@@ -1395,6 +1396,7 @@ This is very DIY. Is there a better way?")
                               :site-electric-locals? t
                               :terms                 (operator
                                                       &body)))
+
   (nomis/ec-add-parser-spec '(
                               :operator-id           :e/server
                               :operator              "e/server"
@@ -1403,6 +1405,7 @@ This is very DIY. Is there a better way?")
                               :site-electric-locals? t
                               :terms                 (operator
                                                       &body)))
+
   (nomis/ec-add-parser-spec `(
                               :operator-id :dom/xxxx
                               :operator    ,(concat "dom/"
@@ -1410,6 +1413,7 @@ This is very DIY. Is there a better way?")
                               :regexp?     t
                               :terms       ((operator :site nec/client)
                                             &body)))
+
   (nomis/ec-add-parser-spec '(
                               :operator-id      :e/defn
                               :operator         "e/defn"
@@ -1432,6 +1436,7 @@ This is very DIY. Is there a better way?")
                                                  ;; not supported by Electric
                                                  ;; Clojure (on 2025-03-24).
                                                  attr-map?)))
+
   (nomis/ec-add-parser-spec '(
                               :operator-id      :e/fn
                               :operator         "e/fn"
@@ -1446,6 +1451,7 @@ This is very DIY. Is there a better way?")
                                                           (:+
                                                            (:list fn-bindings
                                                                   &body)))))))
+
   (nomis/ec-add-parser-spec '(
                               :operator-id :let
                               :operator    "let"
@@ -1453,6 +1459,7 @@ This is very DIY. Is there a better way?")
                                             (let-bindings :site nec/neutral
                                                           :rhs-site nec/inherit)
                                             &body)))
+
   (nomis/ec-add-parser-spec '(
                               :operator-id :binding
                               :operator    "binding"
@@ -1460,6 +1467,7 @@ This is very DIY. Is there a better way?")
                                             (let-bindings :site nec/neutral
                                                           :rhs-site nec/inherit)
                                             &body)))
+
   (nomis/ec-add-parser-spec '(
                               :operator-id :e/for
                               :operator    "e/for"
@@ -1467,6 +1475,7 @@ This is very DIY. Is there a better way?")
                                             (let-bindings :site nec/neutral
                                                           :rhs-site nec/inherit)
                                             &body)))
+
   (nomis/ec-add-parser-spec '(
                               :operator-id :e/for-by
                               :operator    "e/for-by"
@@ -1475,6 +1484,7 @@ This is very DIY. Is there a better way?")
                                             (let-bindings :site nec/neutral
                                                           :rhs-site nec/inherit)
                                             &body)))
+
   (nomis/ec-add-parser-spec `(
                               :operator-id :electric-call
                               :operator    ,-nomis/ec-electric-function-name-regexp
@@ -1482,6 +1492,7 @@ This is very DIY. Is there a better way?")
                               :site        nec/neutral
                               :terms       (operator
                                             &args)))
+
   (nomis/ec-add-parser-spec '(
                               :operator-id :electric-lambda-in-fun-position
                               :operator    "(e/fn" ; Note the open parenthesis here, for lambda in function position.
