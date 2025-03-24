@@ -759,17 +759,18 @@ Otherwise throw an exception."
                                       &allow-other-keys)
   (cl-assert (member site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
-    ;; Each body form separately:
-    (while (-nomis/ec-can-forward-sexp?)
-      (-nomis/ec-bof)
-      (-nomis/ec-with-site (;; avoid-stupid-indentation
-                            :tag (cons 'body-form tag)
-                            :site (-nomis/ec-transmogrify-site site
-                                                               inherited-site)
-                            :description (-> 'body-form
-                                             -nomis/ec->grammar-description))
-        (-nomis/ec-walk-and-overlay-v3))
-      (forward-sexp))))
+    (let* ((*-nomis/ec-site-electric-locals?* t))
+     ;; Each body form separately:
+     (while (-nomis/ec-can-forward-sexp?)
+       (-nomis/ec-bof)
+       (-nomis/ec-with-site (;; avoid-stupid-indentation
+                             :tag (cons 'body-form tag)
+                             :site (-nomis/ec-transmogrify-site site
+                                                                inherited-site)
+                             :description (-> 'body-form
+                                              -nomis/ec->grammar-description))
+         (-nomis/ec-walk-and-overlay-v3))
+       (forward-sexp)))))
 
 (cl-defmethod -nomis/ec-overlay-term ((term-name (eql '&args))
                                       tag
@@ -816,23 +817,18 @@ Otherwise throw an exception."
 
 (defun -nomis/ec-process-term (term-name term-opts
                                          tag site inherited-site)
-  (cl-flet ((do-it ()
-              (-nomis/ec-with-site
-                  (;; avoid-stupid-indentation
-                   :tag tag
-                   :site (-nomis/ec-transmogrify-site site
-                                                      inherited-site)
-                   :description (-> (first tag)
-                                    -nomis/ec->grammar-description))
-                (apply #'-nomis/ec-overlay-term
-                       term-name
-                       tag
-                       inherited-site
-                       term-opts))))
-    (if (eq term-name '&body)
-        (let* ((*-nomis/ec-site-electric-locals?* t))
-          (do-it))
-      (do-it))))
+  (-nomis/ec-with-site
+      (;; avoid-stupid-indentation
+       :tag tag
+       :site (-nomis/ec-transmogrify-site site
+                                          inherited-site)
+       :description (-> (first tag)
+                        -nomis/ec->grammar-description))
+    (apply #'-nomis/ec-overlay-term
+           term-name
+           tag
+           inherited-site
+           term-opts)))
 
 (defun -nomis/ec-process-ecase (operator-id term inherited-site)
   (when (and (listp term)
