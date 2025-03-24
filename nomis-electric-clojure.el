@@ -234,10 +234,10 @@ This can be:
     (concat (buffer-substring start end-of-line)
             (when (< end-of-line end-of-form) "▶▶▶"))))
 
-(defvar -nomis/ec-print-debug-messages? nil)
+(defvar -nomis/ec-print-debug-info-to-messages-buffer? nil)
 
 (defun -nomis/ec-debug (site what &optional force? print-env?)
-  (when (or force? -nomis/ec-print-debug-messages?)
+  (when (or force? -nomis/ec-print-debug-info-to-messages-buffer?)
     (let* ((inhibit-message t))
       (-nomis/ec-message-no-disp "%s %s ---- %s %s => %s%s"
                                  (-nomis/ec-line-number-string)
@@ -834,7 +834,7 @@ Otherwise throw an exception."
                                      old-default-site
                                      new-default-site-supplied?
                                      new-default-site)
-  (when -nomis/ec-print-debug-messages?
+  (when -nomis/ec-print-debug-info-to-messages-buffer?
     (when new-default-site-supplied?
       (-nomis/ec-message-no-disp
        "%s %s ---- Change of default site: %s -> %s [operator-id = %s]"
@@ -1196,7 +1196,7 @@ Otherwise throw an exception."
     ))
 
 (defun -nomis/ec-overlay-region (start end)
-  (when -nomis/ec-print-debug-messages?
+  (when -nomis/ec-print-debug-info-to-messages-buffer?
     (-nomis/ec-message-no-disp "________________________________")
     (-nomis/ec-message-no-disp "==== -nomis/ec-overlay-region %s %s" start end))
   (unless -nomis/ec-electric-version
@@ -1381,13 +1381,14 @@ This is very DIY. Is there a better way?")
                                    (overlay-get ov 'nomis/tag))))
     (message "No. of overlays = %s" (length ovs))))
 
-(defun nomis/ec-toggle-debug-messages ()
+(defun nomis/ec-toggle-print-debug-info-to-messages-buffer ()
   (interactive)
-  (setq -nomis/ec-print-debug-messages? (not -nomis/ec-print-debug-messages?))
-  (message "%s"
-           (if -nomis/ec-print-debug-messages?
-               "Printing debug messages"
-             "Not printing debug messages")))
+  (setq -nomis/ec-print-debug-info-to-messages-buffer?
+        (not -nomis/ec-print-debug-info-to-messages-buffer?))
+  (message "%s debug info to *Messages* buffer"
+           (if -nomis/ec-print-debug-info-to-messages-buffer?
+               "Printing"
+             "Not printing")))
 
 (defun nomis/ec-toggle-show-debug-overlays ()
   (interactive)
