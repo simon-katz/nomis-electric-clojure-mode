@@ -837,39 +837,118 @@ Otherwise throw an exception."
           (do-it))
       (do-it))))
 
+(defun -nomis/ec-process-ecase (operator-id term inherited-site)
+  (when (and (listp term)
+             (eq (first term) :ecase))
+    (prog1
+        t
+      (cl-loop for (regexp . ts) in (rest term)
+               when (looking-at regexp)
+               return (-nomis/ec-process-terms operator-id ts inherited-site)
+               ;; :LIMITATIONS-OF-THE-GRAMMAR Do you need to signal here?
+               ;; Can you just create the overlay here? If not signalling, might
+               ;; need to move forwards to an appropriate new position. (And
+               ;; what about in other places that we signal?)
+               finally (let* ((expecteds (string-join (-map #'first
+                                                            (rest term))
+                                                      ", "))
+                              (can-forward? (-nomis/ec-can-forward-sexp?))
+                              (msg (if can-forward?
+                                       (format "Expected one of %s"
+                                               expecteds)
+                                     (format "Form came to an end when expecting one of %s"
+                                             expecteds)))
+                              (pos (if can-forward?
+                                       (point)
+                                     (save-excursion
+                                       (backward-up-list)
+                                       (point)))))
+                         (signal '-nomis/ec-parse-error
+                                 (list :unused msg pos))))
+      ;; :LIMITATIONS-OF-THE-GRAMMAR Are we at the right buffer location
+      ;; for continuing?
+      )))
+
+(defun -nomis/ec-process-list (operator-id term inherited-site)
+  (when (and (listp term)
+             (eq (first term) :list))
+    (prog1
+        t
+      (if (not (looking-at "("))
+          (signal '-nomis/ec-parse-error
+                  (list :unused ":list parsing failed" (point)))
+        (progn
+          (nomis/ec-down-list '(list-parsing))
+          (when (-nomis/ec-can-forward-sexp?)
+            (-nomis/ec-bof))
+          (-nomis/ec-process-terms operator-id (rest term) inherited-site)
+          (backward-up-list)
+          (forward-sexp)))
+      ;; :LIMITATIONS-OF-THE-GRAMMAR Are we at the right buffer location
+      ;; for continuing?
+      )))
+
+(defun -nomis/ec-process-+ (operator-id term inherited-site)
+  (when (and (listp term)
+             (eq (first term) :+))
+    (prog1
+        t
+      (cl-flet ((do-one ()
+                  (-nomis/ec-process-terms operator-id (rest term) inherited-site)))
+        (do-one)
+        ;; :LIMITATIONS-OF-THE-GRAMMAR This is relying on coming to the end of
+        ;; a list -- a restriction of our grammar -- `:+` cannot be followed by
+        ;; another term. What was that weird extra thing in the Clojure grammar?
+        ;; See https://clojurians.slack.com/archives/C03S1KBA2/p1732491608620849
+        ;; Oh, it's outside of the list anyway, so the parsing code will
+        ;; actually just ignore it. No error.
+        (while (-nomis/ec-can-forward-sexp?)
+          (-nomis/ec-bof)
+          (do-one)))
+      ;; :LIMITATIONS-OF-THE-GRAMMAR Are we at the right buffer location
+      ;; for continuing?
+      )))
+
+(defun -nomis/ec-process-+-list-ecase-etc ; What's a good name for this?
+    (operator-id term inherited-site)
+  (or (-nomis/ec-process-ecase operator-id term inherited-site)
+      (-nomis/ec-process-list operator-id term inherited-site)
+      (-nomis/ec-process-+ operator-id term inherited-site)))
+
 (defun -nomis/ec-process-terms (operator-id terms inherited-site)
   (when terms
     (cl-destructuring-bind (term &rest rest-terms) terms
       (when (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof))
       (-nomis/ec-skip-metadata)
-      (let* ((term-name (if (atom term) term (first term)))
-             (term-opts (if (atom term) '() (rest term)))
-             (site (plist-get term-opts :site))
-             (tag (list term-name operator-id)))
-        (condition-case err
-            (progn
-              (-nomis/ec-debug *-nomis/ec-site* term-name)
-              (cl-flet* ((process-terms* ()
-                           (-nomis/ec-process-term term-name term-opts
-                                                   tag site inherited-site)
-                           (-nomis/ec-process-terms operator-id
-                                                    rest-terms
-                                                    inherited-site)))
-                (cl-ecase term-name
-                  ((operator name name? doc-string? attr-map? key-function)
-                   (process-terms*))
-                  ((fn-bindings let-bindings)
-                   (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
-                     (process-terms*)))
-                  ((&body &args)
-                   (cl-assert (null rest-terms) t)
-                   (process-terms*)))))
-          (-nomis/ec-parse-error
-           (goto-char (third (cdr err)))
-           (-nomis/ec-overlay-unparsable (point)
-                                         term-name
-                                         (second (cdr err)))))))))
+      (or (-nomis/ec-process-+-list-ecase-etc operator-id term inherited-site)
+          (let* ((term-name (if (atom term) term (first term)))
+                 (term-opts (if (atom term) '() (rest term)))
+                 (site (plist-get term-opts :site))
+                 (tag (list term-name operator-id)))
+            (condition-case err
+                (progn
+                  (-nomis/ec-debug *-nomis/ec-site* term-name)
+                  (cl-flet* ((process-terms* ()
+                               (-nomis/ec-process-term term-name term-opts
+                                                       tag site inherited-site)
+                               (-nomis/ec-process-terms operator-id
+                                                        rest-terms
+                                                        inherited-site)))
+                    (cl-ecase term-name
+                      ((operator name name? doc-string? attr-map? key-function)
+                       (process-terms*))
+                      ((fn-bindings let-bindings)
+                       (let* ((*-nomis/ec-bound-vars* *-nomis/ec-bound-vars*))
+                         (process-terms*)))
+                      ((&body &args)
+                       (cl-assert (null rest-terms) t)
+                       (process-terms*)))))
+              (-nomis/ec-parse-error ; TODO: Seems that `(first (cdr err))` is unused.
+               (goto-char (third (cdr err)))
+               (-nomis/ec-overlay-unparsable (point)
+                                             term-name
+                                             (second (cdr err))))))))))
 
 (cl-defun -nomis/ec-overlay-using-parser-spec
     (&key
@@ -1344,8 +1423,19 @@ This is very DIY. Is there a better way?")
                                                  name
                                                  doc-string?
                                                  attr-map?
-                                                 fn-bindings
-                                                 &body)))
+                                                 (:ecase ("\\["
+                                                          fn-bindings
+                                                          &body)
+                                                         ("("
+                                                          (:+
+                                                           (:list fn-bindings
+                                                                  &body))))
+                                                 ;; :LIMITATIONS-OF-THE-GRAMMAR
+                                                 ;; Not working -- grammar
+                                                 ;; limitations. Oh, and also
+                                                 ;; not supported by Electric
+                                                 ;; Clojure (on 2025-03-24).
+                                                 attr-map?)))
   (nomis/ec-add-parser-spec '(
                               :operator-id      :e/fn
                               :operator         "e/fn"

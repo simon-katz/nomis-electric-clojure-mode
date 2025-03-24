@@ -138,9 +138,9 @@ I use the following keyboard shortcuts:
 
 The mode provides an extension mechanism.
 
-See the function `nomis/ec-add-parser-spec` and the definition of the built-in parsers at the end of the source file.
+This is alpha and subject to breaking changes.
 
-Time will tell how useful this is. Perhaps the mechanism will need to be extended.
+See the calls of `nomis/ec-add-parser-spec` at the end of the source file for the definition of the built-in parsers.
 
 For a taste, here are some examples of built-in parser definitions:
 
@@ -150,7 +150,7 @@ For a taste, here are some examples of built-in parser definitions:
                             :site                  ec/client
                             :new-default-site      ec/client
                             :site-electric-locals? t
-                            :shape                 (operator
+                            :terms                 (operator
                                                     &body)))
 
 (nomis/ec-add-parser-spec '(:operator-id           :e/server
@@ -158,26 +158,26 @@ For a taste, here are some examples of built-in parser definitions:
                             :site                  ec/server
                             :new-default-site      ec/server
                             :site-electric-locals? t
-                            :shape                 (operator
+                            :terms                 (operator
                                                     &body)))
 
 (nomis/ec-add-parser-spec '(:operator-id :let
                             :operator    "let"
-                            :shape       (operator
+                            :terms       (operator
                                           (let-bindings :site ec/neutral
                                                         :rhs-site inherit)
                                           &body)))
 
 (nomis/ec-add-parser-spec '(:operator-id :e/for
                             :operator    "e/for"
-                            :shape       (operator
+                            :terms       (operator
                                           (let-bindings :site ec/neutral
                                                         :rhs-site inherit)
                                           &body)))
 
 (nomis/ec-add-parser-spec '(:operator-id :e/for-by
                             :operator    "e/for-by"
-                            :shape       (operator
+                            :terms       (operator
                                           key-function
                                           (let-bindings :site ec/neutral
                                                         :rhs-site inherit)
@@ -187,7 +187,7 @@ For a taste, here are some examples of built-in parser definitions:
                             :operator    ,(concat "dom/"
                                                   -nomis/ec-symbol-no-slash-regexp)
                             :regexp?     t
-                            :shape       ((operator :site ec/client)
+                            :terms       ((operator :site ec/client)
                                           &body)))
 ```
 
@@ -220,7 +220,7 @@ For Electric v3:
 
 - Currently `binding` is handled the same as `let`. Is that correct?
 
-- Need to handle multiple arities in `e/defn` and `e/fn`.
+- Need to handle multiple arities in `e/fn`.
 
 - I still need to finish going through the Electric v3 tutorial. I think I may want to add understanding of the contents of the `hyperfiddle.electric-forms3` namespace, or at least some of it.
 

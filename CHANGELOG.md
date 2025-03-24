@@ -4,9 +4,19 @@
 
 - Breaking change: Change the extension mechanism.
 
+  - (Note that the extension mechanism is alpha and subject to change.)
+
   - Change `:client`, `:server` and `:neutral` to `ec/client`, `ec/server` and `ec/neutral`.
+
   - Allow each term in a parser spec to specify a site, and remove the `apply-to` option.
+
   - Other changes that move knowledge away from the generic code and into the parser specs.
+
+  - Change `:shape` to `:terms`.
+
+  - Add `:ecase`, `:list` and `:+`.
+
+  - Add support for multiple arities in `e/defn`.
 
 - Skip metadata.
 
