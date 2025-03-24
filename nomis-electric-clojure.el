@@ -71,7 +71,7 @@ You can re-run the auto-detection in any of the following ways:
 - by reverting the buffer."
   :type 'integer)
 
-(defcustom nomis/ec-show-grammar-in-tooltips? nil
+(defcustom nomis/ec-show-grammar-tooltips? nil
   "Whether to show grammar-related information in tooltips. This might blat
 tooltips provided by other modes."
   :type 'boolean)
@@ -436,7 +436,7 @@ PROPERTY is already in PLIST."
                   (back-to-indentation))))))))))
 
 (defun -nomis/ec->grammar-description (x)
-  (when nomis/ec-show-grammar-in-tooltips?
+  (when nomis/ec-show-grammar-tooltips?
     (format "[Level=%s] %s"
             *-nomis/ec-level*
             (if (keywordp x)
@@ -492,7 +492,7 @@ Otherwise throw an exception."
   (let* ((*-nomis/ec-level* (1+ *-nomis/ec-level*)))
     (if (or (null site)
             (and (eq site *-nomis/ec-site*)
-                 (not nomis/ec-show-grammar-in-tooltips?)))
+                 (not nomis/ec-show-grammar-tooltips?)))
         ;; No need for a new overlay.
         (funcall f)
       (let* ((*-nomis/ec-site* site)
@@ -1308,13 +1308,13 @@ This is very DIY. Is there a better way?")
       (nomis-electric-clojure-mode)
     (-nomis/ec-redraw)))
 
-(defun nomis/ec-toggle-show-grammar-in-tooltips ()
+(defun nomis/ec-toggle-show-grammar-tooltips ()
   (interactive)
-  (setq nomis/ec-show-grammar-in-tooltips?
-        (not nomis/ec-show-grammar-in-tooltips?))
+  (setq nomis/ec-show-grammar-tooltips?
+        (not nomis/ec-show-grammar-tooltips?))
   (-nomis/ec-redraw-all-buffers)
-  (message "%s grammar in tooltips"
-           (if nomis/ec-show-grammar-in-tooltips? "Showing" "Not showing")))
+  (message "%s grammar tooltips"
+           (if nomis/ec-show-grammar-tooltips? "Showing" "Not showing")))
 
 (defun nomis/ec-toggle-color-initial-whitespace ()
   (interactive)
