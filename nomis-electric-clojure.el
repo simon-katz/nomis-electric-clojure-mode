@@ -448,18 +448,15 @@ into that expression -- /ie/ move down one level of parentheses.
 Otherwise throw an exception."
   (cond ((not (-nomis/ec-can-forward-sexp?))
          (let* ((msg (format "Missing %s" (first desc))))
-           ;; TODO: Unnecessary call of `error` -- see the `signal`.
-           (error (-nomis/ec-message-no-disp "%s" msg)
-                  (signal '-nomis/ec-parse-error
-                          (list desc msg (save-excursion
-                                           (backward-up-list)
-                                           (point)))))))
+           (signal '-nomis/ec-parse-error
+                   (list desc msg (save-excursion
+                                    (backward-up-list)
+                                    (point))))))
         ((not (nomis/ec-at-or-before-sexp-start?))
          (let* ((msg (format "A bracketed s-expression is needed for %s"
                              (first desc))))
-           (error (-nomis/ec-message-no-disp "%s" msg)
-                  (signal '-nomis/ec-parse-error
-                          (list desc msg (point))))))
+           (signal '-nomis/ec-parse-error
+                   (list desc msg (point)))))
         (t
          (down-list))))
 
