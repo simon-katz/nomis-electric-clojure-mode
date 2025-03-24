@@ -1036,8 +1036,9 @@ Otherwise throw an exception."
                                  :print-env? t)
              ;; Nothing more.
              ))
-          ((and (not *-nomis/ec-site-electric-locals?*)
-                (member sym *-nomis/ec-bound-vars*))
+          ((or (looking-at -nomis/ec-electric-function-name-regexp)
+               (and (not *-nomis/ec-site-electric-locals?*)
+                    (member sym *-nomis/ec-bound-vars*)))
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'unsited-single-item)
                                  :site 'nec/neutral

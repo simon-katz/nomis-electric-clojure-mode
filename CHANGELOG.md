@@ -26,6 +26,8 @@
 
 - Don't make locals in `binding`.
 
+- Don't site symbols that are Electric function names.
+
 
 ## Version 0.4 — 2025-03-18
 
