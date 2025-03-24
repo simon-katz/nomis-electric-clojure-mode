@@ -505,7 +505,7 @@ Otherwise throw an exception."
                          (lambda () ,@body)))
 
 (defun -nomis/ec-transmogrify-site (site inherited-site)
-  (if (eq site 'inherit)
+  (if (eq site 'nec/inherit)
       inherited-site
     site))
 
@@ -724,7 +724,7 @@ Otherwise throw an exception."
                                       inherited-site
                                       &key rhs-site
                                       &allow-other-keys)
-  (cl-assert (member rhs-site '(nil nec/client nec/server nec/neutral inherit)))
+  (cl-assert (member rhs-site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
     (let* ((tag (cons 'let-bindings tag)))
       (nomis/ec-down-list tag)
@@ -757,7 +757,7 @@ Otherwise throw an exception."
                                       inherited-site
                                       &key site
                                       &allow-other-keys)
-  (cl-assert (member site '(nil nec/client nec/server nec/neutral inherit)))
+  (cl-assert (member site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
     ;; Each body form separately:
     (while (-nomis/ec-can-forward-sexp?)
@@ -776,7 +776,7 @@ Otherwise throw an exception."
                                       inherited-site
                                       &key site
                                       &allow-other-keys)
-  (cl-assert (member site '(nil nec/client nec/server nec/neutral inherit)))
+  (cl-assert (member site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
     ;; Each arg separately:
     (while (-nomis/ec-can-forward-sexp?)
@@ -1451,21 +1451,21 @@ This is very DIY. Is there a better way?")
                               :operator    "let"
                               :terms       (operator
                                             (let-bindings :site nec/neutral
-                                                          :rhs-site inherit)
+                                                          :rhs-site nec/inherit)
                                             &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :binding
                               :operator    "binding"
                               :terms       (operator
                                             (let-bindings :site nec/neutral
-                                                          :rhs-site inherit)
+                                                          :rhs-site nec/inherit)
                                             &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :e/for
                               :operator    "e/for"
                               :terms       (operator
                                             (let-bindings :site nec/neutral
-                                                          :rhs-site inherit)
+                                                          :rhs-site nec/inherit)
                                             &body)))
   (nomis/ec-add-parser-spec '(
                               :operator-id :e/for-by
@@ -1473,7 +1473,7 @@ This is very DIY. Is there a better way?")
                               :terms       (operator
                                             key-function
                                             (let-bindings :site nec/neutral
-                                                          :rhs-site inherit)
+                                                          :rhs-site nec/inherit)
                                             &body)))
   (nomis/ec-add-parser-spec `(
                               :operator-id :electric-call
