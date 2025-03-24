@@ -24,6 +24,8 @@
 
 - Improve detection of Electric version — make it more lenient.
 
+- Don't make locals in `binding`.
+
 
 ## Version 0.4 — 2025-03-18
 

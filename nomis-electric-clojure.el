@@ -756,7 +756,7 @@ Otherwise throw an exception."
 (cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'let-bindings))
                                       tag
                                       inherited-site
-                                      &key rhs-site
+                                      &key rhs-site no-bind?
                                       &allow-other-keys)
   (cl-assert (member rhs-site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
@@ -766,11 +766,12 @@ Otherwise throw an exception."
         ;; Note the LHS of the binding:
         (-nomis/ec-bof)
         (-nomis/ec-skip-metadata)
-        ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
-        ;; to use recursion instead of iteration.
-        (setq *-nomis/ec-bound-vars*
-              (append (-nomis/ec-binding-structure->vars)
-                      *-nomis/ec-bound-vars*))
+        (unless no-bind?
+          ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
+          ;; to use recursion instead of iteration.
+          (setq *-nomis/ec-bound-vars*
+                (append (-nomis/ec-binding-structure->vars)
+                        *-nomis/ec-bound-vars*)))
         (forward-sexp)
         ;; Walk the RHS of the binding, if there is one:
         (when (-nomis/ec-can-forward-sexp?)
@@ -1497,7 +1498,8 @@ This is very DIY. Is there a better way?")
                               :operator    "binding"
                               :terms       (operator
                                             (let-bindings :site nec/neutral
-                                                          :rhs-site nec/inherit)
+                                                          :rhs-site nec/inherit
+                                                          :no-bind? t)
                                             &body)))
 
   (nomis/ec-add-parser-spec '(

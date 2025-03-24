@@ -10,16 +10,13 @@
 
 (e/defn Foo [local-1]
   (e/server
-   (binding [local-2 global-1
-             local-3 local-1
-             local-4 local-2
-             local-5 (ElectricCall global-1 local-2)
-             local-6 (hosted-call global-1 local-2)]
-     (ElectricCall global-1 local-1 local-2 local-3 local-4 local-5 local-6)
-     (hosted-call global-1 local-1 local-2 local-3 local-4 local-5 local-6)
+   (binding [b-2 global-1
+             b-3 local-1
+             b-4 b-2
+             b-5 (ElectricCall global-1 b-2)
+             b-6 (hosted-call global-1 b-2)]
+     (ElectricCall global-1 local-1 b-2 b-3 b-4 b-5 b-6)
+     (hosted-call global-1 local-1 b-2 b-3 b-4 b-5 b-6)
      (e/client
-      (ElectricCall global-1 local-1 local-2 local-3 local-4 local-5 local-6)
-      (hosted-call global-1 local-1 local-2 local-3 local-4 local-5 local-6)))
-   ;; `local-2` etc are out of scope:
-   (ElectricCall global-1 local-1 local-2 local-2 local-3 local-4 local-5 local-6)
-   (hosted-call global-1 local-2 local-2 local-2 local-3 local-4 local-5 local-6)))
+      (ElectricCall global-1 local-1 b-2 b-3 b-4 b-5 b-6)
+      (hosted-call global-1 local-1 b-2 b-3 b-4 b-5 b-6)))))
