@@ -29,5 +29,3 @@
     (ElectricCall global-1 global-1 global-1 local-1 local-1 local-1 global-1 local-1)
     (let [local-2 local-1]
       global-1 local-1 local-2 local-1 local-2 local-1 local-2)))
-
-;;;; TODO: Look at the colored spaces here.
