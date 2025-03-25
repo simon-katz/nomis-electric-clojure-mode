@@ -1339,6 +1339,23 @@ This is very DIY. Is there a better way?")
   (message "Using %s to show coloring"
            (if nomis/ec-use-underline? "underline" "background")))
 
+(defun nomis/ec-toggle-debug-show-debug-overlays ()
+  (interactive)
+  (if -nomis/ec-show-debug-overlays?
+      (progn (setq -nomis/ec-show-debug-overlays? nil)
+             (set-face-attribute '-nomis/ec-neutral-face
+                                 nil
+                                 :background
+                                 -nomis/ec-neutral-face-color))
+    (progn (setq -nomis/ec-show-debug-overlays? t)
+           (set-face-attribute '-nomis/ec-neutral-face
+                               nil
+                               :background
+                               -nomis/ec-neutral-face-color/debug)))
+  (-nomis/ec-redraw-all-buffers)
+  (message "%s debug overlays"
+           (if -nomis/ec-show-debug-overlays? "Showing" "Not showing")))
+
 (defun nomis/ec-cycle-options ()
   "Cycle between combinations of `nomis/ec-color-initial-whitespace?` and
 `nomis/ec-use-underline?`."
@@ -1397,23 +1414,6 @@ This is very DIY. Is there a better way?")
            (if -nomis/ec-print-debug-info-to-messages-buffer?
                "Printing"
              "Not printing")))
-
-(defun nomis/ec-toggle-debug-show-debug-overlays ()
-  (interactive)
-  (if -nomis/ec-show-debug-overlays?
-      (progn (setq -nomis/ec-show-debug-overlays? nil)
-             (set-face-attribute '-nomis/ec-neutral-face
-                                 nil
-                                 :background
-                                 -nomis/ec-neutral-face-color))
-    (progn (setq -nomis/ec-show-debug-overlays? t)
-           (set-face-attribute '-nomis/ec-neutral-face
-                               nil
-                               :background
-                               -nomis/ec-neutral-face-color/debug)))
-  (-nomis/ec-redraw-all-buffers)
-  (message "%s debug overlays"
-           (if -nomis/ec-show-debug-overlays? "Showing" "Not showing")))
 
 (defun nomis/ec-toggle-debug-show-places-for-metadata ()
   (interactive)
