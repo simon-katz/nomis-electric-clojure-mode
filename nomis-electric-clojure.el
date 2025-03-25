@@ -301,6 +301,11 @@ PROPERTY is already in PLIST."
     p))
 
 (defvar -nomis/ec-regexp-for-bracketed-sexp-start
+  ;; This doesn't include reader syntax for anonymous functions (/ie/ `#(...)`),
+  ;; which is probably an oversite in
+  ;; `-nomis/sexp-regexp-for-bracketed-sexp-start`. But that's handy for us
+  ;; because these anonymous functions are hosted and they end up as
+  ;; `sited-single-item`s.
   "(\\|\\[\\|{\\|#{")
 
 (defun -nomis/ec-looking-at-bracketed-sexp-start ()
