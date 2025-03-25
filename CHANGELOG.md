@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- Add support for multiple arities in `e/defn` and `e/fn`.
+
+- Skip metadata.
+
+- Add dependencies on the `dash` and `parseclj` packages.
+
+- Improve detection of Electric version — make it more lenient.
+
+- Don't make locals in `binding`.
+
+- Don't site symbols that are Electric function names.
+
 - Breaking change: Change the extension mechanism.
 
   - (Note that the extension mechanism is alpha and subject to change.)
@@ -15,18 +27,6 @@
   - Change `:shape` to `:terms`.
 
   - Add `:ecase`, `:list` and `:+`.
-
-- Add support for multiple arities in `e/defn` and `e/fn`.
-
-- Skip metadata.
-
-- Add dependencies on the `dash` and `parseclj` packages.
-
-- Improve detection of Electric version — make it more lenient.
-
-- Don't make locals in `binding`.
-
-- Don't site symbols that are Electric function names.
 
 
 ## Version 0.4 — 2025-03-18
