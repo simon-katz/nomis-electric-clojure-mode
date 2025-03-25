@@ -1071,7 +1071,8 @@ Otherwise throw an exception."
                                  :print-env? t)
              ;; Nothing more.
              ))
-          ((or (looking-at -nomis/ec-electric-function-name-regexp)
+          ((or (looking-at
+                -nomis/ec-electric-function-name-regexp-incl-symbol-end)
                (and (not *-nomis/ec-site-electric-locals?*)
                     (member sym *-nomis/ec-bound-vars*)))
            (-nomis/ec-with-site (;; avoid-stupid-indentation
@@ -1114,6 +1115,10 @@ Otherwise throw an exception."
 
 (defconst -nomis/ec-electric-function-name-regexp
   (rx -nomis/ec-electric-function-name-rx))
+
+(defconst -nomis/ec-electric-function-name-regexp-incl-symbol-end
+  ;; Ugh. This shows that some naming is wrong.
+  (concat -nomis/ec-electric-function-name-regexp "\\_>"))
 
 (defvar -nomis/ec-regexp->parser-spec '())
 
