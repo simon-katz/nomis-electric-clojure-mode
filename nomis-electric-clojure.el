@@ -340,7 +340,7 @@ PROPERTY is already in PLIST."
                            (point))))
                (error nil))))))
 
-(defun nomis/ec-at-or-before-sexp-start? ()
+(defun nomis/ec-at-or-before-bracketed-sexp-start? ()
   ;; I can't get this to work with a regexp for whitespace followed by
   ;; a bracketed-sexp-start. So:
   (and (-nomis/ec-can-forward-sexp?)
@@ -488,7 +488,7 @@ Otherwise throw an exception."
                    (list msg (save-excursion
                                (backward-up-list)
                                (point))))))
-        ((not (nomis/ec-at-or-before-sexp-start?))
+        ((not (nomis/ec-at-or-before-bracketed-sexp-start?))
          (let* ((msg (format "A bracketed s-expression is needed for %s"
                              (first desc))))
            (signal '-nomis/ec-parse-error
