@@ -6,13 +6,13 @@
 
 - Skip metadata.
 
-- Add dependencies on the `dash` and `parseclj` packages.
-
-- Improve detection of Electric version — make it more lenient.
+- Don't site symbols that are Electric function names.
 
 - Don't make locals in `binding`.
 
-- Don't site symbols that are Electric function names.
+- Improve detection of Electric version — make it more lenient.
+
+- Add dependencies on the `dash` and `parseclj` packages.
 
 - Breaking change: Change the extension mechanism.
 
