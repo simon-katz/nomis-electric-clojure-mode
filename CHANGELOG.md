@@ -12,7 +12,7 @@
 
 - Improve detection of Electric version — make it more lenient.
 
-- Add dependencies on the `dash` and `parseclj` packages.
+- Add dependency on the `dash` package.
 
 - Breaking change: Change the extension mechanism.
 
@@ -44,6 +44,8 @@
 - Understand that functions can have doc strings and attr-maps.
 
 - Understand that an `e/fn` can have a name.
+
+- Add dependency on the `parseclj` package.
 
 
 ## Version 0.3 — 2025-03-12
