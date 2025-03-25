@@ -129,21 +129,27 @@ This includes both bad syntax and parts of Clojure that we don't know about.")
 
 (defconst -nomis/ec-neutral-face-color "nomis/ec-unspecified-bg") ; TODO Is there a better way to get the default background color? This gives messages in the echo area.
 
-(defconst -nomis/ec-neutral-face-color/debug "Blue3")
-
-(defface -nomis/ec-neutral-face
+(defface -nomis/ec-neutral-face/normal
   `((t ,(list :background -nomis/ec-neutral-face-color
               :underline nil)))
   "Face for Electric code that is neither specifically client code nor
-specifically server code.
+specifically server code, when `-nomis/ec-show-debug-overlays?` is nil."
+  ;; This can be:
+  ;; - code that is either client or server code; for example:
+  ;;   - code that is not lexically within `e/client` or `e/server`
+  ;;   - an `(e/fn ...)`
+  ;; - code that is neither client nor server; for example:
+  ;;   - in Electric v3:
+  ;;     - symbols that are being bound; /eg/ the LHS of `let` bindings.
+  )
 
-This can be:
-- code that is either client or server code; for example:
-  - code that is not lexically within `e/client` or `e/server`
-  - an `(e/fn ...)`
-- code that is neither client nor server; for example:
-  - in Electric v3:
-    - symbols that are being bound; /eg/ the LHS of `let` bindings.")
+(defface -nomis/ec-neutral-face/debug
+  `((((background dark)) ,(list :background "Blue3"
+                                :underline nil))
+    (t ,(list :background "CadetBlue1"
+              :underline nil)))
+  "Face for Electric code that is neither specifically client code nor
+specifically server code, when `-nomis/ec-show-debug-overlays?` is true.")
 
 ;;;; ___________________________________________________________________________
 
@@ -161,6 +167,11 @@ This can be:
       'nomis/ec-server-face/using-underline
     'nomis/ec-server-face/using-background))
 
+(defun -nomis/ec-compute-neutral-face ()
+  (if -nomis/ec-show-debug-overlays?
+      '-nomis/ec-neutral-face/debug
+    '-nomis/ec-neutral-face/normal))
+
 (defun -nomis/ec-compute-unparsable-face ()
   (if nomis/ec-use-underline?
       'nomis/ec-unparsable-face/using-underline
@@ -173,6 +184,10 @@ This can be:
 (defface -nomis/ec-server-face
   `((t ,(list :inherit (-nomis/ec-compute-server-face)))) ; set by `-nomis/ec-update-faces`
   "Face for Electric Clojure server code.")
+
+(defface -nomis/ec-neutral-face
+  `((t ,(list :inherit (-nomis/ec-compute-neutral-face)))) ; set by `-nomis/ec-update-faces`
+  "Face for neutral Electric Clojure code.")
 
 (defface -nomis/ec-unparsable-face
   `((t ,(list :inherit (-nomis/ec-compute-unparsable-face)))) ; set by `-nomis/ec-update-faces`
@@ -192,6 +207,10 @@ This can be:
                       nil
                       :inherit
                       (-nomis/ec-compute-server-face))
+  (set-face-attribute '-nomis/ec-neutral-face
+                      nil
+                      :inherit
+                      (-nomis/ec-compute-neutral-face))
   (set-face-attribute '-nomis/ec-unparsable-face
                       nil
                       :inherit
@@ -1341,17 +1360,8 @@ This is very DIY. Is there a better way?")
 
 (defun nomis/ec-toggle-debug-show-debug-overlays ()
   (interactive)
-  (if -nomis/ec-show-debug-overlays?
-      (progn (setq -nomis/ec-show-debug-overlays? nil)
-             (set-face-attribute '-nomis/ec-neutral-face
-                                 nil
-                                 :background
-                                 -nomis/ec-neutral-face-color))
-    (progn (setq -nomis/ec-show-debug-overlays? t)
-           (set-face-attribute '-nomis/ec-neutral-face
-                               nil
-                               :background
-                               -nomis/ec-neutral-face-color/debug)))
+  (setq -nomis/ec-show-debug-overlays? (not -nomis/ec-show-debug-overlays?))
+  (-nomis/ec-update-faces)
   (-nomis/ec-redraw-all-buffers)
   (message "%s debug overlays"
            (if -nomis/ec-show-debug-overlays? "Showing" "Not showing")))
