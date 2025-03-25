@@ -797,17 +797,17 @@ Otherwise throw an exception."
   (cl-assert (member site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
     (let* ((*-nomis/ec-site-electric-locals?* t))
-     ;; Each body form separately:
-     (while (-nomis/ec-can-forward-sexp?)
-       (-nomis/ec-bof)
-       (-nomis/ec-with-site (;; avoid-stupid-indentation
-                             :tag (cons 'body-form tag)
-                             :site (-nomis/ec-transmogrify-site site
-                                                                inherited-site)
-                             :description (-> 'body-form
-                                              -nomis/ec->grammar-description))
-         (-nomis/ec-walk-and-overlay-v3))
-       (forward-sexp)))))
+      ;; Each body form separately:
+      (while (-nomis/ec-can-forward-sexp?)
+        (-nomis/ec-bof)
+        (-nomis/ec-with-site (;; avoid-stupid-indentation
+                              :tag (cons 'body-form tag)
+                              :site (-nomis/ec-transmogrify-site site
+                                                                 inherited-site)
+                              :description (-> 'body-form
+                                               -nomis/ec->grammar-description))
+          (-nomis/ec-walk-and-overlay-v3))
+        (forward-sexp)))))
 
 (cl-defmethod -nomis/ec-overlay-term ((term-name (eql '&args))
                                       tag
