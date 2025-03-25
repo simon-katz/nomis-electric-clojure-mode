@@ -1052,7 +1052,7 @@ Otherwise throw an exception."
         (-nomis/ec-walk-and-overlay-v3)
         (forward-sexp)))))
 
-(defun -nomis/ec-overlay-symbol-number-etc ()
+(defun -nomis/ec-overlay-non-descended-form ()
   (-nomis/ec-debug *-nomis/ec-site* 'symbol-number-etc)
   (let* ((sym (thing-at-point 'symbol t)))
     (cond ((null sym)
@@ -1192,7 +1192,7 @@ Otherwise throw an exception."
           (let* ((*-nomis/ec-site-electric-locals?* t))
             (-nomis/ec-overlay-other-bracketed-form-v3)))
          (t
-          (-nomis/ec-overlay-symbol-number-etc))))))
+          (-nomis/ec-overlay-non-descended-form))))))
 
 (defun -nomis/ec-walk-and-overlay-any-version ()
   (cond ; See avoid-case-bug-with-keywords at top of file.
