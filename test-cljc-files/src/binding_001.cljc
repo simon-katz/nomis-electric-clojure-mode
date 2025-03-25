@@ -8,15 +8,17 @@
 
 (def global-1 42)
 
-(e/defn Foo [local-1]
+(def ^:dynamic binding-1 1)
+(def ^:dynamic EBinding1 1)
+
+(e/defn Foo []
   (e/server
-   (binding [b-2 global-1
-             b-3 local-1
-             b-4 b-2
-             b-5 (ElectricCall global-1 b-2)
-             b-6 (hosted-call global-1 b-2)]
-     (ElectricCall global-1 local-1 b-2 b-3 b-4 b-5 b-6)
-     (hosted-call global-1 local-1 b-2 b-3 b-4 b-5 b-6)
+   ;; Note capitalized names and non-capitalized names are dealt
+   ;; with differently.
+   (binding [EBinding1 global-1
+             binding-1 global-1]
+     (ElectricCall global-1 EBinding1 binding-1)
+     (hosted-call global-1 EBinding1 binding-1)
      (e/client
-      (ElectricCall global-1 local-1 b-2 b-3 b-4 b-5 b-6)
-      (hosted-call global-1 local-1 b-2 b-3 b-4 b-5 b-6)))))
+      (ElectricCall global-1 EBinding1 binding-1)
+      (hosted-call global-1 EBinding1 binding-1)))))
