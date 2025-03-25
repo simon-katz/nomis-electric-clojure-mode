@@ -300,16 +300,16 @@ PROPERTY is already in PLIST."
       (setq plist (cddr plist)))
     p))
 
-(defvar -nomis/ec-regexp-for-bracketed-sexp-start
-  ;; This doesn't include reader syntax for anonymous functions (/ie/ `#(...)`),
-  ;; which is probably an oversite in
-  ;; `-nomis/sexp-regexp-for-bracketed-sexp-start`. But that's handy for us
+(defvar -nomis/ec-regexp-for-start-of-form-to-descend
+  ;; Copied from `-nomis/sexp-regexp-for-bracketed-sexp-start`. This doesn't
+  ;; include reader syntax for anonymous functions (/ie/ `#(...)`), which is
+  ;; probably an oversite in the copied-from place. But that's handy for us
   ;; because these anonymous functions are hosted and they end up as
   ;; `sited-single-item`s.
   "(\\|\\[\\|{\\|#{")
 
-(defun -nomis/ec-looking-at-bracketed-sexp-start ()
-  (looking-at -nomis/ec-regexp-for-bracketed-sexp-start))
+(defun -nomis/ec-looking-at-start-of-form-to-descend? ()
+  (looking-at -nomis/ec-regexp-for-start-of-form-to-descend))
 
 (defun -nomis/ec-at-top-level? ()
   (save-excursion
@@ -345,14 +345,14 @@ PROPERTY is already in PLIST."
                            (point))))
                (error nil))))))
 
-(defun nomis/ec-at-or-before-bracketed-sexp-start? ()
+(defun nomis/ec-at-or-before-start-of-form-to-descend? ()
   ;; I can't get this to work with a regexp for whitespace followed by
-  ;; a bracketed-sexp-start. So:
+  ;; a start-of-form-to-descend. So:
   (and (-nomis/ec-can-forward-sexp?)
        (save-excursion
          (forward-sexp)
          (backward-sexp)
-         (-nomis/ec-looking-at-bracketed-sexp-start))))
+         (-nomis/ec-looking-at-start-of-form-to-descend?))))
 
 ;;;; ___________________________________________________________________________
 ;;;; Flashing of the re-overlayed region, to help with debugging.
@@ -493,7 +493,7 @@ Otherwise throw an exception."
                    (list msg (save-excursion
                                (backward-up-list)
                                (point))))))
-        ((not (nomis/ec-at-or-before-bracketed-sexp-start?))
+        ((not (nomis/ec-at-or-before-start-of-form-to-descend?))
          (let* ((msg (format "A bracketed s-expression is needed for %s"
                              (first desc))))
            (signal '-nomis/ec-parse-error
@@ -589,7 +589,7 @@ Otherwise throw an exception."
       (-nomis/ec-overlay-site-v2 'nec/client))
      ((looking-at (-nomis/ec-operator-call-regexp "e/server"))
       (-nomis/ec-overlay-site-v2 'nec/server))
-     ((-nomis/ec-looking-at-bracketed-sexp-start)
+     ((-nomis/ec-looking-at-start-of-form-to-descend?)
       (-nomis/ec-overlay-other-bracketed-form-v2)))))
 
 ;;;; ___________________________________________________________________________
@@ -1188,7 +1188,7 @@ Otherwise throw an exception."
                             (apply #'-nomis/ec-overlay-using-parser-spec spec)
                             t)))
         (cond
-         ((-nomis/ec-looking-at-bracketed-sexp-start)
+         ((-nomis/ec-looking-at-start-of-form-to-descend?)
           (let* ((*-nomis/ec-site-electric-locals?* t))
             (-nomis/ec-overlay-other-bracketed-form-v3)))
          (t
