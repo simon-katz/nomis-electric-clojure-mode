@@ -127,10 +127,8 @@ This includes both bad syntax and parts of Clojure that we don't know about.")
 
 (defvar -nomis/ec-show-debug-overlays? nil)
 
-(defconst -nomis/ec-neutral-face-color "nomis/ec-unspecified-bg") ; TODO Is there a better way to get the default background color? This gives messages in the echo area.
-
 (defface -nomis/ec-neutral-face/normal
-  `((t ,(list :background -nomis/ec-neutral-face-color
+  `((t ,(list :background (face-background 'default) ; set by `nomis/ec-update-normal-neutral-face`, for use in case the default background changes
               :underline nil)))
   "Face for Electric code that is neither specifically client code nor
 specifically server code, when `-nomis/ec-show-debug-overlays?` is nil."
@@ -150,6 +148,12 @@ specifically server code, when `-nomis/ec-show-debug-overlays?` is nil."
               :underline nil)))
   "Face for Electric code that is neither specifically client code nor
 specifically server code, when `-nomis/ec-show-debug-overlays?` is true.")
+
+(defun nomis/ec-update-normal-neutral-face ()
+  (set-face-attribute '-nomis/ec-neutral-face/normal
+                      nil
+                      :background
+                      (face-background 'default)))
 
 ;;;; ___________________________________________________________________________
 
@@ -199,6 +203,7 @@ specifically server code, when `-nomis/ec-show-debug-overlays?` is true.")
   "Face for places that can have metadata.")
 
 (defun -nomis/ec-update-faces ()
+  (nomis/ec-update-normal-neutral-face)
   (set-face-attribute '-nomis/ec-client-face
                       nil
                       :inherit

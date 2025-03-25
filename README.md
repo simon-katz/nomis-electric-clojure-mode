@@ -194,6 +194,16 @@ For a taste, here are some examples of built-in parser definitions:
 
 # Troubleshooting
 
+## The Coloring of Non-Server/Non-Client Areas of Code Goes Awry
+
+This can happen if you change Emacs's default background color.
+
+There are two approaches to fixing it:
+
+- If and when it happens, you can simply turn the mode off and on or run one of the commands that changes the appearance of the coloring.
+
+- You can run the code `(nomis/ec-update-normal-neutral-face)`. If you are changing Emacs's default background color programmatically, perhaps you can add this code somewhere so that the color doesn't go awry in the first place.
+
 ## The Coloring Changes When I Add or Remove Whitespace
 
 I've sometimes seen Emacs overlays get muddled and the coloring flip between being correct and incorrect when I simply change whitespace. I've found that restarting Emacs makes the problem go away. (TODO: That's a bit drastic. Next time it happens: Does it happen in just one buffer? What happens if you kill the buffer and re-open the file?)
