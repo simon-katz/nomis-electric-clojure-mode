@@ -20,7 +20,7 @@
 
 - Skip metadata.
 
-- Add dependency on the `dash` package.
+- Add dependencies on the `dash` and `parseclj` packages.
 
 - Improve detection of Electric version — make it more lenient.
 
