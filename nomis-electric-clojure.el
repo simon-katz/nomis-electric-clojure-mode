@@ -125,6 +125,8 @@ This includes both bad syntax and parts of Clojure that we don't know about.")
 ;;;; ___________________________________________________________________________
 ;;;; Faces not intended to be customized
 
+(defvar -nomis/ec-show-debug-overlays? nil)
+
 (defconst -nomis/ec-neutral-face-color "nomis/ec-unspecified-bg") ; TODO Is there a better way to get the default background color? This gives messages in the echo area.
 
 (defconst -nomis/ec-neutral-face-color/debug "Blue3")
@@ -376,8 +378,6 @@ PROPERTY is already in PLIST."
 
 ;;;; ___________________________________________________________________________
 ;;;; Overlay basics
-
-(defvar -nomis/ec-show-debug-overlays? nil)
 
 (defun -nomis/ec-make-overlay (tag nesting-level face start end description)
   ;; (-nomis/ec-debug *-nomis/ec-site* 'make-overlay)
