@@ -161,13 +161,16 @@ This includes both bad syntax and parts of Clojure that we don't know about.")
   "Face for places that can have metadata.")
 
 (defun -nomis/ec-update-faces ()
-  (set-face-attribute '-nomis/ec-client-face nil
+  (set-face-attribute '-nomis/ec-client-face
+                      nil
                       :inherit
                       (-nomis/ec-compute-client-face))
-  (set-face-attribute '-nomis/ec-server-face nil
+  (set-face-attribute '-nomis/ec-server-face
+                      nil
                       :inherit
                       (-nomis/ec-compute-server-face))
-  (set-face-attribute '-nomis/ec-unparsable-face nil
+  (set-face-attribute '-nomis/ec-unparsable-face
+                      nil
                       :inherit
                       (-nomis/ec-compute-unparsable-face)))
 
