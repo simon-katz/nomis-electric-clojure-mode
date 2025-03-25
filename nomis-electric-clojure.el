@@ -123,6 +123,27 @@ This includes both bad syntax and parts of Clojure that we don't know about.")
 This includes both bad syntax and parts of Clojure that we don't know about.")
 
 ;;;; ___________________________________________________________________________
+;;;; Faces not intended to be customized
+
+(defconst -nomis/ec-neutral-face-color "nomis/ec-unspecified-bg") ; TODO Is there a better way to get the default background color? This gives messages in the echo area.
+
+(defconst -nomis/ec-neutral-face-color/debug "Blue3")
+
+(defface -nomis/ec-neutral-face
+  `((t ,(list :background -nomis/ec-neutral-face-color
+              :underline nil)))
+  "Face for Electric code that is neither specifically client code nor
+specifically server code.
+
+This can be:
+- code that is either client or server code; for example:
+  - code that is not lexically within `e/client` or `e/server`
+  - an `(e/fn ...)`
+- code that is neither client nor server; for example:
+  - in Electric v3:
+    - symbols that are being bound; /eg/ the LHS of `let` bindings.")
+
+;;;; ___________________________________________________________________________
 
 (define-error '-nomis/ec-parse-error "nomis-electric-clojure-mode: Cannot parse")
 
@@ -173,24 +194,6 @@ This includes both bad syntax and parts of Clojure that we don't know about.")
                       nil
                       :inherit
                       (-nomis/ec-compute-unparsable-face)))
-
-(defconst -nomis/ec-neutral-face-color "nomis/ec-unspecified-bg") ; TODO Is there a better way to get the default background color? This gives messages in the echo area.
-
-(defconst -nomis/ec-neutral-face-color/debug "Blue3")
-
-(defface -nomis/ec-neutral-face
-  `((t ,(list :background -nomis/ec-neutral-face-color
-              :underline nil)))
-  "Face for Electric code that is neither specifically client code nor
-specifically server code.
-
-This can be:
-- code that is either client or server code; for example:
-  - code that is not lexically within `e/client` or `e/server`
-  - an `(e/fn ...)`
-- code that is neither client nor server; for example:
-  - in Electric v3:
-    - symbols that are being bound; /eg/ the LHS of `let` bindings.")
 
 ;;;; ___________________________________________________________________________
 
