@@ -1038,14 +1038,14 @@ Otherwise throw an exception."
 ;;;; ___________________________________________________________________________
 
 (defun -nomis/ec-overlay-other-form-to-descend-v3 ()
-  (-nomis/ec-debug *-nomis/ec-site* 'data-structure-or-hosted-call)
+  (-nomis/ec-debug *-nomis/ec-site* 'other-form-to-descend)
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag (list 'data-structure-or-hosted-call)
+                          :tag (list 'other-form-to-descend)
                           :site *-nomis/ec-default-site*
-                          :description (-> 'data-structure-or-hosted-call
+                          :description (-> 'other-form-to-descend
                                            -nomis/ec->grammar-description))
-      (nomis/ec-down-list 'data-structure-or-hosted-call)
+      (nomis/ec-down-list 'other-form-to-descend)
       (while (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
         (-nomis/ec-walk-and-overlay-v3)
