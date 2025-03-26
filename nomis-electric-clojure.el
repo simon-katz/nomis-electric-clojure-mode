@@ -472,8 +472,7 @@ PROPERTY is already in PLIST."
 
 (defun -nomis/ec->grammar-description (x)
   (when nomis/ec-show-grammar-tooltips?
-    (format "[Level=%s] %s"
-            *-nomis/ec-level*
+    (format "%s"
             (if (keywordp x)
                 (-> x
                     symbol-name
