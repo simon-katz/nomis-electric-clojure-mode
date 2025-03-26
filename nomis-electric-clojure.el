@@ -421,7 +421,10 @@ PROPERTY is already in PLIST."
                                (format "DEBUG: Tag = %s"
                                        (reverse tag)))
                              (when -nomis/ec-show-debug-overlays?
-                               (format "DEBUG: Default site = %s"
+                               (format "DEBUG: *-nomis/ec-site* = %s"
+                                       *-nomis/ec-site*))
+                             (when -nomis/ec-show-debug-overlays?
+                               (format "DEBUG: *-nomis/ec-default-site* = %s"
                                        *-nomis/ec-default-site*)))))
         (overlay-put ov 'help-echo (-> (-remove #'null messages)
                                        (string-join "\n")))))
