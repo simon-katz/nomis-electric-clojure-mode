@@ -1052,13 +1052,16 @@ Otherwise throw an exception."
         (forward-sexp)))))
 
 (defun -nomis/ec-overlay-non-descended-form ()
-  (-nomis/ec-debug *-nomis/ec-site* 'symbol-number-etc)
+  ;; A non-descended form is a symbol, number, character, etc, or (kind of
+  ;; accidentally but it works out OK) a reader-syntax anonymous function
+  ;; (`#(...)`), which is a hosted thing.
+  (-nomis/ec-debug *-nomis/ec-site* 'non-descended-form)
   (let* ((sym (thing-at-point 'symbol t)))
     (cond ((null sym)
            (unless (thing-at-point 'string t)
              (let* ((sexp (thing-at-point 'sexp t)))
                (-nomis/ec-message-no-disp
-                "nomis-electric-clojure-mode: Line %s: Expected a symbol-number-etc but got %s"
+                "nomis-electric-clojure-mode: Line %s: Expected a non-descended-form but got %s"
                 (-nomis/ec-line-number-string)
                 sexp))))
           ((equal sym "'")
