@@ -572,10 +572,10 @@ Otherwise throw an exception."
                                            -nomis/ec->grammar-description))
       (-nomis/ec-overlay-args-of-form-v2))))
 
-(defun -nomis/ec-overlay-other-bracketed-form-v2 ()
-  (-nomis/ec-debug *-nomis/ec-site* 'other-bracketed-form)
+(defun -nomis/ec-overlay-other-form-to-descend-v2 ()
+  (-nomis/ec-debug *-nomis/ec-site* 'other-form-to-descend)
   (save-excursion
-    (nomis/ec-down-list 'other-bracketed-form)
+    (nomis/ec-down-list 'other-form-to-descend)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
       (-nomis/ec-walk-and-overlay-v2)
@@ -589,7 +589,7 @@ Otherwise throw an exception."
      ((looking-at (-nomis/ec-operator-call-regexp "e/server"))
       (-nomis/ec-overlay-site-v2 'nec/server))
      ((-nomis/ec-looking-at-start-of-form-to-descend?)
-      (-nomis/ec-overlay-other-bracketed-form-v2)))))
+      (-nomis/ec-overlay-other-form-to-descend-v2)))))
 
 ;;;; ___________________________________________________________________________
 ;;;; ---- More parse and overlay helpers ----
@@ -1037,7 +1037,7 @@ Otherwise throw an exception."
 
 ;;;; ___________________________________________________________________________
 
-(defun -nomis/ec-overlay-other-bracketed-form-v3 ()
+(defun -nomis/ec-overlay-other-form-to-descend-v3 ()
   (-nomis/ec-debug *-nomis/ec-site* 'data-structure-or-hosted-call)
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
@@ -1194,7 +1194,7 @@ Otherwise throw an exception."
         (cond
          ((-nomis/ec-looking-at-start-of-form-to-descend?)
           (let* ((*-nomis/ec-site-electric-locals?* t))
-            (-nomis/ec-overlay-other-bracketed-form-v3)))
+            (-nomis/ec-overlay-other-form-to-descend-v3)))
          (t
           (-nomis/ec-overlay-non-descended-form))))))
 
