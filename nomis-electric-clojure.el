@@ -256,6 +256,9 @@ specifically server code, when `-nomis/ec-show-debug-overlays?` is true.")
                         5
                         t))
 
+(defun -nomis/ec-pos-string (pos)
+  (-nomis/ec-pad-string (number-to-string pos) 6 t))
+
 (defun -nomis/ec-a-few-current-chars ()
   (let* ((start (point))
          (end-of-form (save-excursion
@@ -558,18 +561,28 @@ Otherwise throw an exception."
 (defun -nomis/ec-with-site* (tag site end description print-env? f)
   (cl-assert tag)
   (-nomis/ec-debug site tag nil print-env?)
-  (let* ((*-nomis/ec-level* (1+ *-nomis/ec-level*)))
-    (if (or (null site)
-            (and (eq site *-nomis/ec-site*)
-                 (not nomis/ec-show-grammar-tooltips?)))
+  (let* ((*-nomis/ec-level* (1+ *-nomis/ec-level*))
+         (no-new-overlay? (or (null site)
+                              (and (eq site *-nomis/ec-site*)
+                                   (not nomis/ec-show-grammar-tooltips?))))
+         (start (point))
+         (end (or end
+                  (save-excursion (when (-nomis/ec-can-forward-sexp?)
+                                    (forward-sexp))
+                                  (point)))))
+    (when -nomis/ec-print-debug-info-to-messages-buffer?
+      (-nomis/ec-message-no-disp "%s %s %s %s %s / site = %s / *-nomis/ec-site* = %s"
+                                 (-nomis/ec-line-number-string)
+                                 (-nomis/ec-pos-string start)
+                                 (-nomis/ec-pos-string end)
+                                 (make-string (* 2 *-nomis/ec-level*) ?\s)
+                                 (if no-new-overlay? "[-]" [+])
+                                 site
+                                 *-nomis/ec-site*))
+    (if no-new-overlay?
         ;; No need for a new overlay.
         (funcall f)
-      (let* ((*-nomis/ec-site* site)
-             (start (point))
-             (end (or end
-                      (save-excursion (when (-nomis/ec-can-forward-sexp?)
-                                        (forward-sexp))
-                                      (point)))))
+      (let* ((*-nomis/ec-site* site))
         (-nomis/ec-overlay-lump tag site *-nomis/ec-level* start end description)
         (funcall f)))))
 
