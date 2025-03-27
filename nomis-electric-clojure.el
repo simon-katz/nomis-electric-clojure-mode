@@ -320,16 +320,26 @@ PROPERTY is already in PLIST."
 (defun -nomis/ec-looking-at-start-of-form-to-descend-v2? ()
   (looking-at -nomis/ec-regexp-for-start-of-form-to-descend-v2))
 
-(defvar -nomis/ec-regexp-for-start-of-form-to-descend-v3
-  ;; Copied from `-nomis/sexp-regexp-for-bracketed-sexp-start`. This doesn't
-  ;; include reader syntax for anonymous functions (/ie/ `#(...)`), which is
-  ;; probably an oversite in the copied-from place. But that's handy for us
-  ;; because these anonymous functions are hosted and they end up as
+(defvar -nomis/ec-regexp-for-start-of-function-call
+  "(")
+
+(defun -nomis/ec-looking-at-start-of-function-call ()
+  (looking-at -nomis/ec-regexp-for-start-of-function-call))
+
+(defvar -nomis/ec-regexp-for-start-of-literal-data
+  ;; Copied from `-nomis/sexp-regexp-for-bracketed-sexp-start` and modified.
+  ;; This doesn't include reader syntax for anonymous functions (/ie/ `#(...)`),
+  ;; which is probably an oversite in the copied-from place. But that's handy
+  ;; for us because these anonymous functions are hosted and they end up as
   ;; `sited-single-item`s.
-  "(\\|\\[\\|{\\|#{")
+  "\\[\\|{\\|#{")
+
+(defun -nomis/ec-looking-at-start-of-literal-data? ()
+  (looking-at -nomis/ec-regexp-for-start-of-literal-data))
 
 (defun -nomis/ec-looking-at-start-of-form-to-descend-v3? ()
-  (looking-at -nomis/ec-regexp-for-start-of-form-to-descend-v3))
+  (or (-nomis/ec-looking-at-start-of-function-call)
+      (-nomis/ec-looking-at-start-of-literal-data?)))
 
 (defun -nomis/ec-at-top-level? ()
   (save-excursion
@@ -1138,16 +1148,31 @@ Otherwise throw an exception."
 
 ;;;; ___________________________________________________________________________
 
-(defun -nomis/ec-overlay-other-form-to-descend-v3 ()
-  (-nomis/ec-debug-message *-nomis/ec-site* 'other-form-to-descend-v3)
+(defun -nomis/ec-overlay-function-call ()
+  (-nomis/ec-debug-message *-nomis/ec-site* 'function-call)
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag (list 'other-form-to-descend-v3)
-                          :tag-v2 'other-form-to-descend-v3
+                          :tag (list 'function-call)
+                          :tag-v2 'function-call
                           :site nil ; TODO: Is this right?
-                          :description (-> 'other-form-to-descend-v3
+                          :description (-> 'function-call
                                            -nomis/ec->grammar-description))
-      (nomis/ec-down-list-v3 'other-form-to-descend-v3)
+      (nomis/ec-down-list-v3 'function-call)
+      (while (-nomis/ec-can-forward-sexp?)
+        (-nomis/ec-bof)
+        (-nomis/ec-walk-and-overlay-v3)
+        (forward-sexp)))))
+
+(defun -nomis/ec-overlay-literal-data ()
+  (-nomis/ec-debug-message *-nomis/ec-site* 'literal-data)
+  (save-excursion
+    (-nomis/ec-with-site (;; avoid-stupid-indentation
+                          :tag (list 'literal-data)
+                          :tag-v2 'literal-data
+                          :site nil ; TODO: Is this right?
+                          :description (-> 'literal-data
+                                           -nomis/ec->grammar-description))
+      (nomis/ec-down-list-v3 'literal-data)
       (while (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
         (-nomis/ec-walk-and-overlay-v3)
@@ -1296,8 +1321,10 @@ Otherwise throw an exception."
                           (apply #'-nomis/ec-overlay-using-parser-spec spec)
                           t))
         (cond
-         ((-nomis/ec-looking-at-start-of-form-to-descend-v3?)
-          (-nomis/ec-overlay-other-form-to-descend-v3))
+         ((-nomis/ec-looking-at-start-of-function-call)
+          (-nomis/ec-overlay-function-call))
+         ((-nomis/ec-looking-at-start-of-literal-data?)
+          (-nomis/ec-overlay-literal-data))
          (t
           (-nomis/ec-overlay-non-descended-form))))))
 
