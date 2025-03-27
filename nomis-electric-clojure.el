@@ -396,6 +396,8 @@ PROPERTY is already in PLIST."
 
 (defvar *-nomis/ec-n-lumps-in-current-update* 0)
 
+(defvar *-nomis/ec-tag-v2s* '())
+
 (defvar *-nomis/ec-site* 'nec/neutral
   "The site of the code currently being analysed. One of `nec/neutral`,
 `nec/client` or `nec/server`.")
@@ -420,6 +422,9 @@ PROPERTY is already in PLIST."
     (overlay-put ov 'evaporate t)
     (when (or description -nomis/ec-show-debug-overlays?)
       (let* ((messages (list description
+                             (when -nomis/ec-show-debug-overlays?
+                               (format "DEBUG: tag-v2s = %s"
+                                       *-nomis/ec-tag-v2s*))
                              (when -nomis/ec-show-debug-overlays?
                                (format "DEBUG: Tag = %s"
                                        (reverse tag)))
@@ -558,10 +563,12 @@ Otherwise throw an exception."
        new-default-site
        operator-id))))
 
-(defun -nomis/ec-with-site* (tag site end description print-env? f)
+(defun -nomis/ec-with-site* (tag-v2 tag site end description print-env? f)
   (cl-assert tag)
+  (cl-assert tag-v2)
   (-nomis/ec-debug-message site tag nil print-env?)
-  (let* ((*-nomis/ec-level* (1+ *-nomis/ec-level*))
+  (let* ((*-nomis/ec-tag-v2s* (cons tag-v2 *-nomis/ec-tag-v2s*))
+         (*-nomis/ec-level* (1+ *-nomis/ec-level*))
          (no-new-overlay? (or (null site)
                               (and (eq site *-nomis/ec-site*)
                                    (not nomis/ec-show-grammar-tooltips?))))
@@ -571,11 +578,12 @@ Otherwise throw an exception."
                                     (forward-sexp))
                                   (point)))))
     (when -nomis/ec-print-debug-info-to-messages-buffer?
-      (-nomis/ec-message-no-disp "%s %s %s %s %s / site = %s / *-nomis/ec-site* = %s"
+      (-nomis/ec-message-no-disp "%s %s %s %s %s %s / site = %s / *-nomis/ec-site* = %s"
                                  (-nomis/ec-line-number-string)
                                  (-nomis/ec-pos-string start)
                                  (-nomis/ec-pos-string end)
                                  (make-string (* 2 *-nomis/ec-level*) ?\s)
+                                 tag-v2
                                  (if no-new-overlay? "[-]" [+])
                                  site
                                  *-nomis/ec-site*))
@@ -586,10 +594,11 @@ Otherwise throw an exception."
         (-nomis/ec-overlay-lump tag site *-nomis/ec-level* start end description)
         (funcall f)))))
 
-(cl-defmacro -nomis/ec-with-site ((&key tag site end description print-env?)
+(cl-defmacro -nomis/ec-with-site ((&key tag-v2
+                                        tag site end description print-env?)
                                   &body body)
   (declare (indent 1))
-  `(-nomis/ec-with-site* ,tag ,site ,end ,description ,print-env?
+  `(-nomis/ec-with-site* ,tag-v2 ,tag ,site ,end ,description ,print-env?
                          (lambda () ,@body)))
 
 (defun -nomis/ec-transmogrify-site (site inherited-site)
@@ -615,6 +624,7 @@ Otherwise throw an exception."
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag '(site)
+                          :tag-v2 'site
                           :site site
                           :description (-> site
                                            -nomis/ec->grammar-description))
@@ -648,6 +658,7 @@ Otherwise throw an exception."
   (when -nomis/ec-debug-show-places-for-metadata?
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (list 'place-for-metadata)
+                          :tag-v2 'place-for-metadata
                           :site 'nec/place-for-metadata
                           :description "Place for metadata"
                           :end (1+ (point)))
@@ -670,6 +681,7 @@ Otherwise throw an exception."
     (goto-char pos)
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (list 'unparsable tag)
+                          :tag-v2 'unparsable
                           :site 'nec/unparsable
                           :description description)
       ;; Nothing more.
@@ -867,6 +879,7 @@ Otherwise throw an exception."
                  (*-nomis/ec-default-site* new-site))
             (-nomis/ec-with-site (;; avoid-stupid-indentation
                                   :tag (cons 'binding-rhs tag)
+                                  :tag-v2 'binding-rhs
                                   :site new-site
                                   :description (-> 'binding-rhs
                                                    -nomis/ec->grammar-description))
@@ -887,6 +900,7 @@ Otherwise throw an exception."
         (-nomis/ec-bof)
         (-nomis/ec-with-site (;; avoid-stupid-indentation
                               :tag (cons 'body-form tag)
+                              :tag-v2 'body-form
                               :site (-nomis/ec-transmogrify-site site
                                                                  inherited-site)
                               :description (-> 'body-form
@@ -906,6 +920,7 @@ Otherwise throw an exception."
       (-nomis/ec-bof)
       (-nomis/ec-with-site (;; avoid-stupid-indentation
                             :tag (cons 'arg tag)
+                            :tag-v2 'arg
                             :site (-nomis/ec-transmogrify-site site
                                                                inherited-site)
                             :description (-> 'arg
@@ -960,6 +975,7 @@ Otherwise throw an exception."
     (-nomis/ec-with-site
         (;; avoid-stupid-indentation
          :tag tag
+         :tag-v2 `(:term ,term-name)
          :site (-nomis/ec-transmogrify-site site
                                             inherited-site)
          :end end
@@ -1106,6 +1122,7 @@ Otherwise throw an exception."
                                     new-default-site)
       (-nomis/ec-with-site (;; avoid-stupid-indentation
                             :tag (list operator-id)
+                            :tag-v2 `(:operator-id ,operator-id)
                             :site site
                             :description (-> operator-id
                                              -nomis/ec->grammar-description))
@@ -1119,6 +1136,7 @@ Otherwise throw an exception."
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (list 'other-form-to-descend)
+                          :tag-v2 'other-form-to-descend
                           :site *-nomis/ec-default-site*
                           :description (-> 'other-form-to-descend
                                            -nomis/ec->grammar-description))
@@ -1144,6 +1162,7 @@ Otherwise throw an exception."
           ((equal sym "'")
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'quoted-form)
+                                 :tag-v2 'quoted-form
                                  :site *-nomis/ec-default-site*
                                  :description (-> 'quoted-form
                                                   -nomis/ec->grammar-description)
@@ -1156,6 +1175,7 @@ Otherwise throw an exception."
                     (member sym *-nomis/ec-bound-vars*)))
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'unsited-single-item)
+                                 :tag-v2 'unsited-single-item
                                  :site 'nec/neutral
                                  :description (-> 'unsited-single-item
                                                   -nomis/ec->grammar-description)
@@ -1165,6 +1185,7 @@ Otherwise throw an exception."
           (t
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'sited-single-item)
+                                 :tag-v2 'sited-single-item
                                  :site *-nomis/ec-default-site*
                                  :description (-> 'sited-single-item
                                                   -nomis/ec->grammar-description)
