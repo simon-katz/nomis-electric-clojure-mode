@@ -877,11 +877,17 @@ Otherwise throw an exception."
 (cl-defmethod -nomis/ec-overlay-term ((term-name (eql '&body))
                                       tag
                                       inherited-site
-                                      &key site
+                                      &key
+                                      site
+                                      (new-default-site nil
+                                                        new-default-site-supplied?)
                                       &allow-other-keys)
   (cl-assert (member site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
-    (let* ((*-nomis/ec-site-electric-locals?* t))
+    (let* ((*-nomis/ec-site-electric-locals?* t)
+           (*-nomis/ec-default-site* (if new-default-site-supplied?
+                                         new-default-site
+                                       *-nomis/ec-default-site*)))
       ;; Each body form separately:
       (while (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
@@ -1599,10 +1605,14 @@ This is very DIY. Is there a better way?")
   (nomis/ec-add-parser-spec '(
                               :operator-id :let
                               :operator    "let"
+                              :site        nec/neutral
                               :terms       (operator
-                                            (let-bindings :site nec/neutral
-                                                          :rhs-site nec/inherit)
-                                            &body)))
+                                            (let-bindings :rhs-site nec/inherit)
+                                            (&body :site nec/client
+                                                   :new-default-site nec/client
+                                                   ;; TODO: No error for this
+                                                   ;;       unhandled thing:
+                                                   :ploppppp 1234))))
 
   (nomis/ec-add-parser-spec '(
                               :operator-id :binding

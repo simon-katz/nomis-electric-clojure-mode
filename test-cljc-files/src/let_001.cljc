@@ -15,6 +15,7 @@
           local-4 local-2
           local-5 (ElectricCall global-1 local-2)
           local-6 (hosted-call global-1 local-2)]
+      need-to-set-new-default-site
       (ElectricCall global-1 local-1 local-2 local-3 local-4 local-5 local-6)
       (hosted-call global-1 local-1 local-2 local-3 local-4 local-5 local-6)
       (e/client
