@@ -271,7 +271,7 @@ specifically server code, when `-nomis/ec-show-debug-overlays?` is true.")
 
 (defvar -nomis/ec-print-debug-info-to-messages-buffer? nil)
 
-(defun -nomis/ec-debug (site what &optional force? print-env?)
+(defun -nomis/ec-debug-message (site what &optional force? print-env?)
   (when (or force? -nomis/ec-print-debug-info-to-messages-buffer?)
     (let* ((inhibit-message t))
       (-nomis/ec-message-no-disp "%s %s ---- %s %s => %s%s"
@@ -412,7 +412,7 @@ PROPERTY is already in PLIST."
 ;;;; Overlay basics
 
 (defun -nomis/ec-make-overlay (tag nesting-level face start end description)
-  ;; (-nomis/ec-debug *-nomis/ec-site* 'make-overlay)
+  ;; (-nomis/ec-debug-message *-nomis/ec-site* 'make-overlay)
   (let* ((ov (make-overlay start end nil t nil)))
     (overlay-put ov 'nomis/tag (reverse tag))
     (overlay-put ov 'category 'nomis/ec-overlay)
@@ -438,9 +438,9 @@ PROPERTY is already in PLIST."
     ov))
 
 (defun -nomis/ec-overlay-lump (tag site nesting-level start end description)
-  (-nomis/ec-debug site 'overlay-lump)
+  (-nomis/ec-debug-message site 'overlay-lump)
   (if (= start end)
-      (-nomis/ec-debug site 'empty-lump)
+      (-nomis/ec-debug-message site 'empty-lump)
     (cl-incf *-nomis/ec-n-lumps-in-current-update*)
     (let* ((face (cond ; See avoid-case-bug-with-keywords at top of file.
                   ((eq site 'nec/client)     '-nomis/ec-client-face)
@@ -560,7 +560,7 @@ Otherwise throw an exception."
 
 (defun -nomis/ec-with-site* (tag site end description print-env? f)
   (cl-assert tag)
-  (-nomis/ec-debug site tag nil print-env?)
+  (-nomis/ec-debug-message site tag nil print-env?)
   (let* ((*-nomis/ec-level* (1+ *-nomis/ec-level*))
          (no-new-overlay? (or (null site)
                               (and (eq site *-nomis/ec-site*)
@@ -601,13 +601,13 @@ Otherwise throw an exception."
 ;;;; ---- Electric v2 ----
 
 (defun -nomis/ec-overlay-args-of-form-v2 ()
-  (-nomis/ec-debug *-nomis/ec-site* 'args-of-form)
+  (-nomis/ec-debug-message *-nomis/ec-site* 'args-of-form)
   (save-excursion
     (nomis/ec-down-list 'args-of-form)
     (forward-sexp)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
-      (-nomis/ec-debug *-nomis/ec-site* (list 'args-of-form 'arg))
+      (-nomis/ec-debug-message *-nomis/ec-site* (list 'args-of-form 'arg))
       (-nomis/ec-walk-and-overlay-v2)
       (forward-sexp))))
 
@@ -621,7 +621,7 @@ Otherwise throw an exception."
       (-nomis/ec-overlay-args-of-form-v2))))
 
 (defun -nomis/ec-overlay-other-form-to-descend-v2 ()
-  (-nomis/ec-debug *-nomis/ec-site* 'other-form-to-descend)
+  (-nomis/ec-debug-message *-nomis/ec-site* 'other-form-to-descend)
   (save-excursion
     (nomis/ec-down-list 'other-form-to-descend)
     (while (-nomis/ec-can-forward-sexp?)
@@ -1061,7 +1061,7 @@ Otherwise throw an exception."
                  (tag (list term-name operator-id)))
             (condition-case err
                 (progn
-                  (-nomis/ec-debug *-nomis/ec-site* term-name)
+                  (-nomis/ec-debug-message *-nomis/ec-site* term-name)
                   (cl-flet* ((process-terms* ()
                                (-nomis/ec-process-single-term term-name term-opts
                                                               tag site inherited-site)
@@ -1115,7 +1115,7 @@ Otherwise throw an exception."
 ;;;; ___________________________________________________________________________
 
 (defun -nomis/ec-overlay-other-form-to-descend-v3 ()
-  (-nomis/ec-debug *-nomis/ec-site* 'other-form-to-descend)
+  (-nomis/ec-debug-message *-nomis/ec-site* 'other-form-to-descend)
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (list 'other-form-to-descend)
@@ -1132,7 +1132,7 @@ Otherwise throw an exception."
   ;; A non-descended form is a symbol, number, character, etc, or (kind of
   ;; accidentally but it works out OK) a reader-syntax anonymous function
   ;; (`#(...)`), which is a hosted thing.
-  (-nomis/ec-debug *-nomis/ec-site* 'non-descended-form)
+  (-nomis/ec-debug-message *-nomis/ec-site* 'non-descended-form)
   (let* ((sym (thing-at-point 'symbol t)))
     (cond ((null sym)
            (unless (thing-at-point 'string t)
