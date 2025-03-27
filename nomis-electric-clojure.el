@@ -438,6 +438,8 @@ PROPERTY is already in PLIST."
   "The site of the code currently being analysed. One of `nec/neutral`,
 `nec/client` or `nec/server`.")
 
+(defvar *-nomis/ec-default-site* nil)
+
 (defvar *-nomis/ec-bound-vars* '())
 
 (defvar *-nomis/ec-level* 0)
@@ -469,7 +471,10 @@ PROPERTY is already in PLIST."
                                        (reverse tag)))
                              (when -nomis/ec-show-debug-overlays?
                                (format "DEBUG: *-nomis/ec-site* = %s"
-                                       *-nomis/ec-site*)))))
+                                       *-nomis/ec-site*))
+                             (when -nomis/ec-show-debug-overlays?
+                               (format "DEBUG: *-nomis/ec-default-site* = %s"
+                                       *-nomis/ec-default-site*)))))
         (overlay-put ov 'help-echo (-> (-remove #'null messages)
                                        (string-join "\n")))))
     (unless nomis/ec-color-initial-whitespace?
@@ -1185,10 +1190,15 @@ Otherwise throw an exception."
     (&key
      operator-id
      site
+     (new-default-site nil
+                       new-default-site-supplied?)
      terms)
   (cl-assert (listp terms))
   (save-excursion
-    (let* ((inherited-site *-nomis/ec-site*))
+    (let* ((inherited-site *-nomis/ec-site*)
+           (*-nomis/ec-default-site* (if new-default-site-supplied?
+                                         new-default-site
+                                       *-nomis/ec-default-site*)))
       (-nomis/ec-with-site (;; avoid-stupid-indentation
                             :tag (list operator-id)
                             :tag-v2 `(:operator-id ,operator-id)
@@ -1218,7 +1228,7 @@ Otherwise throw an exception."
         (-nomis/ec-with-site (;; avoid-stupid-indentation
                               :tag (list 'function-call)
                               :tag-v2 'function-call
-                              :site nil ; TODO: Is this right?
+                              :site *-nomis/ec-default-site*
                               :description (-> 'function-call
                                                -nomis/ec->grammar-description))
           (nomis/ec-down-list-v3 'function-call)
@@ -1234,7 +1244,7 @@ Otherwise throw an exception."
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (list 'literal-data)
                           :tag-v2 'literal-data
-                          :site nil ; TODO: Is this right?
+                          :site *-nomis/ec-default-site*
                           :description (-> 'literal-data
                                            -nomis/ec->grammar-description))
       (nomis/ec-down-list-v3 'literal-data)
@@ -1250,46 +1260,57 @@ Otherwise throw an exception."
   ;; forms at the top level that you want to descend recursively.
   (-nomis/ec-debug-message *-nomis/ec-site* 'non-descended-form)
   (let* ((sym (thing-at-point 'symbol t)))
-    (cond ((null sym)
-           (unless (thing-at-point 'string t)
-             (let* ((sexp (thing-at-point 'sexp t)))
-               (-nomis/ec-message-no-disp
-                "nomis-electric-clojure-mode: Line %s: Expected a non-descended-form but got %s"
-                (-nomis/ec-line-number-string)
-                sexp))))
-          ((equal sym "'")
-           (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                 :tag (list 'quoted-form)
-                                 :tag-v2 'quoted-form
-                                 :site *-nomis/ec-site*
-                                 :description (-> 'quoted-form
-                                                  -nomis/ec->grammar-description)
-                                 :print-env? t)
-             ;; Nothing more.
-             ))
-          ((or (looking-at
-                -nomis/ec-electric-function-name-regexp-incl-symbol-end)
-               (and (not (-nomis/ec-top-level-of-hosted-call?))
-                    (member sym *-nomis/ec-bound-vars*)))
-           (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                 :tag (list 'unsited-single-item)
-                                 :tag-v2 'unsited-single-item
-                                 :site 'nec/neutral
-                                 :description (-> 'unsited-single-item
-                                                  -nomis/ec->grammar-description)
-                                 :print-env? t)
-             ;; Nothing more.
-             ))
-          (t
-           (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                 :tag (list 'sited-single-item)
-                                 :tag-v2 'sited-single-item
-                                 :site *-nomis/ec-site*
-                                 :description (-> 'sited-single-item
-                                                  -nomis/ec->grammar-description)
-                                 :print-env? t)
-             ;; Nothing more.
-             )))))
+    (cl-flet ((sited (tag)
+                (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                      :tag (list tag)
+                                      :tag-v2 tag
+                                      :site *-nomis/ec-default-site*
+                                      :description (-> tag
+                                                       -nomis/ec->grammar-description)
+                                      :print-env? t)
+                  ;; Nothing more.
+                  ))
+              (unsited (tag)
+                (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                      :tag (list tag)
+                                      :tag-v2 tag
+                                      :site 'nec/neutral
+                                      :description (-> tag
+                                                       -nomis/ec->grammar-description)
+                                      :print-env? t)
+                  ;; Nothing more.
+                  )))
+      (cond ((null sym)
+             (unless (thing-at-point 'string t)
+               (let* ((sexp (thing-at-point 'sexp t)))
+                 (-nomis/ec-message-no-disp
+                  "nomis-electric-clojure-mode: Line %s: Expected a non-descended-form but got %s"
+                  (-nomis/ec-line-number-string)
+                  sexp))))
+            ((equal sym "'")
+             (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                   :tag (list 'quoted-form)
+                                   :tag-v2 'quoted-form
+                                   :site *-nomis/ec-default-site*
+                                   :description (-> 'quoted-form
+                                                    -nomis/ec->grammar-description)
+                                   :print-env? t)
+               ;; Nothing more.
+               ))
+            ((looking-at
+              -nomis/ec-electric-function-name-regexp-incl-symbol-end)
+             (unsited 'electric-function-name))
+            ((-nomis/ec-top-level-of-hosted-call?)
+             (sited 'hosted-call-arg))
+            ((member sym *-nomis/ec-bound-vars*)
+             (unsited 'local))
+            ((not (member sym *-nomis/ec-bound-vars*))
+             (sited 'global))
+            ;; TODO: Do we need the of top level of Electric call?
+            (t ; Highlight anything we aren't dealing with.
+             (-nomis/ec-overlay-unparsable (point)
+                                           'unhandled-non-descended-form
+                                           "unhandled-non-descended-form"))))))
 
 (defun -nomis/ec-operator-call-regexp (operator-regexp)
   (concat "(\\([[:space:]]\\|\n\\)*"
@@ -1313,6 +1334,7 @@ Otherwise throw an exception."
                                             operator
                                             regexp?
                                             site
+                                            new-default-site
                                             terms))
   "Add a spec for parsing Elecric Clojure code.
 
@@ -1336,6 +1358,7 @@ Otherwise throw an exception."
   NOMIS/EC-RESET-TO-BUILT-IN-PARSER-SPECS will be useful."
   (cl-assert (symbolp operator-id) t)
   (cl-assert (stringp operator) t)
+  (cl-assert (member new-default-site '(nil nec/client nec/server)) t)
   (let* ((operator-regexp (if regexp? operator (regexp-quote operator)))
          (regexp (-nomis/ec-operator-call-regexp operator-regexp))
          (spec (-> spec-and-other-bits
@@ -1630,6 +1653,7 @@ This is very DIY. Is there a better way?")
                               :operator-id           :e/client
                               :operator              "e/client"
                               :site                  nec/client
+                              :new-default-site      nec/client
                               :terms                 (operator
                                                       &body)))
 
@@ -1637,6 +1661,7 @@ This is very DIY. Is there a better way?")
                               :operator-id           :e/server
                               :operator              "e/server"
                               :site                  nec/server
+                              :new-default-site      nec/server
                               :terms                 (operator
                                                       &body)))
 
@@ -1652,6 +1677,7 @@ This is very DIY. Is there a better way?")
                               :operator-id      :e/defn
                               :operator         "e/defn"
                               :site             nec/neutral
+                              :new-default-site nil
                               :terms            (operator
                                                  name
                                                  doc-string?
@@ -1674,6 +1700,7 @@ This is very DIY. Is there a better way?")
                               :operator-id      :e/fn
                               :operator         "e/fn"
                               :site             nec/neutral
+                              :new-default-site nil
                               :terms            (operator
                                                  name?
                                                  (:ecase ("\\["
