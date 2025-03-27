@@ -647,7 +647,7 @@ Otherwise throw an exception."
 (defun -nomis/ec-show-place-for-metadata ()
   (when -nomis/ec-debug-show-places-for-metadata?
     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag (list 'metadata-plop)
+                          :tag (list 'place-for-metadata)
                           :site 'nec/place-for-metadata
                           :description "Place for metadata"
                           :end (1+ (point)))
