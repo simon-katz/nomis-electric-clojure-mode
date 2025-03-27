@@ -541,6 +541,20 @@ Otherwise throw an exception."
   (forward-sexp)
   (backward-sexp))
 
+(defun -nomis/ec-log-change-of-site (operator-id
+                                     old-default-site
+                                     new-default-site-supplied?
+                                     new-default-site)
+  (when -nomis/ec-print-debug-info-to-messages-buffer?
+    (when new-default-site-supplied?
+      (-nomis/ec-message-no-disp
+       "%s %s ---- Change of default site: %s -> %s [operator-id = %s]"
+       (-nomis/ec-line-number-string)
+       (make-string (* 2 *-nomis/ec-level*) ?\s)
+       old-default-site
+       new-default-site
+       operator-id))))
+
 (defun -nomis/ec-with-site* (tag site end description print-env? f)
   (cl-assert tag)
   (-nomis/ec-debug site tag nil print-env?)
@@ -926,20 +940,6 @@ Otherwise throw an exception."
 
 ;;;; ___________________________________________________________________________
 ;;;; ---- -nomis/ec-overlay-using-parser-spec ----
-
-(defun -nomis/ec-log-change-of-site (operator-id
-                                     old-default-site
-                                     new-default-site-supplied?
-                                     new-default-site)
-  (when -nomis/ec-print-debug-info-to-messages-buffer?
-    (when new-default-site-supplied?
-      (-nomis/ec-message-no-disp
-       "%s %s ---- Change of default site: %s -> %s [operator-id = %s]"
-       (-nomis/ec-line-number-string)
-       (make-string (* 2 *-nomis/ec-level*) ?\s)
-       old-default-site
-       new-default-site
-       operator-id))))
 
 (defun -nomis/ec-process-single-term (term-name term-opts
                                                 tag site inherited-site)
