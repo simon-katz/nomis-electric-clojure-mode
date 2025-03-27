@@ -707,7 +707,7 @@ Otherwise throw an exception."
   (while (looking-at (regexp-quote "^"))
     (progn (forward-char)
            (forward-sexp))
-    (when (-nomis/ec-can-forward-sexp?)
+    (when (-nomis/ec-can-forward-sexp?) ; TODO: Make a function for this common oattern.
       (-nomis/ec-bof)))
   (-nomis/ec-show-place-for-metadata))
 
