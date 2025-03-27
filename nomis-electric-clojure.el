@@ -519,6 +519,24 @@ Otherwise throw an exception."
                                     (funcall error-position-fn)
                                     (point))))))))))
 
+(defun -nomis/ec-pos-of-end-of-form ()
+  (save-excursion
+    (if (-nomis/ec-can-forward-sexp?)
+        (progn (forward-sexp)
+               (point))
+      ;; We can get here when something is missing. That might be an optional
+      ;; thing, in which case we'll have an overlay lump where start = end which
+      ;; will be optimised away, or it might be mandatory in which case an error
+      ;; will be produced (elsewhere).
+      (point))))
+
+(defun -nomis/ec-pos-of-end-of-multiple-forms ()
+  (save-excursion
+    (save-excursion (backward-up-list)
+                    (forward-sexp)
+                    (backward-char)
+                    (point))))
+
 (defun -nomis/ec-bof ()
   (forward-sexp)
   (backward-sexp))
@@ -866,6 +884,44 @@ Otherwise throw an exception."
       (forward-sexp))))
 
 ;;;; ___________________________________________________________________________
+;;;; ---- -nomis/ec-term-name->end ----
+
+;;;; This could be simpler, but we want something that gives an error if
+;;;; we forget to think about a new type of term.
+
+(cl-defgeneric -nomis/ec-term-name->end (term-name))
+
+(cl-defmethod -nomis/ec-term-name->end ((term-name (eql 'operator)))
+  (-nomis/ec-pos-of-end-of-form))
+
+(cl-defmethod -nomis/ec-term-name->end ((term-name (eql 'name)))
+  (-nomis/ec-pos-of-end-of-form))
+
+(cl-defmethod -nomis/ec-term-name->end ((term-name (eql 'name?)))
+  (-nomis/ec-pos-of-end-of-form))
+
+(cl-defmethod -nomis/ec-term-name->end ((term-name (eql 'doc-string?)))
+  (-nomis/ec-pos-of-end-of-form))
+
+(cl-defmethod -nomis/ec-term-name->end ((term-name (eql 'attr-map?)))
+  (-nomis/ec-pos-of-end-of-form))
+
+(cl-defmethod -nomis/ec-term-name->end ((term-name (eql 'key-function)))
+  (-nomis/ec-pos-of-end-of-form))
+
+(cl-defmethod -nomis/ec-term-name->end ((term-name (eql 'fn-bindings)))
+  (-nomis/ec-pos-of-end-of-form))
+
+(cl-defmethod -nomis/ec-term-name->end ((term-name (eql 'let-bindings)))
+  (-nomis/ec-pos-of-end-of-form))
+
+(cl-defmethod -nomis/ec-term-name->end ((term-name (eql '&body)))
+  (-nomis/ec-pos-of-end-of-multiple-forms))
+
+(cl-defmethod -nomis/ec-term-name->end ((term-name (eql '&args)))
+  (-nomis/ec-pos-of-end-of-multiple-forms))
+
+;;;; ___________________________________________________________________________
 ;;;; ---- -nomis/ec-overlay-using-parser-spec ----
 
 (defun -nomis/ec-log-change-of-site (operator-id
@@ -884,18 +940,20 @@ Otherwise throw an exception."
 
 (defun -nomis/ec-process-single-term (term-name term-opts
                                                 tag site inherited-site)
-  (-nomis/ec-with-site
-      (;; avoid-stupid-indentation
-       :tag tag
-       :site (-nomis/ec-transmogrify-site site
-                                          inherited-site)
-       :description (-> (first tag)
-                        -nomis/ec->grammar-description))
-    (apply #'-nomis/ec-overlay-term
-           term-name
-           tag
-           inherited-site
-           term-opts)))
+  (let* ((end (-nomis/ec-term-name->end term-name)))
+    (-nomis/ec-with-site
+        (;; avoid-stupid-indentation
+         :tag tag
+         :site (-nomis/ec-transmogrify-site site
+                                            inherited-site)
+         :end end
+         :description (-> (first tag)
+                          -nomis/ec->grammar-description))
+      (apply #'-nomis/ec-overlay-term
+             term-name
+             tag
+             inherited-site
+             term-opts))))
 
 (defun -nomis/ec-process-ecase (operator-id term inherited-site)
   (when (and (listp term)
