@@ -303,7 +303,7 @@ PROPERTY is already in PLIST."
       (setq plist (cddr plist)))
     p))
 
-(defvar -nomis/ec-regexp-for-start-of-form-to-descend
+(defvar -nomis/ec-regexp-for-start-of-form-to-descend-v2
   ;; Copied from `-nomis/sexp-regexp-for-bracketed-sexp-start`. This doesn't
   ;; include reader syntax for anonymous functions (/ie/ `#(...)`), which is
   ;; probably an oversite in the copied-from place. But that's handy for us
@@ -311,8 +311,19 @@ PROPERTY is already in PLIST."
   ;; `sited-single-item`s.
   "(\\|\\[\\|{\\|#{")
 
-(defun -nomis/ec-looking-at-start-of-form-to-descend? ()
-  (looking-at -nomis/ec-regexp-for-start-of-form-to-descend))
+(defun -nomis/ec-looking-at-start-of-form-to-descend-v2? ()
+  (looking-at -nomis/ec-regexp-for-start-of-form-to-descend-v2))
+
+(defvar -nomis/ec-regexp-for-start-of-form-to-descend-v3
+  ;; Copied from `-nomis/sexp-regexp-for-bracketed-sexp-start`. This doesn't
+  ;; include reader syntax for anonymous functions (/ie/ `#(...)`), which is
+  ;; probably an oversite in the copied-from place. But that's handy for us
+  ;; because these anonymous functions are hosted and they end up as
+  ;; `sited-single-item`s.
+  "(\\|\\[\\|{\\|#{")
+
+(defun -nomis/ec-looking-at-start-of-form-to-descend-v3? ()
+  (looking-at -nomis/ec-regexp-for-start-of-form-to-descend-v3))
 
 (defun -nomis/ec-at-top-level? ()
   (save-excursion
@@ -348,14 +359,23 @@ PROPERTY is already in PLIST."
                            (point))))
                (error nil))))))
 
-(defun nomis/ec-at-or-before-start-of-form-to-descend? ()
+(defun nomis/ec-at-or-before-start-of-form-to-descend-v2? ()
   ;; I can't get this to work with a regexp for whitespace followed by
-  ;; a start-of-form-to-descend. So:
+  ;; a start-of-form-to-descend-v2. So:
   (and (-nomis/ec-can-forward-sexp?)
        (save-excursion
          (forward-sexp)
          (backward-sexp)
-         (-nomis/ec-looking-at-start-of-form-to-descend?))))
+         (-nomis/ec-looking-at-start-of-form-to-descend-v2?))))
+
+(defun nomis/ec-at-or-before-start-of-form-to-descend-v3? ()
+  ;; I can't get this to work with a regexp for whitespace followed by
+  ;; a start-of-form-to-descend-v3. So:
+  (and (-nomis/ec-can-forward-sexp?)
+       (save-excursion
+         (forward-sexp)
+         (backward-sexp)
+         (-nomis/ec-looking-at-start-of-form-to-descend-v3?))))
 
 ;;;; ___________________________________________________________________________
 ;;;; Flashing of the re-overlayed region, to help with debugging.
@@ -493,7 +513,7 @@ PROPERTY is already in PLIST."
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay helpers ----
 
-(defun nomis/ec-down-list (desc)
+(defun nomis/ec-down-list-v2 (desc)
   "If we are at or before the start of a bracketed s-expression, move
 into that expression -- /ie/ move down one level of parentheses.
 Otherwise throw an exception."
@@ -503,7 +523,25 @@ Otherwise throw an exception."
                    (list msg (save-excursion
                                (backward-up-list)
                                (point))))))
-        ((not (nomis/ec-at-or-before-start-of-form-to-descend?))
+        ((not (nomis/ec-at-or-before-start-of-form-to-descend-v2?))
+         (let* ((msg (format "A bracketed s-expression is needed for %s"
+                             (first desc))))
+           (signal '-nomis/ec-parse-error
+                   (list msg (point)))))
+        (t
+         (down-list))))
+
+(defun nomis/ec-down-list-v3 (desc)
+  "If we are at or before the start of a bracketed s-expression, move
+into that expression -- /ie/ move down one level of parentheses.
+Otherwise throw an exception."
+  (cond ((not (-nomis/ec-can-forward-sexp?))
+         (let* ((msg (format "Missing %s" (first desc))))
+           (signal '-nomis/ec-parse-error
+                   (list msg (save-excursion
+                               (backward-up-list)
+                               (point))))))
+        ((not (nomis/ec-at-or-before-start-of-form-to-descend-v3?))
          (let* ((msg (format "A bracketed s-expression is needed for %s"
                              (first desc))))
            (signal '-nomis/ec-parse-error
@@ -612,7 +650,7 @@ Otherwise throw an exception."
 (defun -nomis/ec-overlay-args-of-form-v2 ()
   (-nomis/ec-debug-message *-nomis/ec-site* 'args-of-form)
   (save-excursion
-    (nomis/ec-down-list 'args-of-form)
+    (nomis/ec-down-list-v2 'args-of-form)
     (forward-sexp)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
@@ -631,9 +669,9 @@ Otherwise throw an exception."
       (-nomis/ec-overlay-args-of-form-v2))))
 
 (defun -nomis/ec-overlay-other-form-to-descend-v2 ()
-  (-nomis/ec-debug-message *-nomis/ec-site* 'other-form-to-descend)
+  (-nomis/ec-debug-message *-nomis/ec-site* 'other-form-to-descend-v2)
   (save-excursion
-    (nomis/ec-down-list 'other-form-to-descend)
+    (nomis/ec-down-list-v2 'other-form-to-descend-v2)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
       (-nomis/ec-walk-and-overlay-v2)
@@ -646,7 +684,7 @@ Otherwise throw an exception."
       (-nomis/ec-overlay-site-v2 'nec/client))
      ((looking-at (-nomis/ec-operator-call-regexp "e/server"))
       (-nomis/ec-overlay-site-v2 'nec/server))
-     ((-nomis/ec-looking-at-start-of-form-to-descend?)
+     ((-nomis/ec-looking-at-start-of-form-to-descend-v2?)
       (-nomis/ec-overlay-other-form-to-descend-v2)))))
 
 ;;;; ___________________________________________________________________________
@@ -838,7 +876,7 @@ Otherwise throw an exception."
                                       &key
                                       &allow-other-keys)
   (save-excursion
-    (nomis/ec-down-list (cons 'e/fn-bindings tag))
+    (nomis/ec-down-list-v3 (cons 'e/fn-bindings tag))
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
       (-nomis/ec-skip-metadata)
@@ -858,7 +896,7 @@ Otherwise throw an exception."
   (cl-assert (member rhs-site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
     (let* ((tag (cons 'let-bindings tag)))
-      (nomis/ec-down-list tag)
+      (nomis/ec-down-list-v3 tag)
       (while (-nomis/ec-can-forward-sexp?)
         ;; Note the LHS of the binding:
         (-nomis/ec-bof)
@@ -1028,7 +1066,7 @@ Otherwise throw an exception."
           (signal '-nomis/ec-parse-error
                   (list ":list parsing failed" (point)))
         (progn
-          (nomis/ec-down-list '(list-parsing))
+          (nomis/ec-down-list-v3 '(list-parsing))
           (when (-nomis/ec-can-forward-sexp?)
             (-nomis/ec-bof))
           (-nomis/ec-process-terms operator-id (rest term) inherited-site)
@@ -1126,21 +1164,21 @@ Otherwise throw an exception."
                             :site site
                             :description (-> operator-id
                                              -nomis/ec->grammar-description))
-        (nomis/ec-down-list operator-id)
+        (nomis/ec-down-list-v3 operator-id)
         (-nomis/ec-process-terms operator-id terms inherited-site)))))
 
 ;;;; ___________________________________________________________________________
 
 (defun -nomis/ec-overlay-other-form-to-descend-v3 ()
-  (-nomis/ec-debug-message *-nomis/ec-site* 'other-form-to-descend)
+  (-nomis/ec-debug-message *-nomis/ec-site* 'other-form-to-descend-v3)
   (save-excursion
     (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag (list 'other-form-to-descend)
-                          :tag-v2 'other-form-to-descend
+                          :tag (list 'other-form-to-descend-v3)
+                          :tag-v2 'other-form-to-descend-v3
                           :site *-nomis/ec-default-site*
-                          :description (-> 'other-form-to-descend
+                          :description (-> 'other-form-to-descend-v3
                                            -nomis/ec->grammar-description))
-      (nomis/ec-down-list 'other-form-to-descend)
+      (nomis/ec-down-list-v3 'other-form-to-descend-v3)
       (while (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
         (-nomis/ec-walk-and-overlay-v3)
@@ -1293,7 +1331,7 @@ Otherwise throw an exception."
                             (apply #'-nomis/ec-overlay-using-parser-spec spec)
                             t)))
         (cond
-         ((-nomis/ec-looking-at-start-of-form-to-descend?)
+         ((-nomis/ec-looking-at-start-of-form-to-descend-v3?)
           (let* ((*-nomis/ec-site-electric-locals?* t))
             (-nomis/ec-overlay-other-form-to-descend-v3)))
          (t
