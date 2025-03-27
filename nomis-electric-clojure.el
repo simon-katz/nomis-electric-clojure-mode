@@ -882,8 +882,8 @@ Otherwise throw an exception."
        new-default-site
        operator-id))))
 
-(defun -nomis/ec-process-term (term-name term-opts
-                                         tag site inherited-site)
+(defun -nomis/ec-process-single-term (term-name term-opts
+                                                tag site inherited-site)
   (-nomis/ec-with-site
       (;; avoid-stupid-indentation
        :tag tag
@@ -989,8 +989,8 @@ Otherwise throw an exception."
                 (progn
                   (-nomis/ec-debug *-nomis/ec-site* term-name)
                   (cl-flet* ((process-terms* ()
-                               (-nomis/ec-process-term term-name term-opts
-                                                       tag site inherited-site)
+                               (-nomis/ec-process-single-term term-name term-opts
+                                                              tag site inherited-site)
                                (-nomis/ec-process-terms operator-id
                                                         rest-terms
                                                         inherited-site)))
