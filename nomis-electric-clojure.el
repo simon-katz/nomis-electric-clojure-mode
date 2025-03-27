@@ -442,6 +442,13 @@ PROPERTY is already in PLIST."
 
 (defvar *-nomis/ec-level* 0)
 
+(defvar *-nomis/hosted-call-level* nil) ; TODO: Rename: "most recent"
+
+(defun -nomis/ec-top-level-of-hosted-call? ()
+  (and *-nomis/hosted-call-level*
+       (= *-nomis/ec-level*
+          *-nomis/hosted-call-level*)))
+
 ;;;; ___________________________________________________________________________
 ;;;; Overlay basics
 
@@ -681,6 +688,51 @@ Otherwise throw an exception."
       (-nomis/ec-overlay-site-v2 'nec/server))
      ((-nomis/ec-looking-at-start-of-form-to-descend-v2?)
       (-nomis/ec-overlay-other-form-to-descend-v2)))))
+
+;;;; ___________________________________________________________________________
+;;;; Regexps etc for hosted function names
+;;;; Regexps etc for Electric function names
+
+(rx-define -nomis/ec-symbol-char-no-slash-rx
+  (any upper
+       lower
+       digit
+       "-$&*+_<>'.=?!"))
+
+(defconst -nomis/ec-symbol-no-slash-regexp
+  (rx (+ -nomis/ec-symbol-char-no-slash-rx)))
+
+;;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(rx-define -nomis/ec-electric-function-name-rx
+  (seq (? (seq (+ -nomis/ec-symbol-char-no-slash-rx)
+               "/"))
+       (seq upper
+            (* -nomis/ec-symbol-char-no-slash-rx))))
+
+(defconst -nomis/ec-electric-function-name-regexp
+  (rx -nomis/ec-electric-function-name-rx))
+
+(defconst -nomis/ec-electric-function-name-regexp-incl-symbol-end
+  ;; Ugh. This shows that some naming is wrong.
+  (concat -nomis/ec-electric-function-name-regexp "\\_>"))
+
+;;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(rx-define -nomis/ec-hosted-function-name-rx
+  (seq (? (seq (+ -nomis/ec-symbol-char-no-slash-rx)
+               "/"))
+       (seq (any lower
+                 digit
+                 "-$&*+_<>'.=?!")
+            (* -nomis/ec-symbol-char-no-slash-rx))))
+
+(defconst -nomis/ec-hosted-function-name-regexp
+  (rx -nomis/ec-hosted-function-name-rx))
+
+(defconst -nomis/ec-hosted-function-name-regexp-incl-symbol-end
+  ;; Ugh. This shows that some naming is wrong.
+  (concat -nomis/ec-hosted-function-name-regexp "\\_>"))
 
 ;;;; ___________________________________________________________________________
 ;;;; ---- More parse and overlay helpers ----
@@ -1148,20 +1200,33 @@ Otherwise throw an exception."
 
 ;;;; ___________________________________________________________________________
 
+(defun -nomis/ec-looking-at-hosted-function-operator? ()
+  (or (looking-at -nomis/ec-hosted-function-name-regexp-incl-symbol-end)
+      ;; TODO: Add more. `e/fn`. Is that everything?
+      ))
+
 (defun -nomis/ec-overlay-function-call ()
   (-nomis/ec-debug-message *-nomis/ec-site* 'function-call)
   (save-excursion
-    (-nomis/ec-with-site (;; avoid-stupid-indentation
-                          :tag (list 'function-call)
-                          :tag-v2 'function-call
-                          :site nil ; TODO: Is this right?
-                          :description (-> 'function-call
-                                           -nomis/ec->grammar-description))
-      (nomis/ec-down-list-v3 'function-call)
-      (while (-nomis/ec-can-forward-sexp?)
-        (-nomis/ec-bof)
-        (-nomis/ec-walk-and-overlay-v3)
-        (forward-sexp)))))
+    (let* ((hosted-call? (save-excursion
+                           (nomis/ec-down-list-v3 'function-call)
+                           (when (-nomis/ec-can-forward-sexp?)
+                             (-nomis/ec-bof))
+                           (-nomis/ec-looking-at-hosted-function-operator?))))
+      (let* ((*-nomis/hosted-call-level* (when hosted-call?
+                                           (1+ *-nomis/ec-level*))))
+        (-nomis/ec-with-site (;; avoid-stupid-indentation
+                              :tag (list 'function-call)
+                              :tag-v2 'function-call
+                              :site nil ; TODO: Is this right?
+                              :description (-> 'function-call
+                                               -nomis/ec->grammar-description))
+          (nomis/ec-down-list-v3 'function-call)
+          ;; TODO: Might want to skip operator when it is a symbol.
+          (while (-nomis/ec-can-forward-sexp?)
+            (-nomis/ec-bof)
+            (-nomis/ec-walk-and-overlay-v3)
+            (forward-sexp)))))))
 
 (defun -nomis/ec-overlay-literal-data ()
   (-nomis/ec-debug-message *-nomis/ec-site* 'literal-data)
@@ -1204,7 +1269,8 @@ Otherwise throw an exception."
              ))
           ((or (looking-at
                 -nomis/ec-electric-function-name-regexp-incl-symbol-end)
-               (member sym *-nomis/ec-bound-vars*))
+               (and (not (-nomis/ec-top-level-of-hosted-call?))
+                    (member sym *-nomis/ec-bound-vars*)))
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'unsited-single-item)
                                  :tag-v2 'unsited-single-item
@@ -1229,28 +1295,6 @@ Otherwise throw an exception."
   (concat "(\\([[:space:]]\\|\n\\)*"
           operator-regexp
           "\\_>"))
-
-(rx-define -nomis/ec-symbol-char-no-slash-rx
-  (any upper
-       lower
-       digit
-       "-$&*+_<>'.=?!"))
-
-(defconst -nomis/ec-symbol-no-slash-regexp
-  (rx (+ -nomis/ec-symbol-char-no-slash-rx)))
-
-(rx-define -nomis/ec-electric-function-name-rx
-  (seq (? (seq (+ -nomis/ec-symbol-char-no-slash-rx)
-               "/"))
-       (seq upper
-            (* -nomis/ec-symbol-char-no-slash-rx))))
-
-(defconst -nomis/ec-electric-function-name-regexp
-  (rx -nomis/ec-electric-function-name-rx))
-
-(defconst -nomis/ec-electric-function-name-regexp-incl-symbol-end
-  ;; Ugh. This shows that some naming is wrong.
-  (concat -nomis/ec-electric-function-name-regexp "\\_>"))
 
 (defvar -nomis/ec-regexp->parser-spec '())
 
