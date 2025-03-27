@@ -1187,7 +1187,8 @@ Otherwise throw an exception."
 (defun -nomis/ec-overlay-non-descended-form ()
   ;; A non-descended form is a symbol, number, character, etc, or (kind of
   ;; accidentally but it works out OK) a reader-syntax anonymous function
-  ;; (`#(...)`), which is a hosted thing.
+  ;; (`#(...)`), which is a hosted thing. TODO: Oh, but there might be
+  ;; forms at the top level that you want to descend recursively.
   (-nomis/ec-debug-message *-nomis/ec-site* 'non-descended-form)
   (let* ((sym (thing-at-point 'symbol t)))
     (cond ((null sym)
