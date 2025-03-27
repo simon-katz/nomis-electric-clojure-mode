@@ -636,6 +636,9 @@ Otherwise throw an exception."
   (-nomis/ec-show-place-for-metadata))
 
 (defun -nomis/ec-overlay-unparsable (pos tag description)
+  ;; TODO: Here in `-nomis/ec-overlay-unparsable` can have `start` and `end`
+  ;;       instead of `pos`, and can place error highlighting in a more precise
+  ;;       place -- /eg/ at the close bracket when something is missing.
   (save-excursion
     (goto-char pos)
     (-nomis/ec-with-site (;; avoid-stupid-indentation
