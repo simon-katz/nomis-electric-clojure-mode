@@ -428,10 +428,6 @@ PROPERTY is already in PLIST."
   "The site of the code currently being analysed. One of `nec/neutral`,
 `nec/client` or `nec/server`.")
 
-(defvar *-nomis/ec-site-electric-locals?* nil)
-
-(defvar *-nomis/ec-default-site* nil)
-
 (defvar *-nomis/ec-bound-vars* '())
 
 (defvar *-nomis/ec-level* 0)
@@ -456,10 +452,7 @@ PROPERTY is already in PLIST."
                                        (reverse tag)))
                              (when -nomis/ec-show-debug-overlays?
                                (format "DEBUG: *-nomis/ec-site* = %s"
-                                       *-nomis/ec-site*))
-                             (when -nomis/ec-show-debug-overlays?
-                               (format "DEBUG: *-nomis/ec-default-site* = %s"
-                                       *-nomis/ec-default-site*)))))
+                                       *-nomis/ec-site*)))))
         (overlay-put ov 'help-echo (-> (-remove #'null messages)
                                        (string-join "\n")))))
     (unless nomis/ec-color-initial-whitespace?
@@ -592,20 +585,6 @@ Otherwise throw an exception."
 (defun -nomis/ec-bof ()
   (forward-sexp)
   (backward-sexp))
-
-(defun -nomis/ec-log-change-of-site (operator-id
-                                     old-default-site
-                                     new-default-site-supplied?
-                                     new-default-site)
-  (when -nomis/ec-print-debug-info-to-messages-buffer?
-    (when new-default-site-supplied?
-      (-nomis/ec-message-no-disp
-       "%s %s ---- Change of default site: %s -> %s [operator-id = %s]"
-       (-nomis/ec-line-number-string)
-       (make-string (* 2 *-nomis/ec-level*) ?\s)
-       old-default-site
-       new-default-site
-       operator-id))))
 
 (defun -nomis/ec-with-site* (tag-v2 tag site end description print-env? f)
   (cl-assert tag)
@@ -919,8 +898,7 @@ Otherwise throw an exception."
           (-nomis/ec-bof)
           (-nomis/ec-skip-metadata)
           (let* ((new-site (-nomis/ec-transmogrify-site rhs-site
-                                                        inherited-site))
-                 (*-nomis/ec-default-site* new-site))
+                                                        inherited-site)))
             (-nomis/ec-with-site (;; avoid-stupid-indentation
                                   :tag (cons 'binding-rhs tag)
                                   :tag-v2 'binding-rhs
@@ -938,19 +916,18 @@ Otherwise throw an exception."
                                       &allow-other-keys)
   (cl-assert (member site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
-    (let* ((*-nomis/ec-site-electric-locals?* t))
-      ;; Each body form separately:
-      (while (-nomis/ec-can-forward-sexp?)
-        (-nomis/ec-bof)
-        (-nomis/ec-with-site (;; avoid-stupid-indentation
-                              :tag (cons 'body-form tag)
-                              :tag-v2 'body-form
-                              :site (-nomis/ec-transmogrify-site site
-                                                                 inherited-site)
-                              :description (-> 'body-form
-                                               -nomis/ec->grammar-description))
-          (-nomis/ec-walk-and-overlay-v3))
-        (forward-sexp)))))
+    ;; Each body form separately:
+    (while (-nomis/ec-can-forward-sexp?)
+      (-nomis/ec-bof)
+      (-nomis/ec-with-site (;; avoid-stupid-indentation
+                            :tag (cons 'body-form tag)
+                            :tag-v2 'body-form
+                            :site (-nomis/ec-transmogrify-site site
+                                                               inherited-site)
+                            :description (-> 'body-form
+                                             -nomis/ec->grammar-description))
+        (-nomis/ec-walk-and-overlay-v3))
+      (forward-sexp))))
 
 (cl-defmethod -nomis/ec-overlay-term ((term-name (eql '&args))
                                       tag
@@ -1146,24 +1123,10 @@ Otherwise throw an exception."
     (&key
      operator-id
      site
-     site-electric-locals?
-     (new-default-site nil
-                       new-default-site-supplied?)
      terms)
   (cl-assert (listp terms))
   (save-excursion
-    (let* ((inherited-site *-nomis/ec-site*)
-           (old-default-site *-nomis/ec-default-site*)
-           (*-nomis/ec-default-site* (if new-default-site-supplied?
-                                         new-default-site
-                                       *-nomis/ec-default-site*))
-           (*-nomis/ec-site-electric-locals?*
-            (or site-electric-locals?
-                *-nomis/ec-site-electric-locals?*)))
-      (-nomis/ec-log-change-of-site operator-id
-                                    old-default-site
-                                    new-default-site-supplied?
-                                    new-default-site)
+    (let* ((inherited-site *-nomis/ec-site*))
       (-nomis/ec-with-site (;; avoid-stupid-indentation
                             :tag (list operator-id)
                             :tag-v2 `(:operator-id ,operator-id)
@@ -1181,7 +1144,7 @@ Otherwise throw an exception."
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (list 'other-form-to-descend-v3)
                           :tag-v2 'other-form-to-descend-v3
-                          :site *-nomis/ec-default-site*
+                          :site nil ; TODO: Is this right?
                           :description (-> 'other-form-to-descend-v3
                                            -nomis/ec->grammar-description))
       (nomis/ec-down-list-v3 'other-form-to-descend-v3)
@@ -1208,7 +1171,7 @@ Otherwise throw an exception."
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'quoted-form)
                                  :tag-v2 'quoted-form
-                                 :site *-nomis/ec-default-site*
+                                 :site *-nomis/ec-site*
                                  :description (-> 'quoted-form
                                                   -nomis/ec->grammar-description)
                                  :print-env? t)
@@ -1216,8 +1179,7 @@ Otherwise throw an exception."
              ))
           ((or (looking-at
                 -nomis/ec-electric-function-name-regexp-incl-symbol-end)
-               (and (not *-nomis/ec-site-electric-locals?*)
-                    (member sym *-nomis/ec-bound-vars*)))
+               (member sym *-nomis/ec-bound-vars*))
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'unsited-single-item)
                                  :tag-v2 'unsited-single-item
@@ -1231,7 +1193,7 @@ Otherwise throw an exception."
            (-nomis/ec-with-site (;; avoid-stupid-indentation
                                  :tag (list 'sited-single-item)
                                  :tag-v2 'sited-single-item
-                                 :site *-nomis/ec-default-site*
+                                 :site *-nomis/ec-site*
                                  :description (-> 'sited-single-item
                                                   -nomis/ec->grammar-description)
                                  :print-env? t)
@@ -1282,8 +1244,6 @@ Otherwise throw an exception."
                                             operator
                                             regexp?
                                             site
-                                            site-electric-locals?
-                                            new-default-site
                                             terms))
   "Add a spec for parsing Elecric Clojure code.
 
@@ -1307,7 +1267,6 @@ Otherwise throw an exception."
   NOMIS/EC-RESET-TO-BUILT-IN-PARSER-SPECS will be useful."
   (cl-assert (symbolp operator-id) t)
   (cl-assert (stringp operator) t)
-  (cl-assert (member new-default-site '(nil nec/client nec/server)) t)
   (let* ((operator-regexp (if regexp? operator (regexp-quote operator)))
          (regexp (-nomis/ec-operator-call-regexp operator-regexp))
          (spec (-> spec-and-other-bits
@@ -1331,16 +1290,14 @@ Otherwise throw an exception."
 (defun -nomis/ec-walk-and-overlay-v3 ()
   (-nomis/ec-skip-metadata)
   (let* ((case-fold-search nil))
-    (or (let* ((*-nomis/ec-site-electric-locals?* nil))
-          (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
-                   when (looking-at regexp)
-                   return (progn
-                            (apply #'-nomis/ec-overlay-using-parser-spec spec)
-                            t)))
+    (or (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
+                 when (looking-at regexp)
+                 return (progn
+                          (apply #'-nomis/ec-overlay-using-parser-spec spec)
+                          t))
         (cond
          ((-nomis/ec-looking-at-start-of-form-to-descend-v3?)
-          (let* ((*-nomis/ec-site-electric-locals?* t))
-            (-nomis/ec-overlay-other-form-to-descend-v3)))
+          (-nomis/ec-overlay-other-form-to-descend-v3))
          (t
           (-nomis/ec-overlay-non-descended-form))))))
 
@@ -1602,8 +1559,6 @@ This is very DIY. Is there a better way?")
                               :operator-id           :e/client
                               :operator              "e/client"
                               :site                  nec/client
-                              :new-default-site      nec/client
-                              :site-electric-locals? t
                               :terms                 (operator
                                                       &body)))
 
@@ -1611,8 +1566,6 @@ This is very DIY. Is there a better way?")
                               :operator-id           :e/server
                               :operator              "e/server"
                               :site                  nec/server
-                              :new-default-site      nec/server
-                              :site-electric-locals? t
                               :terms                 (operator
                                                       &body)))
 
@@ -1628,7 +1581,6 @@ This is very DIY. Is there a better way?")
                               :operator-id      :e/defn
                               :operator         "e/defn"
                               :site             nec/neutral
-                              :new-default-site nil
                               :terms            (operator
                                                  name
                                                  doc-string?
@@ -1651,7 +1603,6 @@ This is very DIY. Is there a better way?")
                               :operator-id      :e/fn
                               :operator         "e/fn"
                               :site             nec/neutral
-                              :new-default-site nil
                               :terms            (operator
                                                  name?
                                                  (:ecase ("\\["
