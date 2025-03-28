@@ -555,24 +555,6 @@ PROPERTY is already in PLIST."
 ;;;; ___________________________________________________________________________
 ;;;; ---- Parse and overlay helpers ----
 
-(defun nomis/ec-down-list-v2 (desc)
-  "If we are at or before the start of a bracketed s-expression, move
-into that expression -- /ie/ move down one level of parentheses.
-Otherwise throw an exception."
-  (cond ((not (-nomis/ec-can-forward-sexp?))
-         (let* ((msg (format "Missing %s" (first desc))))
-           (signal '-nomis/ec-parse-error
-                   (list msg (save-excursion
-                               (backward-up-list)
-                               (point))))))
-        ((not (nomis/ec-at-or-before-start-of-form-to-descend-v2?))
-         (let* ((msg (format "A bracketed s-expression is needed for %s"
-                             (first desc))))
-           (signal '-nomis/ec-parse-error
-                   (list msg (point)))))
-        (t
-         (down-list))))
-
 (defun nomis/ec-down-list-v3 (desc)
   "If we are at or before the start of a bracketed s-expression, move
 into that expression -- /ie/ move down one level of parentheses.
@@ -682,7 +664,7 @@ Otherwise throw an exception."
 (defun -nomis/ec-overlay-args-of-form-v2 ()
   (-nomis/ec-debug-message *-nomis/ec-site* 'args-of-form)
   (save-excursion
-    (nomis/ec-down-list-v2 'args-of-form)
+    (down-list)
     (forward-sexp)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
@@ -703,7 +685,7 @@ Otherwise throw an exception."
 (defun -nomis/ec-overlay-other-form-to-descend-v2 ()
   (-nomis/ec-debug-message *-nomis/ec-site* 'other-form-to-descend-v2)
   (save-excursion
-    (nomis/ec-down-list-v2 'other-form-to-descend-v2)
+    (down-list)
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
       (-nomis/ec-walk-and-overlay-v2)
