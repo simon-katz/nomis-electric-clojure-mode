@@ -457,6 +457,8 @@ PROPERTY is already in PLIST."
        (= *-nomis/ec-level*
           *-nomis/enclosing-body-level*)))
 
+(defvar *-nomis/ec-first-arg?* nil)
+
 ;;;; ___________________________________________________________________________
 ;;;; Overlay basics
 
@@ -1240,11 +1242,13 @@ Otherwise throw an exception."
                             :description (-> 'function-call
                                              -nomis/ec->grammar-description))
         (nomis/ec-down-list-v3 'function-call)
-        ;; TODO: Might want to skip operator when it is a symbol.
-        (while (-nomis/ec-can-forward-sexp?)
-          (-nomis/ec-bof)
-          (-nomis/ec-walk-and-overlay-v3)
-          (forward-sexp))))))
+        (let* ((arg-count 0))
+          (while (-nomis/ec-can-forward-sexp?)
+            (cl-incf arg-count)
+            (let* ((*-nomis/ec-first-arg?* (= arg-count 1)))
+              (-nomis/ec-bof)
+              (-nomis/ec-walk-and-overlay-v3)
+              (forward-sexp))))))))
 
 (defun -nomis/ec-overlay-literal-data ()
   (-nomis/ec-debug-message *-nomis/ec-site* 'literal-data)
@@ -1288,7 +1292,9 @@ Otherwise throw an exception."
           ((looking-at -nomis/ec-electric-function-name-regexp-incl-symbol-end)
            (unsited 'electric-function-name))
           ((-nomis/ec-top-level-of-hosted-call?)
-           (sited 'hosted-call-arg))
+           (sited (if *-nomis/ec-first-arg?*
+                      'hosted-call-function-name
+                    'hosted-call-arg)))
           ((-nomis/ec-top-level-of-body?)
            (sited 'top-level-of-body))
           (t
