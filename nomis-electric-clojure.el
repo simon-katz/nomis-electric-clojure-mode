@@ -444,12 +444,12 @@ PROPERTY is already in PLIST."
 
 (defvar *-nomis/ec-level* 0)
 
-(defvar *-nomis/hosted-call-level* nil) ; TODO: Rename: "most recent"
+(defvar *-nomis/enclosing-hosted-call-level* nil)
 
 (defun -nomis/ec-top-level-of-hosted-call? ()
-  (and *-nomis/hosted-call-level*
+  (and *-nomis/enclosing-hosted-call-level*
        (= *-nomis/ec-level*
-          *-nomis/hosted-call-level*)))
+          *-nomis/enclosing-hosted-call-level*)))
 
 (defvar *-nomis/body-level* nil) ; TODO: Rename: "most recent"
 
@@ -1232,8 +1232,8 @@ Otherwise throw an exception."
                            (when (-nomis/ec-can-forward-sexp?)
                              (-nomis/ec-bof))
                            (-nomis/ec-looking-at-hosted-function-operator?)))
-           (*-nomis/hosted-call-level* (when hosted-call?
-                                         (1+ *-nomis/ec-level*))))
+           (*-nomis/enclosing-hosted-call-level* (when hosted-call?
+                                                   (1+ *-nomis/ec-level*))))
       (-nomis/ec-with-site (;; avoid-stupid-indentation
                             :tag (list 'function-call)
                             :tag-v2 'function-call
