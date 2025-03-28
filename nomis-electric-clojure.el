@@ -954,7 +954,9 @@ Otherwise throw an exception."
                                       &allow-other-keys)
   (cl-assert (member rhs-site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
-    (let* ((tag (cons 'let-bindings tag)))
+    (let* ((tag (cons 'let-bindings tag))
+           (new-rhs-site (-nomis/ec-transmogrify-site rhs-site
+                                                      inherited-site)))
       (nomis/ec-down-list-v3 tag)
       (while (-nomis/ec-can-forward-sexp?)
         ;; Note the LHS of the binding:
@@ -971,13 +973,11 @@ Otherwise throw an exception."
         (when (-nomis/ec-can-forward-sexp?)
           (-nomis/ec-bof)
           (-nomis/ec-skip-metadata)
-          (let* ((new-site (-nomis/ec-transmogrify-site rhs-site
-                                                        inherited-site))
-                 (*-nomis/ec-default-site* new-site))
+          (let* ((*-nomis/ec-default-site* new-rhs-site))
             (-nomis/ec-with-site (;; avoid-stupid-indentation
                                   :tag (cons 'binding-rhs tag)
                                   :tag-v2 'binding-rhs
-                                  :site new-site
+                                  :site new-rhs-site
                                   :description (-> 'binding-rhs
                                                    -nomis/ec->grammar-description))
               (-nomis/ec-walk-and-overlay-v3)))
