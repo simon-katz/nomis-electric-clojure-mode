@@ -448,14 +448,14 @@ PROPERTY is already in PLIST."
 (defun -nomis/ec-top-level-of-hosted-call? ()
   (and *-nomis/enclosing-hosted-call-level*
        (= *-nomis/ec-level*
-          *-nomis/enclosing-hosted-call-level*)))
+          (1+ *-nomis/enclosing-hosted-call-level*))))
 
 (defvar *-nomis/enclosing-body-level* nil)
 
 (defun -nomis/ec-top-level-of-body? ()
   (and *-nomis/enclosing-body-level*
        (= *-nomis/ec-level*
-          *-nomis/enclosing-body-level*)))
+          (1+ *-nomis/enclosing-body-level*))))
 
 (defvar *-nomis/ec-first-arg?* nil)
 
@@ -995,7 +995,7 @@ Otherwise throw an exception."
                                       &allow-other-keys)
   (cl-assert (member site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
-    (let* ((*-nomis/enclosing-body-level* (1+ *-nomis/ec-level*)))
+    (let* ((*-nomis/enclosing-body-level* *-nomis/ec-level*))
       ;; Each body form separately:
       (while (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
@@ -1234,7 +1234,7 @@ Otherwise throw an exception."
                            (-nomis/ec-bof-if-poss)
                            (-nomis/ec-looking-at-hosted-function-operator?)))
            (*-nomis/enclosing-hosted-call-level* (when hosted-call?
-                                                   (1+ *-nomis/ec-level*))))
+                                                   *-nomis/ec-level*)))
       (-nomis/ec-with-site (;; avoid-stupid-indentation
                             :tag (list 'function-call)
                             :tag-v2 'function-call
