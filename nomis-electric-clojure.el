@@ -256,6 +256,11 @@ specifically server code, when `-nomis/ec-show-debug-overlays?` is true.")
                         5
                         t))
 
+(defun -nomis/ec-level-string (&optional position absolute)
+  (-nomis/ec-pad-string (number-to-string *-nomis/ec-level*)
+                        5
+                        t))
+
 (defun -nomis/ec-pos-string (pos)
   (-nomis/ec-pad-string (number-to-string pos) 6 t))
 
@@ -276,6 +281,7 @@ specifically server code, when `-nomis/ec-show-debug-overlays?` is true.")
     (let* ((inhibit-message t))
       (-nomis/ec-message-no-disp "%s %s ---- %s %s => %s%s"
                                  (-nomis/ec-line-number-string)
+                                 (-nomis/ec-level-string)
                                  (make-string (* 2 *-nomis/ec-level*) ?\s)
                                  site
                                  (let* ((s (with-output-to-string (princ what))))
