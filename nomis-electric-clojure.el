@@ -405,21 +405,21 @@ PROPERTY is already in PLIST."
          (backward-sexp)
          (-nomis/ec-looking-at-start-of-form-to-descend-v3?))))
 
-(cl-defun -nomis/ec-end-of-form-pos (&optional (pos (point)))
+(cl-defun -nomis/ec-pos-end-of-form (&optional (pos (point)))
   (save-excursion (goto-char pos)
                   (forward-sexp)
                   (point)))
 
-(cl-defun -nomis/ec-close-bracket-pos (&optional (pos (point)))
+(cl-defun -nomis/ec-pos-close-bracket (&optional (pos (point)))
   (save-excursion (goto-char pos)
                   (backward-up-list)
                   (forward-sexp)
                   (point)))
 
-(cl-defun -nomis/ec-end-of-form-or-close-bracket-pos (&optional (pos (point)))
+(cl-defun -nomis/ec-pos-end-of-form-or-close-bracket (&optional (pos (point)))
   (if (-nomis/ec-can-forward-sexp?)
-      (-nomis/ec-end-of-form-pos pos)
-    (-nomis/ec-close-bracket-pos pos)))
+      (-nomis/ec-pos-end-of-form pos)
+    (-nomis/ec-pos-close-bracket pos)))
 
 ;;;; ___________________________________________________________________________
 ;;;; Flashing of the re-overlayed region, to help with debugging.
@@ -580,12 +580,12 @@ Otherwise throw an exception."
            (signal '-nomis/ec-parse-error
                    (list msg
                          (point)
-                         (-nomis/ec-close-bracket-pos)))))
+                         (-nomis/ec-pos-close-bracket)))))
         ((not (nomis/ec-at-or-before-start-of-form-to-descend-v3?))
          (let* ((msg (format "A bracketed s-expression is needed for %s"
                              (first desc))))
            (signal '-nomis/ec-parse-error
-                   (list msg (point) (-nomis/ec-end-of-form-pos)))))
+                   (list msg (point) (-nomis/ec-pos-end-of-form)))))
         (t
          (down-list))))
 
@@ -864,7 +864,7 @@ Otherwise throw an exception."
              (helper ast))
            (cl-loop for (msg start) in unhandled-things
                     do (-nomis/ec-overlay-unparsable start
-                                                     (-nomis/ec-end-of-form-pos
+                                                     (-nomis/ec-pos-end-of-form
                                                       start)
                                                      'bindings
                                                      msg))
@@ -888,7 +888,7 @@ Otherwise throw an exception."
   (-nomis/ec-check-movement-possible tag
                                      #'forward-sexp
                                      #'point
-                                     #'-nomis/ec-end-of-form-or-close-bracket-pos)
+                                     #'-nomis/ec-pos-end-of-form-or-close-bracket)
   ;; Operators that are symbols are colored the same as their parent form unless
   ;; the `operator` term has a `site` (as in, for example, `:dom/xxxx`) -- and
   ;; that coloring is handled in the generic term coloring.
@@ -903,7 +903,7 @@ Otherwise throw an exception."
   (-nomis/ec-check-movement-possible (cons 'name tag)
                                      #'forward-sexp
                                      #'point
-                                     #'-nomis/ec-end-of-form-or-close-bracket-pos)
+                                     #'-nomis/ec-pos-end-of-form-or-close-bracket)
   (forward-sexp))
 
 (cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'name?))
@@ -934,7 +934,7 @@ Otherwise throw an exception."
   (-nomis/ec-check-movement-possible (cons 'key-function tag)
                                      #'forward-sexp
                                      #'point
-                                     #'-nomis/ec-end-of-form-or-close-bracket-pos)
+                                     #'-nomis/ec-pos-end-of-form-or-close-bracket)
   (-nomis/ec-walk-and-overlay-v3)
   (forward-sexp))
 
@@ -1113,7 +1113,7 @@ Otherwise throw an exception."
                          (signal '-nomis/ec-parse-error
                                  (list msg
                                        (point)
-                                       (-nomis/ec-end-of-form-or-close-bracket-pos)))))
+                                       (-nomis/ec-pos-end-of-form-or-close-bracket)))))
       ;; :LIMITATIONS-OF-THE-GRAMMAR Are we at the right buffer location
       ;; for continuing?
       )))
@@ -1127,7 +1127,7 @@ Otherwise throw an exception."
           (signal '-nomis/ec-parse-error
                   (list ":list parsing failed"
                         (point)
-                        (-nomis/ec-end-of-form-or-close-bracket-pos)))
+                        (-nomis/ec-pos-end-of-form-or-close-bracket)))
         (progn
           (nomis/ec-down-list-v3 '(list-parsing))
           (-nomis/ec-bof-if-poss)
@@ -1303,7 +1303,7 @@ Otherwise throw an exception."
                    (sited 'global))
                ;; Highlight anything we aren't dealing with.
                (-nomis/ec-overlay-unparsable (point)
-                                             (-nomis/ec-end-of-form-pos)
+                                             (-nomis/ec-pos-end-of-form)
                                              'unhandled-thing
                                              "unhandled-thing")))))))
 
