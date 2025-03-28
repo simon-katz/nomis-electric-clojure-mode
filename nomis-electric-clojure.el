@@ -319,11 +319,8 @@ PROPERTY is already in PLIST."
 (defun -nomis/ec-looking-at-start-of-form-to-descend-v2? ()
   (looking-at -nomis/ec-regexp-for-start-of-form-to-descend-v2))
 
-(defvar -nomis/ec-regexp-for-start-of-function-call
-  "(")
-
 (defun -nomis/ec-looking-at-open-parenthesis ()
-  (looking-at -nomis/ec-regexp-for-start-of-function-call))
+  (looking-at "("))
 
 (defvar -nomis/ec-regexp-for-start-of-literal-data
   ;; Copied from `-nomis/sexp-regexp-for-bracketed-sexp-start` and modified.
