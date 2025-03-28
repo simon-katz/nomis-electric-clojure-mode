@@ -1296,15 +1296,7 @@ Otherwise throw an exception."
                                            'TODO-reader-syntax-for-anonymous-function
                                            "TODO-reader-syntax-for-anonymous-function"))
             ((looking-at "'")
-             (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                   :tag (list 'quoted-form)
-                                   :tag-v2 'quoted-form
-                                   :site *-nomis/ec-default-site*
-                                   :description (-> 'quoted-form
-                                                    -nomis/ec->grammar-description)
-                                   :print-env? t)
-               ;; Nothing more.
-               ))
+             (sited 'quoted-form))
             ((looking-at
               -nomis/ec-electric-function-name-regexp-incl-symbol-end)
              (unsited 'electric-function-name))
