@@ -1288,7 +1288,7 @@ Otherwise throw an exception."
                                       :print-env? t)
                   ;; Nothing more.
                   )))
-      (cond ((null sym)
+      (cond ((null sym) ; TODO Rethink and use `-nomis/ec-overlay-unparsable`.
              (unless (thing-at-point 'string t)
                (let* ((sexp (thing-at-point 'sexp t)))
                  (-nomis/ec-message-no-disp
