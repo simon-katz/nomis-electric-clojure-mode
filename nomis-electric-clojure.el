@@ -451,6 +451,13 @@ PROPERTY is already in PLIST."
        (= *-nomis/ec-level*
           *-nomis/hosted-call-level*)))
 
+(defvar *-nomis/body-level* nil) ; TODO: Rename: "most recent"
+
+(defun -nomis/ec-top-level-of-body? ()
+  (and *-nomis/body-level*
+       (= *-nomis/ec-level*
+          *-nomis/body-level*)))
+
 ;;;; ___________________________________________________________________________
 ;;;; Overlay basics
 
@@ -983,18 +990,19 @@ Otherwise throw an exception."
                                       &allow-other-keys)
   (cl-assert (member site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
-    ;; Each body form separately:
-    (while (-nomis/ec-can-forward-sexp?)
-      (-nomis/ec-bof)
-      (-nomis/ec-with-site (;; avoid-stupid-indentation
-                            :tag (cons 'body-form tag)
-                            :tag-v2 'body-form
-                            :site (-nomis/ec-transmogrify-site site
-                                                               inherited-site)
-                            :description (-> 'body-form
-                                             -nomis/ec->grammar-description))
-        (-nomis/ec-walk-and-overlay-v3))
-      (forward-sexp))))
+    (let* ((*-nomis/body-level* (1+ *-nomis/ec-level*)))
+      ;; Each body form separately:
+      (while (-nomis/ec-can-forward-sexp?)
+        (-nomis/ec-bof)
+        (-nomis/ec-with-site (;; avoid-stupid-indentation
+                              :tag (cons 'body-form tag)
+                              :tag-v2 'body-form
+                              :site (-nomis/ec-transmogrify-site site
+                                                                 inherited-site)
+                              :description (-> 'body-form
+                                               -nomis/ec->grammar-description))
+          (-nomis/ec-walk-and-overlay-v3))
+        (forward-sexp)))))
 
 (cl-defmethod -nomis/ec-overlay-term ((term-name (eql '&args))
                                       tag
@@ -1302,6 +1310,8 @@ Otherwise throw an exception."
              (unsited 'electric-function-name))
             ((-nomis/ec-top-level-of-hosted-call?)
              (sited 'hosted-call-arg))
+            ((-nomis/ec-top-level-of-body?)
+             (sited 'top-level-of-body))
             ((member sym *-nomis/ec-bound-vars*)
              (unsited 'local))
             ((not (member sym *-nomis/ec-bound-vars*))
