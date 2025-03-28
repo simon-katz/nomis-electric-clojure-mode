@@ -11,30 +11,30 @@
 (def global-1 42)
 
 (e/defn Foo [local-1]
-  (e/server ElectricCall2
-            hosted-call
-            'foo
-            '(foo foo)
-            local-1
-            global-1
-            "a-string"
+  (e/server "a-string"
             123
             :foo
-            (hosted-call ElectricCall2
-                         hosted-call
+            'foo
+            '(foo foo)
+            hosted-call
+            ElectricCall2
+            local-1
+            global-1
+            (hosted-call "a-string"
+                         123
+                         :foo
                          'foo
                          '(foo foo)
+                         hosted-call
+                         ElectricCall2
                          local-1
-                         global-1
-                         "a-string"
-                         123
-                         :foo)
-            (ElectricCall ElectricCall2
-                          hosted-call
+                         global-1)
+            (ElectricCall "a-string"
+                          123
+                          :foo
                           'foo
                           '(foo foo)
+                          hosted-call
+                          ElectricCall2
                           local-1
-                          global-1
-                          "a-string"
-                          123
-                          :foo)))
+                          global-1)))
