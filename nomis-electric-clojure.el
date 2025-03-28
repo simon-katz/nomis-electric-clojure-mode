@@ -1223,8 +1223,8 @@ Otherwise throw an exception."
 
 (defun -nomis/ec-looking-at-hosted-function-operator? ()
   (or (looking-at -nomis/ec-hosted-function-name-regexp-incl-symbol-end)
-      ;; TODO: Add more. `e/fn`. Is that everything?
-      ))
+      (looking-at (-nomis/ec-operator-call-regexp "fn"))
+      (looking-at "#(")))
 
 (defun -nomis/ec-overlay-function-call ()
   (-nomis/ec-debug-message *-nomis/ec-site* 'function-call)
