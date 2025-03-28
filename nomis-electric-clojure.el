@@ -322,7 +322,7 @@ PROPERTY is already in PLIST."
 (defvar -nomis/ec-regexp-for-start-of-function-call
   "(")
 
-(defun -nomis/ec-looking-at-start-of-function-call ()
+(defun -nomis/ec-looking-at-open-parenthesis ()
   (looking-at -nomis/ec-regexp-for-start-of-function-call))
 
 (defvar -nomis/ec-regexp-for-start-of-literal-data
@@ -337,7 +337,7 @@ PROPERTY is already in PLIST."
   (looking-at -nomis/ec-regexp-for-start-of-literal-data))
 
 (defun -nomis/ec-looking-at-start-of-form-to-descend-v3? ()
-  (or (-nomis/ec-looking-at-start-of-function-call)
+  (or (-nomis/ec-looking-at-open-parenthesis)
       (-nomis/ec-looking-at-start-of-literal-data?)))
 
 (defun -nomis/ec-at-top-level? ()
@@ -1398,7 +1398,7 @@ Otherwise throw an exception."
                           (apply #'-nomis/ec-overlay-using-parser-spec spec)
                           t))
         (cond
-         ((-nomis/ec-looking-at-start-of-function-call)
+         ((-nomis/ec-looking-at-open-parenthesis)
           (-nomis/ec-overlay-function-call))
          ((-nomis/ec-looking-at-start-of-literal-data?)
           (-nomis/ec-overlay-literal-data))
