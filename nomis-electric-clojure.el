@@ -292,6 +292,14 @@ specifically server code, when `-nomis/ec-show-debug-overlays?` is true.")
                                    "")))))
 
 ;;;; ___________________________________________________________________________
+;;;; -nomis/ec-operator-call-regexp
+
+(defun -nomis/ec-operator-call-regexp (operator-regexp)
+  (concat "(\\([[:space:]]\\|\n\\)*"
+          operator-regexp
+          "\\_>"))
+
+;;;; ___________________________________________________________________________
 ;;;; Some utilities copied from `nomis-sexp-utils` and other places. (I don't
 ;;;; want to make this package dependent on those.)
 
@@ -321,6 +329,15 @@ PROPERTY is already in PLIST."
 
 (defun -nomis/ec-looking-at-open-parenthesis ()
   (looking-at "("))
+
+(defvar -nomis/ec-regexp-for-hosted-anonymous-fn-fn-syntax
+  (-nomis/ec-operator-call-regexp "fn"))
+
+(defun -nomis/ec-looking-at-hosted-anonymous-fn-fn-syntax ()
+  (looking-at -nomis/ec-regexp-for-hosted-anonymous-fn-fn-syntax))
+
+(defun -nomis/ec-looking-at-hosted-anonymous-fn-reader-syntax ()
+  (looking-at "#("))
 
 (defvar -nomis/ec-regexp-for-start-of-literal-data
   ;; Copied from `-nomis/sexp-regexp-for-bracketed-sexp-start` and modified.
@@ -747,6 +764,9 @@ Otherwise throw an exception."
 (defconst -nomis/ec-hosted-function-name-regexp-incl-symbol-end
   ;; Ugh. This shows that some naming is wrong.
   (concat -nomis/ec-hosted-function-name-regexp "\\_>"))
+
+(defun -nomis/ec-looking-at-hosted-function-name ()
+  (looking-at -nomis/ec-hosted-function-name-regexp-incl-symbol-end))
 
 ;;;; ___________________________________________________________________________
 ;;;; ---- More parse and overlay helpers ----
@@ -1219,9 +1239,9 @@ Otherwise throw an exception."
 ;;;; ___________________________________________________________________________
 
 (defun -nomis/ec-looking-at-hosted-function-operator? ()
-  (or (looking-at -nomis/ec-hosted-function-name-regexp-incl-symbol-end)
-      (looking-at (-nomis/ec-operator-call-regexp "fn"))
-      (looking-at "#(")))
+  (or (-nomis/ec-looking-at-hosted-function-name)
+      (-nomis/ec-looking-at-hosted-anonymous-fn-fn-syntax)
+      (-nomis/ec-looking-at-hosted-anonymous-fn-reader-syntax)))
 
 (defun -nomis/ec-overlay-function-call ()
   (-nomis/ec-debug-message *-nomis/ec-site* 'function-call)
@@ -1304,11 +1324,6 @@ Otherwise throw an exception."
                (-nomis/ec-overlay-unparsable (point)
                                              'unhandled-scalar-or-quoted-form
                                              "unhandled-scalar-or-quoted-form")))))))
-
-(defun -nomis/ec-operator-call-regexp (operator-regexp)
-  (concat "(\\([[:space:]]\\|\n\\)*"
-          operator-regexp
-          "\\_>"))
 
 (defvar -nomis/ec-regexp->parser-spec '())
 
