@@ -1,4 +1,4 @@
-(ns anonymous-function-reader-syntax
+(ns hosted-anonymous-functions
   (:require
    [hyperfiddle.electric3 :as e]))
 
