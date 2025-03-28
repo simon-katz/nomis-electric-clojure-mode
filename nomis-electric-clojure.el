@@ -1285,8 +1285,7 @@ Otherwise throw an exception."
            (sited 'quoted-form))
           ((thing-at-point 'string t)
            (sited 'string))
-          ((looking-at
-            -nomis/ec-electric-function-name-regexp-incl-symbol-end)
+          ((looking-at -nomis/ec-electric-function-name-regexp-incl-symbol-end)
            (unsited 'electric-function-name))
           ((-nomis/ec-top-level-of-hosted-call?)
            (sited 'hosted-call-arg))
