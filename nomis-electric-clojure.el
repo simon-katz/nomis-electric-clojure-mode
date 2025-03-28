@@ -1262,14 +1262,8 @@ Otherwise throw an exception."
         (-nomis/ec-walk-and-overlay-v3)
         (forward-sexp)))))
 
-;; TODO: Change `non-descended-form` to `scalar-or-quoted-form`.
-
-(defun -nomis/ec-overlay-non-descended-form ()
-  ;; A non-descended form is a symbol, number, character, etc, or (kind of
-  ;; accidentally but it works out OK) a reader-syntax anonymous function
-  ;; (`#(...)`), which is a hosted thing. TODO: Oh, but there might be
-  ;; forms at the top level that you want to descend recursively.
-  (-nomis/ec-debug-message *-nomis/ec-site* 'non-descended-form)
+(defun -nomis/ec-overlay-scalar-or-quoted-form ()
+  (-nomis/ec-debug-message *-nomis/ec-site* 'scalar-or-quoted-form)
   (let* ((sym (thing-at-point 'symbol t)))
     (cl-flet ((sited (tag)
                 (-nomis/ec-with-site (;; avoid-stupid-indentation
@@ -1295,7 +1289,7 @@ Otherwise throw an exception."
              (unless (thing-at-point 'string t)
                (let* ((sexp (thing-at-point 'sexp t)))
                  (-nomis/ec-message-no-disp
-                  "nomis-electric-clojure-mode: Line %s: Expected a non-descended-form but got %s"
+                  "nomis-electric-clojure-mode: Line %s: Expected a scalar-or-quoted-form but got %s"
                   (-nomis/ec-line-number-string)
                   sexp))))
             ((looking-at "#(")
@@ -1326,8 +1320,8 @@ Otherwise throw an exception."
             ;; TODO: Do we need the of top level of Electric call?
             (t ; Highlight anything we aren't dealing with.
              (-nomis/ec-overlay-unparsable (point)
-                                           'unhandled-non-descended-form
-                                           "unhandled-non-descended-form"))))))
+                                           'unhandled-scalar-or-quoted-form
+                                           "unhandled-scalar-or-quoted-form"))))))
 
 (defun -nomis/ec-operator-call-regexp (operator-regexp)
   (concat "(\\([[:space:]]\\|\n\\)*"
@@ -1410,7 +1404,7 @@ Otherwise throw an exception."
          ((-nomis/ec-looking-at-start-of-literal-data?)
           (-nomis/ec-overlay-literal-data))
          (t
-          (-nomis/ec-overlay-non-descended-form))))))
+          (-nomis/ec-overlay-scalar-or-quoted-form))))))
 
 (defun -nomis/ec-walk-and-overlay-any-version ()
   (cond ; See avoid-case-bug-with-keywords at top of file.
