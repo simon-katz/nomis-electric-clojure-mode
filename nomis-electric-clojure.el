@@ -972,7 +972,8 @@ Otherwise throw an exception."
           (-nomis/ec-bof)
           (-nomis/ec-skip-metadata)
           (let* ((new-site (-nomis/ec-transmogrify-site rhs-site
-                                                        inherited-site)))
+                                                        inherited-site))
+                 (*-nomis/ec-default-site* new-site))
             (-nomis/ec-with-site (;; avoid-stupid-indentation
                                   :tag (cons 'binding-rhs tag)
                                   :tag-v2 'binding-rhs
