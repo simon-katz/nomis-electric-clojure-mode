@@ -1264,26 +1264,20 @@ Otherwise throw an exception."
 (defun -nomis/ec-overlay-scalar-or-quoted-form ()
   (-nomis/ec-debug-message *-nomis/ec-site* 'scalar-or-quoted-form)
   (let* ((sym (thing-at-point 'symbol t)))
-    (cl-flet ((sited (tag)
-                (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                      :tag (list tag)
-                                      :tag-v2 tag
-                                      :site *-nomis/ec-default-site*
-                                      :description (-> tag
-                                                       -nomis/ec->grammar-description)
-                                      :print-env? t)
-                  ;; Nothing more.
-                  ))
-              (unsited (tag)
-                (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                      :tag (list tag)
-                                      :tag-v2 tag
-                                      :site 'nec/neutral
-                                      :description (-> tag
-                                                       -nomis/ec->grammar-description)
-                                      :print-env? t)
-                  ;; Nothing more.
-                  )))
+    (cl-flet* ((use-site (tag site)
+                 (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                       :tag (list tag)
+                                       :tag-v2 tag
+                                       :site site
+                                       :description (-> tag
+                                                        -nomis/ec->grammar-description)
+                                       :print-env? t)
+                   ;; Nothing more.
+                   ))
+               (sited (tag)
+                 (use-site tag *-nomis/ec-default-site*))
+               (unsited (tag)
+                 (use-site tag 'nec/neutral)))
       (cond ((null sym) ; TODO Rethink and use `-nomis/ec-overlay-unparsable`.
              (unless (thing-at-point 'string t)
                (let* ((sexp (thing-at-point 'sexp t)))
