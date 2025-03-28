@@ -1230,21 +1230,21 @@ Otherwise throw an exception."
                            (nomis/ec-down-list-v3 'function-call)
                            (when (-nomis/ec-can-forward-sexp?)
                              (-nomis/ec-bof))
-                           (-nomis/ec-looking-at-hosted-function-operator?))))
-      (let* ((*-nomis/hosted-call-level* (when hosted-call?
-                                           (1+ *-nomis/ec-level*))))
-        (-nomis/ec-with-site (;; avoid-stupid-indentation
-                              :tag (list 'function-call)
-                              :tag-v2 'function-call
-                              :site *-nomis/ec-default-site*
-                              :description (-> 'function-call
-                                               -nomis/ec->grammar-description))
-          (nomis/ec-down-list-v3 'function-call)
-          ;; TODO: Might want to skip operator when it is a symbol.
-          (while (-nomis/ec-can-forward-sexp?)
-            (-nomis/ec-bof)
-            (-nomis/ec-walk-and-overlay-v3)
-            (forward-sexp)))))))
+                           (-nomis/ec-looking-at-hosted-function-operator?)))
+           (*-nomis/hosted-call-level* (when hosted-call?
+                                         (1+ *-nomis/ec-level*))))
+      (-nomis/ec-with-site (;; avoid-stupid-indentation
+                            :tag (list 'function-call)
+                            :tag-v2 'function-call
+                            :site *-nomis/ec-default-site*
+                            :description (-> 'function-call
+                                             -nomis/ec->grammar-description))
+        (nomis/ec-down-list-v3 'function-call)
+        ;; TODO: Might want to skip operator when it is a symbol.
+        (while (-nomis/ec-can-forward-sexp?)
+          (-nomis/ec-bof)
+          (-nomis/ec-walk-and-overlay-v3)
+          (forward-sexp))))))
 
 (defun -nomis/ec-overlay-literal-data ()
   (-nomis/ec-debug-message *-nomis/ec-site* 'literal-data)
