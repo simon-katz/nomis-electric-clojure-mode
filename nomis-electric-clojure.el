@@ -1301,8 +1301,8 @@ Otherwise throw an exception."
                    (sited 'global))
                ;; Highlight anything we aren't dealing with.
                (-nomis/ec-overlay-unparsable (point)
-                                             'unhandled-scalar-or-quoted-form
-                                             "unhandled-scalar-or-quoted-form")))))))
+                                             'unhandled-thing
+                                             "unhandled-thing")))))))
 
 (defvar -nomis/ec-regexp->parser-spec '())
 
