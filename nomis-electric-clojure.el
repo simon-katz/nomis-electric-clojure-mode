@@ -1261,6 +1261,8 @@ Otherwise throw an exception."
         (-nomis/ec-walk-and-overlay-v3)
         (forward-sexp)))))
 
+;; TODO: Change `non-descended-form` to `scalar-or-quoted-form`.
+
 (defun -nomis/ec-overlay-non-descended-form ()
   ;; A non-descended form is a symbol, number, character, etc, or (kind of
   ;; accidentally but it works out OK) a reader-syntax anonymous function
