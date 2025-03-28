@@ -604,7 +604,7 @@ Otherwise throw an exception."
 (defun -nomis/ec-with-site* (tag-v2 tag site end description print-env? f)
   (cl-assert tag)
   (cl-assert tag-v2)
-  (-nomis/ec-debug-message site tag nil print-env?)
+  (-nomis/ec-debug-message site tag-v2 nil print-env?)
   (let* ((*-nomis/ec-tag-v2s* (cons tag-v2 *-nomis/ec-tag-v2s*))
          (*-nomis/ec-level* (1+ *-nomis/ec-level*))
          (no-new-overlay? (or (null site)
