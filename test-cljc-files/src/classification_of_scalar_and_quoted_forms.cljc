@@ -1,4 +1,4 @@
-(ns classification-of-non-descended-forms
+(ns classification-of-scalar-and-quoted-forms
   (:require
    [hyperfiddle.electric3 :as e]))
 
