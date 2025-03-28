@@ -1263,50 +1263,51 @@ Otherwise throw an exception."
 
 (defun -nomis/ec-overlay-scalar-or-quoted-form ()
   (-nomis/ec-debug-message *-nomis/ec-site* 'scalar-or-quoted-form)
-  (let* ((sym (thing-at-point 'symbol t)))
-    (cl-flet* ((use-site (tag site)
-                 (-nomis/ec-with-site (;; avoid-stupid-indentation
-                                       :tag (list tag)
-                                       :tag-v2 tag
-                                       :site site
-                                       :description (-> tag
-                                                        -nomis/ec->grammar-description)
-                                       :print-env? t)
-                   ;; Nothing more.
-                   ))
-               (sited (tag)
-                 (use-site tag *-nomis/ec-default-site*))
-               (unsited (tag)
-                 (use-site tag 'nec/neutral)))
-      (cond ((null sym) ; TODO Rethink and use `-nomis/ec-overlay-unparsable`.
-             (unless (thing-at-point 'string t)
-               (let* ((sexp (thing-at-point 'sexp t)))
-                 (-nomis/ec-message-no-disp
-                  "nomis-electric-clojure-mode: Line %s: Expected a scalar-or-quoted-form but got %s"
-                  (-nomis/ec-line-number-string)
-                  sexp))))
-            ((looking-at "#(")
-             (-nomis/ec-overlay-unparsable (point)
-                                           'TODO-reader-syntax-for-anonymous-function
-                                           "TODO-reader-syntax-for-anonymous-function"))
-            ((looking-at "'")
-             (sited 'quoted-form))
-            ((looking-at
-              -nomis/ec-electric-function-name-regexp-incl-symbol-end)
-             (unsited 'electric-function-name))
-            ((-nomis/ec-top-level-of-hosted-call?)
-             (sited 'hosted-call-arg))
-            ((-nomis/ec-top-level-of-body?)
-             (sited 'top-level-of-body))
-            ((member sym *-nomis/ec-bound-vars*)
-             (unsited 'local))
-            ((not (member sym *-nomis/ec-bound-vars*))
-             (sited 'global))
-            ;; TODO: Do we need the of top level of Electric call?
-            (t ; Highlight anything we aren't dealing with.
-             (-nomis/ec-overlay-unparsable (point)
-                                           'unhandled-scalar-or-quoted-form
-                                           "unhandled-scalar-or-quoted-form"))))))
+  (cl-flet* ((use-site (tag site)
+               (-nomis/ec-with-site (;; avoid-stupid-indentation
+                                     :tag (list tag)
+                                     :tag-v2 tag
+                                     :site site
+                                     :description (-> tag
+                                                      -nomis/ec->grammar-description)
+                                     :print-env? t)
+                 ;; Nothing more.
+                 ))
+             (sited (tag)
+               (use-site tag *-nomis/ec-default-site*))
+             (unsited (tag)
+               (use-site tag 'nec/neutral)))
+    (cond ((looking-at "#(")
+           (-nomis/ec-overlay-unparsable (point)
+                                         'TODO-reader-syntax-for-anonymous-function
+                                         "TODO-reader-syntax-for-anonymous-function"))
+          ((looking-at "'")
+           (sited 'quoted-form))
+          (t
+           (let* ((sym (thing-at-point 'symbol t)))
+             (cond ((null sym) ; TODO Rethink and use `-nomis/ec-overlay-unparsable`.
+                    (unless (thing-at-point 'string t)
+                      (let* ((sexp (thing-at-point 'sexp t)))
+                        (-nomis/ec-message-no-disp
+                         "nomis-electric-clojure-mode: Line %s: Expected a scalar-or-quoted-form but got %s"
+                         (-nomis/ec-line-number-string)
+                         sexp))))
+                   ((looking-at
+                     -nomis/ec-electric-function-name-regexp-incl-symbol-end)
+                    (unsited 'electric-function-name))
+                   ((-nomis/ec-top-level-of-hosted-call?)
+                    (sited 'hosted-call-arg))
+                   ((-nomis/ec-top-level-of-body?)
+                    (sited 'top-level-of-body))
+                   ((member sym *-nomis/ec-bound-vars*)
+                    (unsited 'local))
+                   ((not (member sym *-nomis/ec-bound-vars*))
+                    (sited 'global))
+                   ;; TODO: Do we need the of top level of Electric call?
+                   (t ; Highlight anything we aren't dealing with.
+                    (-nomis/ec-overlay-unparsable (point)
+                                                  'unhandled-scalar-or-quoted-form
+                                                  "unhandled-scalar-or-quoted-form"))))))))
 
 (defun -nomis/ec-operator-call-regexp (operator-regexp)
   (concat "(\\([[:space:]]\\|\n\\)*"
