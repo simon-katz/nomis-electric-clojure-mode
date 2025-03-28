@@ -882,12 +882,6 @@ Otherwise throw an exception."
 (cl-defgeneric -nomis/ec-overlay-term (term-name tag inherited-site
                                                  &key))
 
-(cl-defmethod -nomis/ec-overlay-term :before ((term-name t)
-                                              tag
-                                              inherited-site
-                                              &key site rhs-site no-bind?)
-  (-nomis/ec-skip-metadata))
-
 (cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'operator))
                                       tag
                                       inherited-site
@@ -1181,6 +1175,7 @@ Otherwise throw an exception."
                  (tag (list term-name operator-id)))
             (condition-case err
                 (progn
+                  (-nomis/ec-skip-metadata)
                   (-nomis/ec-debug-message *-nomis/ec-site* term-name)
                   (cl-flet* ((process-terms* ()
                                (-nomis/ec-process-single-term term-name term-opts
