@@ -615,6 +615,10 @@ Otherwise throw an exception."
   (forward-sexp)
   (backward-sexp))
 
+(defun -nomis/ec-bof-if-poss ()
+  (when (-nomis/ec-can-forward-sexp?)
+    (-nomis/ec-bof)))
+
 (defun -nomis/ec-with-site* (tag-v2 tag site end description print-env? f)
   (cl-assert tag)
   (cl-assert tag-v2)
@@ -766,8 +770,7 @@ Otherwise throw an exception."
   (while (looking-at (regexp-quote "^"))
     (progn (forward-char)
            (forward-sexp))
-    (when (-nomis/ec-can-forward-sexp?) ; TODO: Make a function for this common oattern.
-      (-nomis/ec-bof)))
+    (-nomis/ec-bof-if-poss))
   (-nomis/ec-show-place-for-metadata))
 
 (defun -nomis/ec-overlay-unparsable (pos tag description)
@@ -1126,8 +1129,7 @@ Otherwise throw an exception."
                   (list ":list parsing failed" (point)))
         (progn
           (nomis/ec-down-list-v3 '(list-parsing))
-          (when (-nomis/ec-can-forward-sexp?)
-            (-nomis/ec-bof))
+          (-nomis/ec-bof-if-poss)
           (-nomis/ec-process-terms operator-id (rest term) inherited-site)
           (backward-up-list)
           (forward-sexp)))
@@ -1165,8 +1167,7 @@ Otherwise throw an exception."
 (defun -nomis/ec-process-terms (operator-id terms inherited-site)
   (when terms
     (cl-destructuring-bind (term &rest rest-terms) terms
-      (when (-nomis/ec-can-forward-sexp?)
-        (-nomis/ec-bof))
+      (-nomis/ec-bof-if-poss)
       (or (-nomis/ec-process-+-list-ecase-etc operator-id term inherited-site)
           (let* ((term-name (if (atom term) term (first term)))
                  (term-opts (if (atom term) '() (rest term)))
@@ -1229,8 +1230,7 @@ Otherwise throw an exception."
   (save-excursion
     (let* ((hosted-call? (save-excursion
                            (nomis/ec-down-list-v3 'function-call)
-                           (when (-nomis/ec-can-forward-sexp?)
-                             (-nomis/ec-bof))
+                           (-nomis/ec-bof-if-poss)
                            (-nomis/ec-looking-at-hosted-function-operator?)))
            (*-nomis/enclosing-hosted-call-level* (when hosted-call?
                                                    (1+ *-nomis/ec-level*))))
