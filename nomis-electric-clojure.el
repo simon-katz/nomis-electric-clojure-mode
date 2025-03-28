@@ -1283,31 +1283,25 @@ Otherwise throw an exception."
                                          "TODO-reader-syntax-for-anonymous-function"))
           ((looking-at "'")
            (sited 'quoted-form))
+          ((thing-at-point 'string t)
+           (sited 'string))
+          ((looking-at
+            -nomis/ec-electric-function-name-regexp-incl-symbol-end)
+           (unsited 'electric-function-name))
+          ((-nomis/ec-top-level-of-hosted-call?)
+           (sited 'hosted-call-arg))
+          ((-nomis/ec-top-level-of-body?)
+           (sited 'top-level-of-body))
           (t
            (let* ((sym (thing-at-point 'symbol t)))
-             (cond ((null sym) ; TODO Rethink and use `-nomis/ec-overlay-unparsable`.
-                    (unless (thing-at-point 'string t)
-                      (let* ((sexp (thing-at-point 'sexp t)))
-                        (-nomis/ec-message-no-disp
-                         "nomis-electric-clojure-mode: Line %s: Expected a scalar-or-quoted-form but got %s"
-                         (-nomis/ec-line-number-string)
-                         sexp))))
-                   ((looking-at
-                     -nomis/ec-electric-function-name-regexp-incl-symbol-end)
-                    (unsited 'electric-function-name))
-                   ((-nomis/ec-top-level-of-hosted-call?)
-                    (sited 'hosted-call-arg))
-                   ((-nomis/ec-top-level-of-body?)
-                    (sited 'top-level-of-body))
-                   ((member sym *-nomis/ec-bound-vars*)
-                    (unsited 'local))
-                   ((not (member sym *-nomis/ec-bound-vars*))
-                    (sited 'global))
-                   ;; TODO: Do we need the of top level of Electric call?
-                   (t ; Highlight anything we aren't dealing with.
-                    (-nomis/ec-overlay-unparsable (point)
-                                                  'unhandled-scalar-or-quoted-form
-                                                  "unhandled-scalar-or-quoted-form"))))))))
+             (if sym
+                 (if (member sym *-nomis/ec-bound-vars*)
+                     (unsited 'local)
+                   (sited 'global))
+               ;; Highlight anything we aren't dealing with.
+               (-nomis/ec-overlay-unparsable (point)
+                                             'unhandled-scalar-or-quoted-form
+                                             "unhandled-scalar-or-quoted-form")))))))
 
 (defun -nomis/ec-operator-call-regexp (operator-regexp)
   (concat "(\\([[:space:]]\\|\n\\)*"
