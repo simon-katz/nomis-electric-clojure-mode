@@ -331,7 +331,7 @@ PROPERTY is already in PLIST."
   ;; This doesn't include reader syntax for anonymous functions (/ie/ `#(...)`),
   ;; which is probably an oversite in the copied-from place. But that's handy
   ;; for us because these anonymous functions are hosted and they end up as
-  ;; `sited-single-item`s.
+  ;; `sited-single-item`s. TODO: Revisit this comment when you look at `#(...)`.
   "\\[\\|{\\|#{")
 
 (defun -nomis/ec-looking-at-start-of-literal-data? ()
