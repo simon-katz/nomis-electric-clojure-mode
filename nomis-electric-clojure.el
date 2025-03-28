@@ -1295,6 +1295,10 @@ Otherwise throw an exception."
                   "nomis-electric-clojure-mode: Line %s: Expected a non-descended-form but got %s"
                   (-nomis/ec-line-number-string)
                   sexp))))
+            ((looking-at "#(")
+             (-nomis/ec-overlay-unparsable (point)
+                                           'TODO-reader-syntax-for-anonymous-function
+                                           "TODO-reader-syntax-for-anonymous-function"))
             ((equal sym "'")
              (-nomis/ec-with-site (;; avoid-stupid-indentation
                                    :tag (list 'quoted-form)
