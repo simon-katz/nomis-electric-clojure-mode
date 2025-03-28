@@ -342,9 +342,8 @@ PROPERTY is already in PLIST."
 (defvar -nomis/ec-regexp-for-start-of-literal-data
   ;; Copied from `-nomis/sexp-regexp-for-bracketed-sexp-start` and modified.
   ;; This doesn't include reader syntax for anonymous functions (/ie/ `#(...)`),
-  ;; which is probably an oversite in the copied-from place. But that's handy
-  ;; for us because these anonymous functions are hosted and they end up as
-  ;; `sited-single-item`s. TODO: Revisit this comment when you look at `#(...)`.
+  ;; which is probably an oversite in the copied-from place. We deal with
+  ;; `#(...)` elsewhere.
   "\\[\\|{\\|#{")
 
 (defun -nomis/ec-looking-at-start-of-literal-data? ()
@@ -1298,11 +1297,7 @@ Otherwise throw an exception."
                (use-site tag *-nomis/ec-default-site*))
              (unsited (tag)
                (use-site tag 'nec/neutral)))
-    (cond ((looking-at "#(")
-           (-nomis/ec-overlay-unparsable (point)
-                                         'TODO-reader-syntax-for-anonymous-function
-                                         "TODO-reader-syntax-for-anonymous-function"))
-          ((looking-at "'")
+    (cond ((looking-at "'")
            (sited 'quoted-form))
           ((thing-at-point 'string t)
            (sited 'string))
@@ -1400,6 +1395,10 @@ Otherwise throw an exception."
           (-nomis/ec-overlay-function-call))
          ((-nomis/ec-looking-at-start-of-literal-data?)
           (-nomis/ec-overlay-literal-data))
+         ((or (-nomis/ec-looking-at-hosted-anonymous-fn-fn-syntax)
+              (-nomis/ec-looking-at-hosted-anonymous-fn-reader-syntax))
+          ;; Not Electric -- do nothing.
+          )
          (t
           (-nomis/ec-overlay-scalar-or-quoted-form))))))
 
