@@ -1299,7 +1299,7 @@ Otherwise throw an exception."
              (-nomis/ec-overlay-unparsable (point)
                                            'TODO-reader-syntax-for-anonymous-function
                                            "TODO-reader-syntax-for-anonymous-function"))
-            ((equal sym "'")
+            ((looking-at "'")
              (-nomis/ec-with-site (;; avoid-stupid-indentation
                                    :tag (list 'quoted-form)
                                    :tag-v2 'quoted-form
