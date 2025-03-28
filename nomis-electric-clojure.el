@@ -405,6 +405,22 @@ PROPERTY is already in PLIST."
          (backward-sexp)
          (-nomis/ec-looking-at-start-of-form-to-descend-v3?))))
 
+(cl-defun -nomis/ec-end-of-form-pos (&optional (pos (point)))
+  (save-excursion (goto-char pos)
+                  (forward-sexp)
+                  (point)))
+
+(cl-defun -nomis/ec-close-bracket-pos (&optional (pos (point)))
+  (save-excursion (goto-char pos)
+                  (backward-up-list)
+                  (forward-sexp)
+                  (point)))
+
+(cl-defun -nomis/ec-end-of-form-or-close-bracket-pos (&optional (pos (point)))
+  (if (-nomis/ec-can-forward-sexp?)
+      (-nomis/ec-end-of-form-pos pos)
+    (-nomis/ec-close-bracket-pos pos)))
+
 ;;;; ___________________________________________________________________________
 ;;;; Flashing of the re-overlayed region, to help with debugging.
 
@@ -562,20 +578,21 @@ Otherwise throw an exception."
   (cond ((not (-nomis/ec-can-forward-sexp?))
          (let* ((msg (format "Missing %s" (first desc))))
            (signal '-nomis/ec-parse-error
-                   (list msg (save-excursion
-                               (backward-up-list)
-                               (point))))))
+                   (list msg
+                         (point)
+                         (-nomis/ec-close-bracket-pos)))))
         ((not (nomis/ec-at-or-before-start-of-form-to-descend-v3?))
          (let* ((msg (format "A bracketed s-expression is needed for %s"
                              (first desc))))
            (signal '-nomis/ec-parse-error
-                   (list msg (point)))))
+                   (list msg (point) (-nomis/ec-end-of-form-pos)))))
         (t
          (down-list))))
 
 (defun -nomis/ec-check-movement-possible (desc
                                           move-fn
-                                          error-position-fn)
+                                          start-error-position-fn
+                                          end-error-position-fn)
   (save-excursion
     (let* ((start (point)))
       (condition-case _
@@ -585,9 +602,9 @@ Otherwise throw an exception."
                              (first desc))))
            (-nomis/ec-message-no-disp "%s" msg)
            (signal '-nomis/ec-parse-error
-                   (list msg (progn (goto-char start)
-                                    (funcall error-position-fn)
-                                    (point))))))))))
+                   (list msg
+                         (funcall start-error-position-fn)
+                         (funcall end-error-position-fn)))))))))
 
 (defun -nomis/ec-pos-of-end-of-form ()
   (save-excursion
@@ -772,17 +789,15 @@ Otherwise throw an exception."
     (-nomis/ec-bof-if-poss))
   (-nomis/ec-show-place-for-metadata))
 
-(defun -nomis/ec-overlay-unparsable (pos tag description)
-  ;; TODO: Here in `-nomis/ec-overlay-unparsable` can have `start` and `end`
-  ;;       instead of `pos`, and can place error highlighting in a more precise
-  ;;       place -- /eg/ at the close bracket when something is missing.
+(defun -nomis/ec-overlay-unparsable (start end tag description)
   (save-excursion
-    (goto-char pos)
+    (goto-char start)
     (-nomis/ec-with-site (;; avoid-stupid-indentation
                           :tag (list 'unparsable tag)
                           :tag-v2 'unparsable
                           :site 'nec/unparsable
-                          :description description)
+                          :description description
+                          :end end)
       ;; Nothing more.
       )))
 
@@ -847,8 +862,10 @@ Otherwise throw an exception."
                                                  (+ (point)
                                                     (get-position ast))))))))
              (helper ast))
-           (cl-loop for (msg pos) in unhandled-things
-                    do (-nomis/ec-overlay-unparsable pos
+           (cl-loop for (msg start) in unhandled-things
+                    do (-nomis/ec-overlay-unparsable start
+                                                     (-nomis/ec-end-of-form-pos
+                                                      start)
                                                      'bindings
                                                      msg))
            ;; For debugging:
@@ -870,7 +887,8 @@ Otherwise throw an exception."
                                       &key site)
   (-nomis/ec-check-movement-possible tag
                                      #'forward-sexp
-                                     #'backward-up-list)
+                                     #'point
+                                     #'-nomis/ec-end-of-form-or-close-bracket-pos)
   ;; Operators that are symbols are colored the same as their parent form unless
   ;; the `operator` term has a `site` (as in, for example, `:dom/xxxx`) -- and
   ;; that coloring is handled in the generic term coloring.
@@ -884,7 +902,8 @@ Otherwise throw an exception."
                                       &key)
   (-nomis/ec-check-movement-possible (cons 'name tag)
                                      #'forward-sexp
-                                     #'backward-up-list)
+                                     #'point
+                                     #'-nomis/ec-end-of-form-or-close-bracket-pos)
   (forward-sexp))
 
 (cl-defmethod -nomis/ec-overlay-term ((term-name (eql 'name?))
@@ -914,7 +933,8 @@ Otherwise throw an exception."
                                       &key)
   (-nomis/ec-check-movement-possible (cons 'key-function tag)
                                      #'forward-sexp
-                                     #'backward-up-list)
+                                     #'point
+                                     #'-nomis/ec-end-of-form-or-close-bracket-pos)
   (-nomis/ec-walk-and-overlay-v3)
   (forward-sexp))
 
@@ -1089,14 +1109,11 @@ Otherwise throw an exception."
                                        (format "Expected one of %s"
                                                expecteds)
                                      (format "Form came to an end when expecting one of %s"
-                                             expecteds)))
-                              (pos (if can-forward?
-                                       (point)
-                                     (save-excursion
-                                       (backward-up-list)
-                                       (point)))))
+                                             expecteds))))
                          (signal '-nomis/ec-parse-error
-                                 (list msg pos))))
+                                 (list msg
+                                       (point)
+                                       (-nomis/ec-end-of-form-or-close-bracket-pos)))))
       ;; :LIMITATIONS-OF-THE-GRAMMAR Are we at the right buffer location
       ;; for continuing?
       )))
@@ -1108,7 +1125,9 @@ Otherwise throw an exception."
         t
       (if (not (looking-at "("))
           (signal '-nomis/ec-parse-error
-                  (list ":list parsing failed" (point)))
+                  (list ":list parsing failed"
+                        (point)
+                        (-nomis/ec-end-of-form-or-close-bracket-pos)))
         (progn
           (nomis/ec-down-list-v3 '(list-parsing))
           (-nomis/ec-bof-if-poss)
@@ -1176,6 +1195,7 @@ Otherwise throw an exception."
                        (process-terms*)))))
               (-nomis/ec-parse-error
                (-nomis/ec-overlay-unparsable (second (cdr err))
+                                             (third (cdr err))
                                              term-name
                                              (first (cdr err))))))))))
 
@@ -1283,6 +1303,7 @@ Otherwise throw an exception."
                    (sited 'global))
                ;; Highlight anything we aren't dealing with.
                (-nomis/ec-overlay-unparsable (point)
+                                             (-nomis/ec-end-of-form-pos)
                                              'unhandled-thing
                                              "unhandled-thing")))))))
 
