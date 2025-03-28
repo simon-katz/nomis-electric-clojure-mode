@@ -1283,20 +1283,24 @@ Otherwise throw an exception."
                (use-site tag *-nomis/ec-default-site*))
              (unsited (tag)
                (use-site tag 'nec/neutral)))
-    (cond ((looking-at "'")
-           (sited 'quoted-form))
-          ((thing-at-point 'string t)
-           (sited 'string))
-          ((looking-at -nomis/ec-electric-function-name-regexp-incl-symbol-end)
-           (unsited 'electric-function-name))
-          ((-nomis/ec-top-level-of-hosted-call?)
-           (sited (if *-nomis/ec-first-arg?*
-                      'hosted-call-function-name
-                    'hosted-call-arg)))
-          ((-nomis/ec-top-level-of-body?)
-           (sited 'top-level-of-body))
-          (t
-           (let* ((sym (thing-at-point 'symbol t)))
+    (let* ((sym (thing-at-point 'symbol t)))
+      (cond ((looking-at "'")
+             (sited 'quoted-form))
+            ((thing-at-point 'string t)
+             (sited 'string))
+            ((thing-at-point 'number t)
+             (sited 'number))
+            ((and sym (equal ":" (substring sym 0 1)))
+             (sited 'keyword))
+            ((looking-at -nomis/ec-electric-function-name-regexp-incl-symbol-end)
+             (unsited 'electric-function-name))
+            ((-nomis/ec-top-level-of-hosted-call?)
+             (sited (if *-nomis/ec-first-arg?*
+                        'hosted-call-function-name
+                      'hosted-call-arg)))
+            ((-nomis/ec-top-level-of-body?)
+             (sited 'top-level-of-body))
+            (t
              (if sym
                  (if (member sym *-nomis/ec-bound-vars*)
                      (unsited 'local)
