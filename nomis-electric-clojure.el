@@ -451,12 +451,12 @@ PROPERTY is already in PLIST."
        (= *-nomis/ec-level*
           *-nomis/enclosing-hosted-call-level*)))
 
-(defvar *-nomis/body-level* nil) ; TODO: Rename: "most recent"
+(defvar *-nomis/enclosing-body-level* nil)
 
 (defun -nomis/ec-top-level-of-body? ()
-  (and *-nomis/body-level*
+  (and *-nomis/enclosing-body-level*
        (= *-nomis/ec-level*
-          *-nomis/body-level*)))
+          *-nomis/enclosing-body-level*)))
 
 ;;;; ___________________________________________________________________________
 ;;;; Overlay basics
@@ -991,7 +991,7 @@ Otherwise throw an exception."
                                       &allow-other-keys)
   (cl-assert (member site '(nil nec/client nec/server nec/neutral nec/inherit)))
   (save-excursion
-    (let* ((*-nomis/body-level* (1+ *-nomis/ec-level*)))
+    (let* ((*-nomis/enclosing-body-level* (1+ *-nomis/ec-level*)))
       ;; Each body form separately:
       (while (-nomis/ec-can-forward-sexp?)
         (-nomis/ec-bof)
