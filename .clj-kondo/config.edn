@@ -3,7 +3,8 @@
            hyperfiddle.electric3/cursor  clojure.core/let
            hyperfiddle.electric3/with-cycle clojure.core/let
            hyperfiddle.electric3/fn      clojure.core/fn
-           hyperfiddle.electric.impl.array-fields/deffields clojure.core/declare}
+           hyperfiddle.electric.impl.array-fields/deffields clojure.core/declare
+           let-with-client-on-rhs/nomis-let-with-client-on-rhs clojure.core/let}
  :linters {:redundant-expression {:level :off}
            :var-same-name-except-case {:level :off}
            :clojure-lsp/unused-public-var {:level :off}}}

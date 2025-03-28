@@ -1755,6 +1755,14 @@ This is very DIY. Is there a better way?")
                                                           :rhs-site nec/inherit)
                                             &body)))
 
+  (nomis/ec-add-parser-spec '(
+                              :operator-id :nomis-let-with-client-on-rhs ; for testing
+                              :operator    "nomis-let-with-client-on-rhs"
+                              :terms       (operator
+                                            (let-bindings :site nec/neutral
+                                                          :rhs-site nec/client)
+                                            &body)))
+
   (nomis/ec-add-parser-spec `(
                               :operator-id :electric-call
                               :operator    ,-nomis/ec-electric-function-name-regexp
