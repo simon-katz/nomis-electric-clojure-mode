@@ -312,8 +312,7 @@ PROPERTY is already in PLIST."
 (defvar -nomis/ec-regexp-for-start-of-form-to-descend-v2
   ;; Copied from `-nomis/sexp-regexp-for-bracketed-sexp-start`. This doesn't
   ;; include reader syntax for anonymous functions (/ie/ `#(...)`), which is
-  ;; probably an oversite in the copied-from place. But that's handy for us
-  ;; because these anonymous functions are hosted and they end up as
+  ;; probably an oversite in the copied-from place. But that's OK for us.
   ;; `sited-single-item`s.
   "(\\|\\[\\|{\\|#{")
 
