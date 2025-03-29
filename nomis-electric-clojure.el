@@ -878,8 +878,21 @@ Otherwise throw an exception."
            ;; (-nomis/ec-message-no-disp "sofar = %s"
            ;;                            (cl-format nil "~s" sofar))
            sofar)))
-    (let* ((ast (parseclj-parse-clojure (thing-at-point 'sexp t))))
-      (ast->vars ast))))
+    (let* ((thing (thing-at-point 'sexp t))
+           (ast (condition-case err
+                    (parseclj-parse-clojure thing)
+                  (error
+                   (-nomis/ec-overlay-unparsable (point)
+                                                 (-nomis/ec-pos-end-of-form)
+                                                 'parseclj-error
+                                                 (format "parseclj-error: %s %s"
+                                                         (car err)
+                                                         (cdr err)))
+                   nil))))
+      (when ast
+        (ast->vars ast)))))
+
+
 
 ;;;; ___________________________________________________________________________
 ;;;; ---- -nomis/ec-overlay-term ----
