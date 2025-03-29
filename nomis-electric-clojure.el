@@ -1468,7 +1468,13 @@ Otherwise throw an exception."
       (while (and (< (point) end-2)
                   (-nomis/ec-can-forward-sexp?))
         (-nomis/ec-bof)
-        (-nomis/ec-walk-and-overlay-any-version)
+        (condition-case err
+            (-nomis/ec-walk-and-overlay-any-version)
+          (error (-nomis/ec-message-no-disp
+                  "nomis-electric-clojure: Error; rethrowing: %s %s"
+                  (car err)
+                  (cdr err))
+                 (signal (car err) (cdr err))))
         (forward-sexp))
       (-nomis/ec-feedback-flash start end start-2 end-2)
       ;; (-nomis/ec-message-no-disp "*-nomis/ec-n-lumps-in-current-update* = %s"
