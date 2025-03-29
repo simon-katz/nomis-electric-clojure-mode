@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `nomis/ec-base-priority-for-overlays`.
+
+
 ## Version 0.5 — 2025-03-25
 
 - Add support for multiple arities in `e/defn` and `e/fn`.

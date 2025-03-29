@@ -125,6 +125,11 @@ Here's an example:
 You can cycle through combinations of `nomis/ec-color-initial-whitespace?` and `nomis/ec-use-underline?` using `M-x nomis/ec-cycle-options`.
 
 
+# Other Customization
+
+- `nomis/ec-base-priority-for-overlays`. Overlays are created with a priority that increases with nesting level, starting at this number.
+
+
 # Keyboard Shortcuts
 
 I use the following keyboard shortcuts:

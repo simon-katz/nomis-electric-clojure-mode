@@ -71,6 +71,11 @@ You can re-run the auto-detection in any of the following ways:
 - by reverting the buffer."
   :type 'integer)
 
+(defcustom nomis/ec-base-priority-for-overlays 0
+  "Overlays are created with a priority that increases with nesting level,
+starting at this number."
+  :type 'integer)
+
 (defcustom nomis/ec-show-grammar-tooltips? nil
   "Whether to show grammar-related information in tooltips. This might blat
 tooltips provided by other modes."
@@ -517,7 +522,8 @@ PROPERTY is already in PLIST."
     (unless nomis/ec-color-initial-whitespace?
       ;; We have multiple overlays in the same place, so we need to
       ;; specify their priority.
-      (overlay-put ov 'priority nesting-level))
+      (overlay-put ov 'priority (+ nomis/ec-base-priority-for-overlays
+                                   nesting-level)))
     ov))
 
 (defun -nomis/ec-overlay-lump (tag site nesting-level start end description)
