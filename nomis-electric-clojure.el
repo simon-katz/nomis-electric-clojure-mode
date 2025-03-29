@@ -788,7 +788,7 @@ Otherwise throw an exception."
       ;; Nothing more.
       )))
 
-(defun -nomis/ec-skip-metadata ()
+(defun -nomis/ec-skip-ignorables ()
   (while (looking-at (regexp-quote "^"))
     (progn (forward-char)
            (forward-sexp))
@@ -965,7 +965,7 @@ Otherwise throw an exception."
     (nomis/ec-down-list-v3 (cons 'e/fn-bindings tag))
     (while (-nomis/ec-can-forward-sexp?)
       (-nomis/ec-bof)
-      (-nomis/ec-skip-metadata)
+      (-nomis/ec-skip-ignorables)
       ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
       ;; to use recursion instead of iteration.
       (setq *-nomis/ec-bound-vars*
@@ -987,7 +987,7 @@ Otherwise throw an exception."
       (while (-nomis/ec-can-forward-sexp?)
         ;; Note the LHS of the binding:
         (-nomis/ec-bof)
-        (-nomis/ec-skip-metadata)
+        (-nomis/ec-skip-ignorables)
         (unless no-bind?
           ;; Slighly unpleasant use of `setq`. Maybe this could be rewritten
           ;; to use recursion instead of iteration.
@@ -998,7 +998,7 @@ Otherwise throw an exception."
         ;; Walk the RHS of the binding, if there is one:
         (when (-nomis/ec-can-forward-sexp?)
           (-nomis/ec-bof)
-          (-nomis/ec-skip-metadata)
+          (-nomis/ec-skip-ignorables)
           (let* ((*-nomis/ec-default-site* new-rhs-site))
             (-nomis/ec-with-site (;; avoid-stupid-indentation
                                   :tag (cons 'binding-rhs tag)
@@ -1195,7 +1195,7 @@ Otherwise throw an exception."
                  (tag (list term-name operator-id)))
             (condition-case err
                 (progn
-                  (-nomis/ec-skip-metadata)
+                  (-nomis/ec-skip-ignorables)
                   (-nomis/ec-debug-message *-nomis/ec-site* term-name)
                   (cl-flet* ((process-terms* ()
                                (-nomis/ec-process-single-term term-name term-opts
@@ -1393,7 +1393,7 @@ Otherwise throw an exception."
                       (list new-entry)))))))
 
 (defun -nomis/ec-walk-and-overlay-v3 ()
-  (-nomis/ec-skip-metadata)
+  (-nomis/ec-skip-ignorables)
   (let* ((case-fold-search nil))
     (or (cl-loop for (regexp . spec) in -nomis/ec-regexp->parser-spec
                  when (looking-at regexp)
