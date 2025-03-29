@@ -870,7 +870,7 @@ Otherwise throw an exception."
              (helper ast))
            (cl-loop for (msg start) in unhandled-things
                     do (-nomis/ec-overlay-unparsable start
-                                                     (-nomis/ec-pos-end-of-form
+                                                     (-nomis/ec-pos-end-of-form-or-close-bracket
                                                       start)
                                                      'bindings
                                                      msg))
@@ -883,7 +883,7 @@ Otherwise throw an exception."
                     (parseclj-parse-clojure thing)
                   (error
                    (-nomis/ec-overlay-unparsable (point)
-                                                 (-nomis/ec-pos-end-of-form)
+                                                 (-nomis/ec-pos-end-of-form-or-close-bracket)
                                                  'parseclj-error
                                                  (format "parseclj-error: %s %s"
                                                          (car err)
